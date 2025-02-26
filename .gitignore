@@ -1,0 +1,17 @@
+# Ignore the SQLite database
+db.sqlite3
+
+# Ignore all migrations in the "inquiries" app
+inquiries/migrations/
+
+# Ignore Python-related files
+# ignore all files with a .pyc extension
+*.pyc 
+__pycache__/
+
+# Ignore environment files
+.env
+
+# Custom files
+running_django_instructions.txt
+myenv/

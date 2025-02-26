@@ -1,0 +1,6 @@
+django-cities-light
+openpyxl
+django
+gunicorn
+pandas
+python-dotenv

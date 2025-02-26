@@ -1,0 +1,319 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Inquiry</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+</head>
+
+<body>
+    <div class="container">
+        <h1>Add New Inquiry</h1>
+
+        <!-- Display Form -->
+        <form method="POST" class="inquiry-form">
+            {% csrf_token %}
+            
+            <!-- Other Fields -->
+            <div class="form-group">
+                <label for="{{ form.student_name.id_for_label }}">Student Name</label>
+                {{ form.student_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.parent_name.id_for_label }}">Parent Name</label>
+                {{ form.parent_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.mobile_number.id_for_label }}">Mobile Number</label>
+                {{ form.mobile_number }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.address.id_for_label }}">Address</label>
+                {{ form.address }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.block.id_for_label }}">Block</label>
+                {{ form.block }}
+            </div>
+            <!-- Manual Block Input Field (Initially Hidden) -->
+            <div class="form-group" id="manual-block-field" style="display: none;">
+                <label for="manual_block">Enter Block</label>
+                <input type="text" name="manual_block" id="manual_block" placeholder="Enter Block">
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.location_panchayat.id_for_label }}">Location/Panchayat</label>
+                {{ form.location_panchayat }}
+            </div>
+
+            <!-- Manual input field (Hidden initially) -->
+            <div class="form-group" id="manual-panchayat-field" style="display: none;">
+                <label for="manual_location_panchayat">Enter Location/Panchayat</label>
+                <input type="text" name="manual_location_panchayat" id="manual_location_panchayat" placeholder="Enter Location/Panchayat">
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.inquiry_source.id_for_label }}">Inquiry Source</label>
+                {{ form.inquiry_source }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.student_class.id_for_label }}">Student Class</label>
+                {{ form.student_class }}
+            </div>           
+
+            <div class="form-group">
+                <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+                {{ form.remarks }}
+            </div>
+
+            <!-- New Fields -->
+            <div class="form-group">
+                <label for="{{ form.assigned_agent.id_for_label }}">Assigned Agent</label>
+                {{ form.assigned_agent }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.admin_assigned.id_for_label }}">Admin Assigned</label>
+                {{ form.admin_assigned }}
+            </div>
+
+            <!-- Always Visible Follow-Up Date -->
+            <div class="form-group">
+                <label for="{{ form.follow_up_date.id_for_label }}">Follow-Up Date</label>
+                {{ form.follow_up_date }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.status.id_for_label }}">Status</label>
+                {{ form.status }}
+            </div>
+
+            <!-- Conditional Date Fields -->
+            <div id="inquiry-date" class="date-field" style="display: none;">
+                <label for="{{ form.inquiry_date.id_for_label }}">Inquiry Date</label>
+                {{ form.inquiry_date }}
+            </div>
+
+            <div id="registration-date" class="date-field" style="display: none;">
+                <label for="{{ form.registration_date.id_for_label }}">Registration Date</label>
+                {{ form.registration_date }}
+            </div>
+
+            <div id="admission-test-date" class="date-field" style="display: none;">
+                <label for="{{ form.admission_test_date.id_for_label }}">Admission Test Date</label>
+                {{ form.admission_test_date }}
+            </div>
+
+            <div id="admission-offered-date" class="date-field" style="display: none;">
+                <label for="{{ form.admission_offered_date.id_for_label }}">Admission Offered Date</label>
+                {{ form.admission_offered_date }}
+            </div>
+
+            <div id="admission-confirmed-date" class="date-field" style="display: none;">
+                <label for="{{ form.admission_confirmed_date.id_for_label }}">Admission Confirmed Date</label>
+                {{ form.admission_confirmed_date }}
+            </div>
+
+            <div id="rejected-date" class="date-field" style="display: none;">
+                <label for="{{ form.rejected_date.id_for_label }}">Rejected Date</label>
+                {{ form.rejected_date }}
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit">Submit Inquiry</button>
+        </form>
+
+        <!-- Navigation Link -->
+        <div class="navigation">
+            <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        const statusField = document.querySelector('select[name="status"]');
+        const dateFields = {
+            'Inquiry': document.getElementById('inquiry-date'),
+            'Registration': document.getElementById('registration-date'),
+            'Admission Test': document.getElementById('admission-test-date'),
+            'Admission Offered': document.getElementById('admission-offered-date'),
+            'Admission Confirmed': document.getElementById('admission-confirmed-date'),
+            'Rejected': document.getElementById('rejected-date'),
+        };
+
+        function updateDateFields() {
+            const selectedStatus = statusField.value;
+            Object.values(dateFields).forEach(field => field.style.display = 'none');
+            if (dateFields[selectedStatus]) {
+                dateFields[selectedStatus].style.display = 'block';
+            }
+        }
+
+        updateDateFields();
+        statusField.addEventListener('change', updateDateFields);
+    </script>
+
+
+    <script>
+        $(document).ready(function() {
+            var blockDropdown = $('#id_block');
+            var manualBlockField = $('#manual-block-field');
+            var manualBlockInput = $('#manual_block');
+        
+            var panchayatDropdown = $('#id_location_panchayat');
+            var manualPanchayatField = $('#manual-panchayat-field');
+            var manualPanchayatInput = $('#manual_location_panchayat');
+        
+            // Handle Block Dropdown Change
+            blockDropdown.change(function() {
+                if ($(this).val() === "Other") {
+                    manualBlockField.show();
+                    manualBlockInput.prop('required', true);
+                } else {
+                    manualBlockField.hide();
+                    manualBlockInput.prop('required', false);
+                }
+        
+                var block = $(this).val();
+                if (block && block !== "Other") {
+                    $.ajax({
+                        url: "{% url 'get_panchayats' %}",
+                        data: { 'block': block },
+                        dataType: 'json',
+                        success: function(response) {
+                            panchayatDropdown.empty();
+                            panchayatDropdown.append('<option value="">Select Location/Panchayat</option>');
+                            $.each(response.panchayats, function(index, panchayat) {
+                                panchayatDropdown.append('<option value="' + panchayat.name + '">' + panchayat.name + '</option>');
+                            });
+                            panchayatDropdown.append('<option value="Other">Other</option>'); // Add 'Other' option
+                        }
+                    });
+                } 
+                else if(block && block =="Other"){
+                    panchayatDropdown.empty();
+                    panchayatDropdown.append('<option value="">Select Location/Panchayat</option>');
+                    panchayatDropdown.append('<option value="Other">Other</option>'); // Add 'Other' option
+                }
+                else {
+                    panchayatDropdown.empty();
+                    panchayatDropdown.append('<option value="">Select Block First</option>');
+                }
+            });
+        
+            // Handle Panchayat Dropdown Change
+            panchayatDropdown.change(function() {
+                if ($(this).val() === "Other") {
+                    manualPanchayatField.show();
+                    manualPanchayatInput.prop('required', true);
+                } else {
+                    manualPanchayatField.hide();
+                    manualPanchayatInput.prop('required', false);
+                }
+            });
+        });        
+    </script>
+
+    <style>
+        /* General Styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: auto;
+            padding: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 26px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-submit {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+
+        .navigation {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #007BFF;
+            font-size: 16px;
+        }
+
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+</body>
+
+</html>
