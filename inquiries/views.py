@@ -182,11 +182,10 @@ def inquiry_list(request):
 
 # ====================================================================================
 
-@login_required
-@user_passes_test(is_admin)     # => this view is only for admin
+@login_required  
 def add_inquiry(request):
     if request.method == 'POST':
-        form = InquiryForm(request.POST)
+        form = InquiryForm(request.POST, user=request.user)
 
         if form.is_valid():
             inquiry = form.save(commit=False)
@@ -223,7 +222,7 @@ def add_inquiry(request):
                     fail_silently=False,
                 )                        
             
-            return redirect('inquiry_list')        
+            return redirect('inquiry_list')
         # else:
         #     print("==================> form was not valid and form.location_panchayat = ")
             
@@ -232,7 +231,7 @@ def add_inquiry(request):
         #     for field, value in request.POST.items():
         #         print(f"{field}: {value}")
     else:
-        form = InquiryForm()
+        form = InquiryForm(user=request.user)
         
     return render(request, 'inquiries/add_inquiry.html', {'form': form})
 
@@ -657,8 +656,8 @@ def add_agent(request):
 
 
             # Create the User for the agent with a default password
-            # default_password = 'DefaultPassword123!'
-            default_password = CustomUser.objects.make_random_password()  # Generates a secure random password
+            default_password = 'DefaultPassword123!'
+            #default_password = CustomUser.objects.make_random_password()  # Generates a secure random password
 
             
             user = CustomUser.objects.create_user(username=email, email=email, password=default_password)

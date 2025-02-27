@@ -150,10 +150,12 @@
             <li><a href="{% url 'add_inquiry' %}">Add New Inquiry</a></li>
             <li><a href="{% url 'agent_performance' %}">Agent Performance</a></li>
             <li><a href="{% url 'export_inquiries_csv' %}">Export Inquiries to Excel</a></li>
-            <li><a href="{% url 'remove_lead' %}">Remove Agent from Lead</a></li>
-            <li><a href="{% url 'assign_lead' %}">Assign Lead to Agent</a></li>
-            <li><a href="{% url 'agent_list' %}">View Agents</a></li>
-            <li><a href="{% url 'add_agent' %}">Add Agent</a></li>
+            {% if user.is_staff %}
+                <li><a href="{% url 'remove_lead' %}">Remove Agent from Lead</a></li>
+                <li><a href="{% url 'assign_lead' %}">Assign Lead to Agent</a></li>
+                <li><a href="{% url 'agent_list' %}">View Agents</a></li>
+                <li><a href="{% url 'add_agent' %}">Add Agent</a></li>
+            {% endif %}
         </ul>
 
         <!-- Current Status -->

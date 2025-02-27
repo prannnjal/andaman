@@ -1,4 +1,3 @@
-django-cities-light
 openpyxl
 django
 gunicorn

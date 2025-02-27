@@ -18,6 +18,8 @@ class InquiryForm(forms.ModelForm):
         fields = ['student_name','parent_name','mobile_number','email','address','block','location_panchayat','inquiry_source','student_class','status','remarks','inquiry_date','follow_up_date','registration_date','admission_test_date','admission_offered_date','admission_confirmed_date','rejected_date','assigned_agent','admin_assigned']      # what fields from Lead model to be included in this form
         
     def __init__(self, *args, **kwargs):        # constructor
+        user = kwargs.pop('user', None)  # Get the user from the kwargs. Django’s ModelForm does not accept user as a parameter by default. Pop and Extract user before calling super()
+        
         super().__init__(*args, **kwargs)       # calling parent class constructor
         
         # Assign the 'date' widget to the date fields individually
@@ -31,6 +33,10 @@ class InquiryForm(forms.ModelForm):
                                 
         # Set empty Location/Panchayat initially
         self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])
+        
+        # Restrict Assigned Agent field to only email of that agent in dropdown for non admin users                
+        if user and not user.is_staff:
+            self.fields['assigned_agent'].queryset = Agent.objects.filter(user=user)
             
 # ====================================================================================
 
