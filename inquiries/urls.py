@@ -18,6 +18,7 @@ urlpatterns = [
     path('agents/add/', views.add_agent, name='add_agent'),
     
     path('login/', views.agent_login, name='login'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     
     path('password-reset/', auth_views.PasswordResetView.as_view(), name='password_reset'), # Displays the "Enter your email" form to reset password.
     path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(), name='password_reset_done'),   # The PasswordResetDoneView displays a page informing the user that an email has been sent (if the email is registered).
