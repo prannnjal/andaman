@@ -17,6 +17,11 @@ from django.db.models.functions import TruncDate
 from django.conf import settings
 from django.http import JsonResponse
 import pandas as pd
+from django.db.models.functions import Coalesce
+from django.db.models import ExpressionWrapper
+from django.db.models import FloatField
+
+
 
 # ====================================================================================
 
@@ -445,25 +450,28 @@ def agent_performance(request):
     for agent in agents:
         # Total Leads Assigned
         total_leads = Lead.objects.filter(assigned_agent=agent).count()
-
-        # Leads Converted to Registration
-        leads_to_registration = Lead.objects.filter(assigned_agent=agent, status='Registration').count()
-
-        # Leads Converted to Admission Offered
-        leads_to_admission_offered = Lead.objects.filter(assigned_agent=agent, status='Admission Offered').count()
-
+        
+        # Leads in Inquiry Status
+        leads_inquiry = Lead.objects.filter(assigned_agent=agent, status='Inquiry').count()
+        
         # Leads Converted to Admission Confirmed
         leads_to_admission_confirmed = Lead.objects.filter(assigned_agent=agent, status='Admission Confirmed').count()
-
-        # Leads Rejected
-        leads_rejected = Lead.objects.filter(assigned_agent=agent, status='Rejected').count()
+        
+        # Leads Converted to Admission Offered
+        leads_to_admission_offered = leads_to_admission_confirmed + Lead.objects.filter(assigned_agent=agent, status='Admission Offered').count()  
+        
+        # Leads Converted to Admission Test
+        leads_to_admission_test = leads_to_admission_offered + Lead.objects.filter(assigned_agent=agent, status='Admission Test').count()  
+        
+        # Leads Converted to Registration Phase
+        leads_to_registration = leads_to_admission_test + Lead.objects.filter(assigned_agent=agent, status='Registration').count()
+              
+        # Leads Lost
+        leads_lost = Lead.objects.filter(assigned_agent=agent, status='Rejected').count()
 
         # Conversion Rates (Admission Offered and Confirmed)
-        conversion_rate = (leads_to_admission_offered + leads_to_admission_confirmed) / total_leads * 100 if total_leads > 0 else 0
-
-        # Follow-Up Efficiency (leads with follow-up date set)
-        leads_with_follow_up = Lead.objects.filter(assigned_agent=agent, follow_up_date__isnull=False).count()
-        follow_up_efficiency = (leads_with_follow_up / total_leads * 100) if total_leads > 0 else 0
+        conversion_rate = leads_to_admission_confirmed / total_leads * 100 if total_leads > 0 else 0
+       
 
         # Average Time to Conversion (from Inquiry to Admission Confirmed)
         total_days_to_conversion = sum(
@@ -472,23 +480,21 @@ def agent_performance(request):
             if lead.inquiry_date and lead.admission_confirmed_date
         )
         conversions_count = Lead.objects.filter(assigned_agent=agent, status='Admission Confirmed').count()
-        average_days_to_conversion = total_days_to_conversion / conversions_count if conversions_count else 0
-
-        # Leads Remaining in Pending Status (still in Inquiry or Follow-up)
-        leads_in_pending = Lead.objects.filter(assigned_agent=agent, status__in=['Inquiry', 'Follow-up']).count()
+        average_days_to_conversion = round(total_days_to_conversion / conversions_count, 2) if conversions_count else 'N/A'
+      
 
         # Collect data for each agent
         agent_data.append({
             'agent': agent,
             'total_leads': total_leads,
+            'leads_inquiry': leads_inquiry,
             'leads_to_registration': leads_to_registration,
+            'leads_to_admission_test':leads_to_admission_test,
             'leads_to_admission_offered': leads_to_admission_offered,
             'leads_to_admission_confirmed': leads_to_admission_confirmed,
-            'leads_rejected': leads_rejected,
-            'conversion_rate': conversion_rate,
-            'follow_up_efficiency': follow_up_efficiency,
-            'average_days_to_conversion': average_days_to_conversion,
-            'leads_in_pending': leads_in_pending
+            'leads_lost': leads_lost,
+            'conversion_rate': conversion_rate,        
+            'average_days_to_conversion': average_days_to_conversion,       
         })
 
     # Sort agents by performance (conversion rate as example)
@@ -688,20 +694,51 @@ def agent_list(request):
     # Get filter query parameters
     name_filter = request.GET.get('name', '')
     email_filter = request.GET.get('email', '')
-    min_score_filter = request.GET.get('min_score', '')
-    max_score_filter = request.GET.get('max_score', '')
-
+    min_conversion_rate_filter = request.GET.get('min_conversion_rate', '')
+    max_conversion_rate_filter = request.GET.get('max_conversion_rate', '')
+    min_leads_converted_filter = request.GET.get('min_leads_converted', '')
+    max_leads_converted_filter = request.GET.get('max_leads_converted', '')
+    min_leads_handled_filter = request.GET.get('min_leads_handled', '')
+    max_leads_handled_filter = request.GET.get('max_leads_handled', '')
+        
+    '''
+    1) Coalesce() prevents division by zero by replacing lead_count = 0 with 1
+    
+    2) lead_count and converted_leads are not python variable but database generated values. So to use it in python, you have to access it using F(lead_count).
+    
+    3) output_field=FloatField() tells Django that the result of the expression will be a floating-point number (decimal).
+    '''
+    agents = Agent.objects.annotate(
+        lead_count=Count('lead'),       # total leads given agent is handling
+        converted_leads=Count('lead', filter=Q(lead__status="Admission Confirmed")),    # total leads an agent converted successfully
+        conversion_rate=ExpressionWrapper(
+            100.0*F("converted_leads")/Coalesce(F('lead_count'), 1),
+            output_field=FloatField()
+        )        
+    )
+    
     # Filter agents based on the query parameters
-    agents = Agent.objects.all()
-
     if name_filter:
         agents = agents.filter(name__icontains=name_filter)
     if email_filter:
-        agents = agents.filter(user__email__icontains=email_filter)
-    if min_score_filter:
-        agents = agents.filter(performance_score__gte=int(min_score_filter))
-    if max_score_filter:
-        agents = agents.filter(performance_score__lte=int(max_score_filter))
+        agents = agents.filter(user__email__icontains=email_filter)            
+            
+    
+    # Apply remaining filters    
+    if min_leads_handled_filter:
+        agents = agents.filter(lead_count__gte=int(min_leads_handled_filter))
+    if max_leads_handled_filter:
+        agents = agents.filter(lead_count__lte=int(max_leads_handled_filter))
+    if min_leads_converted_filter:
+        agents = agents.filter(converted_leads__gte=int(min_leads_converted_filter))
+    if max_leads_converted_filter:
+        agents = agents.filter(converted_leads__lte=int(max_leads_converted_filter))
+    if min_conversion_rate_filter:
+        agents = agents.filter(conversion_rate__gte=float(min_conversion_rate_filter))
+    if max_conversion_rate_filter:
+        agents = agents.filter(conversion_rate__lte=float(max_conversion_rate_filter))
+        
+
 
     # Handle deletion of agents
     if request.method == 'POST':  # Handle agent deletion
@@ -714,12 +751,19 @@ def agent_list(request):
         messages.success(request, f"Agent '{agent.name}' has been deleted successfully.")
         return redirect('agent_list')  # Refresh the agent list after deletion
 
+    
+    
+    # For GET request
     return render(request, 'inquiries/agent_list.html', {
         'agents': agents,
         'name_filter': name_filter,
         'email_filter': email_filter,
-        'min_score_filter': min_score_filter,
-        'max_score_filter': max_score_filter,
+        'min_conversion_rate_filter' : min_conversion_rate_filter,
+        "max_conversion_rate_filter" : max_conversion_rate_filter,
+        "min_leads_converted_filter" : min_leads_converted_filter,
+        "max_leads_converted_filter" : max_leads_converted_filter,
+        "min_leads_handled_filter" : min_leads_handled_filter,
+        "max_leads_handled_filter" : max_leads_handled_filter,
     })
     
 # ====================================================================================

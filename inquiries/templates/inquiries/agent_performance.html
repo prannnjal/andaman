@@ -123,9 +123,7 @@
 
 <body>
     <div class="container">
-        <h1>Agent Performance Overview</h1>
-
-        <h2>Performance Metrics</h2>
+        <h1>Agent Performance Overview</h1>       
 
         <!-- Wrapper for Table (for mobile responsiveness) -->
         <div class="table-wrapper">
@@ -134,14 +132,14 @@
                     <tr>
                         <th>Agent</th>
                         <th>Total Leads</th>
+                        <th>Leads in Inquiry Status</th>
                         <th>Leads Converted to Registration</th>
+                        <th>Leads Converted to Admission Test</th>
                         <th>Leads Converted to Admission Offered</th>
                         <th>Leads Converted to Admission Confirmed</th>
-                        <th>Leads Rejected</th>
-                        <th>Conversion Rate (%)</th>
-                        <th>Follow-up Efficiency (%)</th>
-                        <th>Average Time to Conversion (days)</th>
-                        <th>Leads in Pending Status</th>
+                        <th>Leads Lost</th>
+                        <th>Conversion Rate (%)</th>                    
+                        <th>Average Time to Conversion (days)</th>               
                     </tr>
                 </thead>
                 <tbody>
@@ -149,14 +147,14 @@
                     <tr class="{% if forloop.first %}highlight{% endif %}">
                         <td>{{ agent.agent.name }}</td>
                         <td>{{ agent.total_leads }}</td>
+                        <td>{{ agent.leads_inquiry }}</td>
                         <td>{{ agent.leads_to_registration }}</td>
+                        <td>{{ agent.leads_to_admission_test }}</td>
                         <td>{{ agent.leads_to_admission_offered }}</td>
                         <td>{{ agent.leads_to_admission_confirmed }}</td>
-                        <td>{{ agent.leads_rejected }}</td>
-                        <td>{{ agent.conversion_rate|floatformat:2 }}</td>
-                        <td>{{ agent.follow_up_efficiency|floatformat:2 }}</td>
-                        <td>{{ agent.average_days_to_conversion|floatformat:2 }}</td>
-                        <td>{{ agent.leads_in_pending }}</td>
+                        <td>{{ agent.leads_lost }}</td>
+                        <td>{{ agent.conversion_rate|floatformat:2 }}</td>                     
+                        <td>{{ agent.average_days_to_conversion}}</td>              
                     </tr>
                     {% endfor %}
                 </tbody>

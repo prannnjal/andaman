@@ -34,6 +34,27 @@ class InquiryForm(forms.ModelForm):
         # Set empty Location/Panchayat initially
         self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])
         
+        # Modify the select field to have a default placeholder
+        '''
+        This explicitly sets the widget for the "admin_assigned" field to a dropdown menu (<select>).
+        
+        Even if Django already assigns a <select> by default, this ensures we customize its options.
+        
+        self.fields['admin_assigned'].choices contains all the options Django generates from the model.
+        
+        list(...)[1:] removes the first choice (which is usually an empty option added by Django automatically). Then, + appends the remaining choices so the field still works properly.
+        '''
+        self.fields['block'].widget = forms.Select(choices=[('', 'Select the Block')] + list(self.fields['block'].choices)[1:])
+        
+        self.fields['inquiry_source'].widget = forms.Select(choices=[('', 'Select Inquiry Source')] + list(self.fields['inquiry_source'].choices)[1:])
+        
+        self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Inquiry Source')] + list(self.fields['student_class'].choices)[1:])
+        
+        self.fields['assigned_agent'].widget = forms.Select(choices=[('', 'Choose Agent')] + list(self.fields['assigned_agent'].choices)[1:])
+        
+        self.fields['admin_assigned'].widget = forms.Select(choices=[('', 'Choose Admin')] + list(self.fields['admin_assigned'].choices)[1:])
+
+        
         # Restrict Assigned Agent field to only email of that agent in dropdown for non admin users                
         if user and not user.is_staff:
             self.fields['assigned_agent'].queryset = Agent.objects.filter(user=user)
@@ -48,31 +69,6 @@ class ManageLeadStatusForm(forms.ModelForm):
         fields = ['assigned_agent', 'status','remarks','inquiry_date','follow_up_date','registration_date','admission_test_date','admission_offered_date','admission_confirmed_date','rejected_date','admin_assigned']        
         
 # ====================================================================================  
-        
-# class ReassignLeadForm(forms.ModelForm):
-#     assigned_agent = forms.ModelChoiceField(queryset=User.objects.filter(is_staff=True), required=True)
-
-#     class Meta:
-#         model = Lead
-#         fields = ['assigned_agent', 'email']
-        
-# ====================================================================================
-        
-# class RemoveAgentForm(forms.Form):
-#     lead = forms.ModelChoiceField(
-#         queryset=Lead.objects.none(),  # We'll set the queryset dynamically
-#         empty_label="Select a lead to remove",
-#         widget=forms.Select(attrs={'class': 'form-control'}),
-#     )
-
-#     def __init__(self, *args, **kwargs):
-#         agent = kwargs.pop('agent', None)
-#         super(RemoveAgentForm, self).__init__(*args, **kwargs)
-#         if agent:            
-#             self.fields['lead'].queryset = Lead.objects.filter(assigned_agent=agent)
-            
-
-# ====================================================================================
 
 class AgentForm(forms.ModelForm):
     email = forms.EmailField(
@@ -83,14 +79,11 @@ class AgentForm(forms.ModelForm):
 
     class Meta:
         model = Agent
-        fields = ['name', 'email', 'performance_score']     # fields to display in the form. email is not present in the Agent schema as a field, so it would be taken from above.
-        widgets = {
-            'performance_score': forms.NumberInput(attrs={'min': 0, 'max': 100}),
-        }
+        fields = ['name', 'email']     # fields to display in the form. email is not present in the Agent schema as a field, so it would be taken from above.
+        
         labels = {
             'name': 'Agent Name',
-            'email': 'Email Address',
-            'performance_score': 'Performance Score (0-100)',
+            'email': 'Email Address',         
         }
 
     def save(self, commit=True):
