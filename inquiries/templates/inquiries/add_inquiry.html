@@ -267,7 +267,8 @@
             // Handle Panchayat Dropdown Change
             panchayatDropdown.change(function() {
                 if ($(this).val() === "Other") {
-                    manualPanchayatField.show();                
+                    manualPanchayatField.show();
+                    panchayatDropdown.hide();
                     manualPanchayatInput.prop('required', true);
                 }
                 else {

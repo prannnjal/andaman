@@ -82,7 +82,8 @@ class Lead(models.Model):
     student_name = models.CharField(max_length=100)
     parent_name = models.CharField(max_length=100)
     mobile_number = models.CharField(max_length=15)
-    email = models.EmailField(max_length=100)       # no need to enforce unique constraint because the same person can ask more than 1 inquiries for his multiple children
+    email = models.EmailField(max_length=100, blank=True, null=True)
+    # no need to enforce unique constraint because the same person can ask more than 1 inquiries for his multiple children
     address = models.TextField()    
     block = models.CharField(choices=BLOCK_CHOICES, max_length=100, blank=False, null=False)
     location_panchayat = models.CharField(max_length=100, blank=False, null=False)
