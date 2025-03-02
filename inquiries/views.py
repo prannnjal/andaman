@@ -303,7 +303,7 @@ def manage_lead_status(request, inquiry_id):
 
 @login_required
 @user_passes_test(is_admin)  # Restrict access to admins
-def remove_agent_view(request):
+def remove_lead_from_agent_view(request):
     if request.method == 'POST':
         # print("===============> request.POST = ",request.POST)
         lead_id = request.POST.get('lead_id')  # Get the lead ID
@@ -437,7 +437,13 @@ def dashboard(request):
 @login_required
 def agent_performance(request):
     user = request.user  # Get the logged-in user
-
+    
+    # Get sorting parameters from request
+    sort_column = request.GET.get("sort_column", "1")  # Default to sorting by agent name
+    sort_order = request.GET.get("sort_order", "asc")  # Default to ascending order
+    reverse_sort = True if sort_order == "desc" else False
+    
+   
     # If the user is an admin, get all agents; otherwise, get only the logged-in agent
     if user.is_staff:
         agents = Agent.objects.all()  # Admins see all agents
@@ -497,11 +503,32 @@ def agent_performance(request):
             'average_days_to_conversion': average_days_to_conversion,       
         })
 
-    # Sort agents by performance (conversion rate as example)
-    agent_data = sorted(agent_data, key=lambda x: x['conversion_rate'], reverse=True)
+    # Define valid sorting keys
+    valid_sort_keys = {
+        "1": lambda x: x["agent"].name.lower(),
+        "2": lambda x: x["agent"].user.email.lower(),
+        "3": lambda x: x["total_leads"],
+        "4": lambda x: x["leads_inquiry"],
+        "5": lambda x: x["leads_to_registration"],
+        "6": lambda x: x["leads_to_admission_test"],
+        "7": lambda x: x["leads_to_admission_offered"],
+        "8": lambda x: x["leads_to_admission_confirmed"],
+        "9": lambda x: x["leads_lost"],
+        "10": lambda x: x["conversion_rate"],
+        "11": lambda x: x["average_days_to_conversion"] if isinstance(x["average_days_to_conversion"], (int, float)) else float("inf"),
+    }
+        
+    # Sort dynamically based on user selection
+    if sort_column in valid_sort_keys:
+        agent_data = sorted(agent_data, key=valid_sort_keys[sort_column], reverse=reverse_sort)
 
     # Render the performance template
-    return render(request, 'inquiries/agent_performance.html', {'agent_data': agent_data})
+    return render(request, 'inquiries/agent_performance.html', {
+        'agent_data': agent_data,
+        'sort_column': sort_column,
+        'sort_order': sort_order
+        }
+    )
 
 
 # ====================================================================================
@@ -568,8 +595,8 @@ def export_inquiries_excel(request):
 
 @login_required
 @user_passes_test(is_admin)
-def assign_lead(request):
-    inquiries = Lead.objects.filter(assigned_agent__isnull=True)  # Fetch unassigned inquiries
+def assign_lead_to_agent_view(request):
+    inquiries = Lead.objects.all()  # Fetch all inquiries
     agents = Agent.objects.all()  # Fetch all agents
 
     if request.method == 'POST':

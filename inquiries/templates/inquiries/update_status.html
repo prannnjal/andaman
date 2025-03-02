@@ -12,42 +12,48 @@
 
 <body>
     <div class="container">
-        <h1>Update Status for {{ inquiry.student_name }}</h1>
+        <h1>Update Status for {{ inquiry.student_name }} (Id = {{inquiry.id}}) </h1>
 
         <!-- Display Follow-up Form -->
         <form method="POST" class="follow-up-form" id="followUpForm">
             {% csrf_token %}
             {{ form.non_field_errors }}
 
-            <!-- Status Field -->
-            <label for="id_status">Status:</label>
-            {{ form.status }}
+            <div class="same_row_wrapper">
+                <!-- Status Field -->
+                <div>
+                    <label for="id_status">Status:</label>
+                {{ form.status }}
+                </div>
 
-            <!-- Conditional Date Fields -->
-            <div id="conditional-dates">
-                <div class="date-field" id="inquiry-date-field" style="display: none;">
-                    <label for="id_inquiry_date">Inquiry Date:</label>
-                    <input type="date" id="id_inquiry_date" name="inquiry_date">
-                </div>
-                <div class="date-field" id="registration-date-field" style="display: none;">
-                    <label for="id_registration_date">Registration Date:</label>
-                    <input type="date" id="id_registration_date" name="registration_date">
-                </div>
-                <div class="date-field" id="admission-test-date-field" style="display: none;">
-                    <label for="id_admission_test_date">Admission Test Date:</label>
-                    <input type="date" id="id_admission_test_date" name="admission_test_date">
-                </div>
-                <div class="date-field" id="admission-offered-date-field" style="display: none;">
-                    <label for="id_admission_offered_date">Admission Offered Date:</label>
-                    <input type="date" id="id_admission_offered_date" name="admission_offered_date">
-                </div>
-                <div class="date-field" id="admission-confirmed-date-field" style="display: none;">
-                    <label for="id_admission_confirmed_date">Admission Confirmed Date:</label>
-                    <input type="date" id="id_admission_confirmed_date" name="admission_confirmed_date">
-                </div>
-                <div class="date-field" id="rejected-date-field" style="display: none;">
-                    <label for="id_rejected_date">Rejected Date:</label>
-                    <input type="date" id="id_rejected_date" name="rejected_date">
+                <!-- Conditional Date Fields -->
+                <div id="conditional-dates">
+                    <div class="date-field" id="inquiry-date-field" style="display: none;">
+                        <label for="id_inquiry_date">Inquiry Date:</label>
+                        <div class="date-container">
+                            <input type="date" id="id_inquiry_date" name="inquiry_date">
+                        </div>
+                    </div>
+                    <div class="date-field" id="registration-date-field" style="display: none;">
+                        <label for="id_registration_date">Registration Date:</label>
+                        <input type="date" id="id_registration_date" name="registration_date">
+                    </div>
+                    <div class="date-field" id="admission-test-date-field" style="display: none;">
+                        <label for="id_admission_test_date">Admission Test Date:</label>
+                        <input type="date" id="id_admission_test_date" name="admission_test_date">
+                    </div>
+                    <div class="date-field" id="admission-offered-date-field" style="display: none;">
+                        <label for="id_admission_offered_date">Admission Offered Date:</label>
+                        <input type="date" id="id_admission_offered_date" name="admission_offered_date">
+                    </div>
+                    <div class="date-field" id="admission-confirmed-date-field" style="display: none;">
+                        <label for="id_admission_confirmed_date">Admission Confirmed Date:</label>
+                        <input type="date" id="id_admission_confirmed_date" name="admission_confirmed_date">
+                    </div>
+                    <div class="date-field" id="rejected-date-field" style="display: none;">
+                        <label for="id_rejected_date">Rejected Date:</label>
+                        <input type="date" id="id_rejected_date" name="rejected_date">
+                    </div>
                 </div>
             </div>
 
@@ -107,7 +113,7 @@
                 if (dateFieldMapping[selectedStatus]) {
                     const relevantField = document.getElementById(dateFieldMapping[selectedStatus]);
                     if (relevantField) {
-                        relevantField.style.display = "block";
+                        relevantField.style.display = "block";                                                           
                     }
                 }
             }
@@ -136,7 +142,9 @@
             background-color: white;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
+        }   
+        
+        
 
         h1 {
             text-align: center;
@@ -194,6 +202,34 @@
 
         .btn-back:hover {
             text-decoration: underline;
+        }
+
+        .same_row_wrapper {
+            display: flex;
+            flex-direction: row;          
+            gap: 20px;
+            align-items: center; 
+            justify-content: space-between;         
+        }
+
+        /* Applies to all direct children (*) of .same_row_wrapper
+        Makes each child element take up an equal share of the available space inside the flex container. 
+        */
+        .same_row_wrapper > * {       
+            flex: 1;            
+        }      
+
+        .date-container {
+            display: inline-block;
+            width: 80%;
+        }
+
+
+        @media screen and (max-width: 480px) {
+           
+            .same_row_wrapper {
+                display: block;
+            }
         }
     </style>
 </body>

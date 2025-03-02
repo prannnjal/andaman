@@ -267,11 +267,11 @@
             // Handle Panchayat Dropdown Change
             panchayatDropdown.change(function() {
                 if ($(this).val() === "Other") {
-                    manualPanchayatField.show();
+                    manualPanchayatField.show();                
                     manualPanchayatInput.prop('required', true);
                 }
                 else {
-                    manualPanchayatField.hide();
+                    manualPanchayatField.hide();                
                     manualPanchayatInput.prop('required', false);
                 }
             });

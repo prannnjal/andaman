@@ -35,17 +35,18 @@
             margin: 20px 0;
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);            
         }
 
         th, td {
             padding: 15px 20px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            border: 1px solid #05050557;
         }
 
         th {
-            background-color: #007bff;
+            background-color: #007bffba;
             color: white;
             font-weight: bold;
             text-transform: none; /* Removed uppercase transformation */
@@ -77,7 +78,7 @@
 
             th, td {
                 padding: 10px;
-                font-size: 14px;
+                font-size: 14px;                
             }
 
             th {
@@ -118,7 +119,56 @@
             margin-top: 30px;
             text-align: center;
         }
+
+        .navigation a {          
+            font-size: 20px; 
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        /* 
+        1) th.asc: This means select any <th> element that has the class asc.
+        2)  .sort-icon: targets element with class = "sort_icon" anywhere inside th.asc
+        3) ::after means add content after this .sort-icon element
+        */
+        th {
+            text-align: center; /* Centers text inside the <th> */
+            min-width: 70px;            
+        }
+
+        th a {
+            display: flex; 
+            flex-direction: row; /* Stack "Name" and the icon vertically */
+            align-items: center; /* Center horizontally */
+            justify-content: start;
+            gap: 5px;
+            color: white;            
+            text-decoration: none; /* Remove underline from the link */
+        }
+        
+
+        th.asc .sort-icon::after {
+            content: "\25B2"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0566ceba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;            
+        }
+        
+        th.desc .sort-icon::after {
+            content: "\25BC"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0566ceba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;            
+        }
+        
+
     </style>
+
+    
 </head>
 
 <body>
@@ -127,25 +177,81 @@
 
         <!-- Wrapper for Table (for mobile responsiveness) -->
         <div class="table-wrapper">
-            <table>
+            <table id="agentTable">
                 <thead>
                     <tr>
-                        <th>Agent</th>
-                        <th>Total Leads</th>
-                        <th>Leads in Inquiry Status</th>
-                        <th>Leads Converted to Registration</th>
-                        <th>Leads Converted to Admission Test</th>
-                        <th>Leads Converted to Admission Offered</th>
-                        <th>Leads Converted to Admission Confirmed</th>
-                        <th>Leads Lost</th>
-                        <th>Conversion Rate (%)</th>                    
-                        <th>Average Time to Conversion (days)</th>               
+                        <th class="{% if sort_column == '1' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '1' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=1">Name
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '2' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '2' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=2">Email
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '3' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '3' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=3">Total Leads
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '4' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '4' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=4">Leads in Inquiry Status
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '5' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '5' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=5">Leads Converted to Registration
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '6' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '6' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=6">Leads Converted to Admission Test
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+                        
+                        <th class="{% if sort_column == '7' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '7' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=7">Leads Converted to Admission Offered
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '8' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '8' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=8">Leads Converted to Admission Confirmed
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '9' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '9' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=9">Leads Lost
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>
+
+                        <th class="{% if sort_column == '10' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '10' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=10">Conversion Rate (%)
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>   
+                        
+                        <th class="{% if sort_column == '11' %}{{sort_order}}{% endif %}">
+                            <a href="?sort_order={% if sort_column == '11' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=11">Average Time to Conversion (days)
+                                <span class="sort-icon"></span>
+                            </a>                            
+                        </th>                                
                     </tr>
                 </thead>
                 <tbody>
                     {% for agent in agent_data %}
                     <tr class="{% if forloop.first %}highlight{% endif %}">
                         <td>{{ agent.agent.name }}</td>
+                        <td>{{ agent.agent.user.email }}</td>
                         <td>{{ agent.total_leads }}</td>
                         <td>{{ agent.leads_inquiry }}</td>
                         <td>{{ agent.leads_to_registration }}</td>
@@ -165,7 +271,11 @@
         <div class="navigation">
             <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
         </div>
+       
     </div>
+
+        
+        
 </body>
 
 </html>

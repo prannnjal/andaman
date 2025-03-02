@@ -5,6 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remove Lead</title>
+
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
     <style>
         /* General Styling */
         body {
@@ -23,10 +33,34 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
+        .select2-selection {            
+            font-size: 16px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            background-color: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+        
+        /* Style the Select2 search input */
+        .select2-search__field {    
+            font-size: 14px;
+            padding: 6px !important;      
+            border: 1px solid #999 !important;
+            border-radius: 4px; /* Rounded corners */
+            outline: none;
+        }
+
+        .select2-search__field::placeholder {
+            color: #d03636; /* Placeholder text color */
+            font-style: italic;
+        }
+
         h1 {
             text-align: center;
             color: #333;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         form {
@@ -38,14 +72,18 @@
         label {
             font-weight: bold;
             color: #555;
+            margin-bottom: 0px;
         }
 
         select {
             width: 100%;
-            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 14px;
+            font-size: 14px;          
+        }
+
+        .remove_lead_form{
+            overflow-x: hidden;
         }
 
         button {
@@ -75,7 +113,25 @@
         .navigation {
             margin-top: 30px;
             text-align: center;
+        }    
+        
+        .remove-lead-btn{
+            max-width: 170px;
+            display: block;
+            margin: auto;
+            margin: 10px auto 20px auto;
+            background-color: #ff2600;
+            color: white;
+            border: none;
+            padding: 9px 13px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
+        
+        
     </style>
 </head>
 
@@ -93,7 +149,7 @@
         {% endif %}
 
         <!-- Form for Removing Lead -->
-        <form method="POST">
+        <form class="remove_lead_form" method="POST">
             {% csrf_token %}
 
             <!-- Agent Dropdown -->
@@ -101,7 +157,9 @@
             <select id="agent" name="agent" onchange="showLeads(this.value)">
                 <option value="">--Select Agent--</option>
                 {% for agent in agents %}
-                <option value="{{ agent.id }}">{{ agent.name }}</option>
+                <option value="{{ agent.id }}">
+                    Id: {{ agent.id }} - Name: {{ agent.name }} - Email: {{ agent.user.email }}
+                </option>
                 {% endfor %}
             </select>
 
@@ -113,7 +171,10 @@
                     <select id="lead-{{ agent.id }}" name="lead_id" disabled>
                         <option value="">--Select Lead--</option>
                         {% for lead in agent.lead_set.all %}
-                        <option value="{{ lead.id }}">{{ lead.student_name }}</option>
+                        <option value="{{ lead.id }}">
+                            Id: {{ lead.id }} - 
+                        Email: {{ lead.email }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -121,7 +182,7 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit">Remove Lead</button>
+            <button class="remove-lead-btn" type="submit">Remove Lead</button>
         </form>
     </div>
 
@@ -129,6 +190,30 @@
     <div class="navigation">
         <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
     </div>
+
+
+    <script>
+        // Initialize Select2 for dropdowns
+        $(document).ready(function () {
+            $('#agent').select2({
+                placeholder: "Select an option",                
+            });
+        
+            /* When Select2 dropdown opens, set a placeholder for the search input. 
+
+            select2:open → This event fires whenever a Select2 dropdown is opened.
+
+            $('.select2-search__field') → Selects the search input inside the Select2 dropdown.
+
+            .attr('placeholder', 'Search here...') → Sets the placeholder text to "Search here..." inside the search input.
+            */
+
+            $(document).on('select2:open', function () {              
+                    $('.select2-search__field').attr('placeholder', 'Search here...');
+            });
+        });
+        
+    </script>
 
     <script>
         function showLeads(agentId) {
@@ -146,10 +231,24 @@
                     selectedDiv.style.display = 'block';
                     const select = selectedDiv.querySelector('select');
                     if (select) select.disabled = false;
+
+                    const label = selectedDiv.querySelector('label');
+                    if (label) {
+                        label.style.display = 'block'; // This will display the label       
+                        label.style.marginBottom = '15px';                 
+                    }
                 }
-            }
-        }
-    </script>
+
+                const select = selectedDiv.querySelector('select');
+                if (select) select.disabled = false;
+
+                // Initialize Select2 for the lead dropdown for the selected agentId
+                $(select).select2({
+                    placeholder: "Select an option",
+                });
+            }                                       
+        }        
+    </script>    
 </body>
 
 </html>

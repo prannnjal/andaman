@@ -29,7 +29,7 @@
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f4f7fc;
+            background-color: #ffffff;
             color: #333;
             display: flex;
             flex-direction: column;
@@ -40,16 +40,16 @@
             text-align: center;
             color: #333;
             font-size: 28px;
-            margin-bottom: 20px;
+            margin: 20px 10px 40px 10px;
         }
 
         .form-container {
             width: 100%;
-            max-width: 600px;
-            background: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            padding: 20px;
+            max-width: 700px;
+            background: rgb(255, 255, 255);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 8px;            
+            padding: 25px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -57,7 +57,7 @@
 
         /* Form Styling */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 24px;
             display: flex;
             flex-direction: column;
         }
@@ -81,11 +81,6 @@
         select:focus {
             border-color: #007bff;
             outline: none;
-        }
-
-        /* Select2 Specific Styling */
-        .select2-container {
-            width: 100% !important;
         }
 
         .select2-selection {            
@@ -136,16 +131,13 @@
         
         /* Centering the button */
         .center-btn {
-            text-align: center;  /* Centers inline elements inside */
-            margin-top: 20px;  /* Adds spacing */
+            text-align: center;  /* Centers inline elements inside */           
         }
         
 
         /* Responsive Styles */
         @media screen and (max-width: 768px) {
-            .form-container {
-                padding: 15px;
-            }
+           
 
             h2 {
                 font-size: 24px;
@@ -168,9 +160,7 @@
         }
 
         @media screen and (max-width: 480px) {
-            .form-container {
-                padding: 10px;
-            }
+           
 
             h2 {
                 font-size: 22px;
@@ -190,6 +180,41 @@
                 font-size: 14px;
             }
         }
+
+        /* Style the Select2 search input */
+        .select2-search__field {    
+            font-size: 14px;
+            padding: 6px !important;      
+            border: 1px solid #999 !important;
+            border-radius: 4px; /* Rounded corners */
+            outline: none;
+        }
+
+        .select2-search__field::placeholder {
+            color: #d03636; /* Placeholder text color */
+            font-style: italic;
+        }
+
+        .assign-btn{
+            max-width: 170px;
+            display: block;
+            margin: auto;
+            margin: 30px auto 20px auto;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 9px 13px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .assign-lead-form{
+            overflow-x: hidden;
+        }
+
     </style>
 
 </head>
@@ -197,10 +222,10 @@
 <body>
 
 
-    <h2>Assign Lead to Agent</h2>
+    <h2>Assign / Reassign Lead to Agent</h2>
 
     <div class="form-container">
-        <form method="post">
+        <form class="assign-lead-form" method="post">
             {% csrf_token %}
 
             <!-- Select Lead Dropdown -->
@@ -209,9 +234,10 @@
                 <select name="inquiry_id" id="inquiry" required>
                     <option value="" disabled selected>-- Select Lead --</option>
                     {% for inquiry in inquiries %}
-                        <option value="{{ inquiry.id }}">
-                            ({{ inquiry.email }})
-                        </option>
+                    <option value="{{ inquiry.id }}">
+                        Id: {{ inquiry.id }} - 
+                        Email: {{ inquiry.email }}
+                    </option>                    
                     {% endfor %}
                 </select>
             </div>
@@ -223,14 +249,14 @@
                     <option value="" disabled selected>-- Select Agent --</option>
                     {% for agent in agents %}
                         <option value="{{ agent.id }}">
-                            {{ agent.name }} - {{ agent.email }}
+                            Id: {{ agent.id }} - Name: {{ agent.name }} - Email: {{ agent.user.email }}
                         </option>
                     {% endfor %}
                 </select>
             </div>
 
             <!-- Submit Button -->
-            <button type="submit">Assign</button>
+            <button class="assign-btn" type="submit">Assign</button>
         </form>
 
         <!-- Back Link -->
@@ -245,45 +271,23 @@
         // Initialize Select2 for dropdowns
         $(document).ready(function () {
             $('#inquiry, #agent').select2({
-                placeholder: "Select an option",
-                allowClear: true
+                placeholder: "Select an option",                
+            });
+        
+            /* When Select2 dropdown opens, set a placeholder for the search input. 
+
+            select2:open → This event fires whenever a Select2 dropdown is opened.
+
+            $('.select2-search__field') → Selects the search input inside the Select2 dropdown.
+
+            .attr('placeholder', 'Search here...') → Sets the placeholder text to "Search here..." inside the search input.
+            */
+            $(document).on('select2:open', function () {              
+                    $('.select2-search__field').attr('placeholder', 'Search here...');
             });
         });
+        
     </script>
-
-
-    <script>
-        $(document).ready(function () {
-            // Initialize Select2 with proper settings
-            $('#inquiry').select2({
-                placeholder: "Select Lead",
-                allowClear: true,
-                closeOnSelect: false // Keep dropdown open for multiple selection cases
-            });
-    
-            $('#agent').select2({
-                placeholder: "Select Agent",
-                allowClear: true,
-                closeOnSelect: false // Keep dropdown open for multiple selection cases
-            });
-    
-            // Force close Select2 when clicking outside
-            $(document).on('click', function (e) {
-                if (!$(e.target).closest('.select2-container').length) {
-                    $('#inquiry').select2('close');
-                    $('#agent').select2('close');
-                }
-            });
-    
-            // Ensure dropdown closes when an option is selected
-            $('#inquiry, #agent').on('select2:select', function () {
-                $(this).select2('close');
-            });
-        });
-    </script>
-
-    
-    
 
 </body>
 
