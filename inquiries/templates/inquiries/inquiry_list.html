@@ -21,192 +21,308 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     <style>
-      /* General Styling */
-body {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f7fc;
-    color: #333;
-    text-align: center;
-}
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7fc;
+            color: #333;
+            text-align: center;
+        }
 
-h1 {
-    font-size: 32px;
-    margin-bottom: 20px;
-    color: #333;
-}
+        .same_row_wrapper {
+            display: flex;
+            flex-direction: row;          
+            gap: 20px;
+            align-items: center; 
+            justify-content: space-between;   
+            margin: 10px 0 30px 0;               
+        }
 
-/* Modal Styling */
-.modal {
-    display: none; /* Hidden by default */
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
-    padding-top: 60px;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
-}
+        .same_row_wrapper > * {       
+            flex: 1;
+        }
 
-.modal-content {
-    background-color: #fff;
-    margin: 5% auto;
-    padding: 30px;
-    border: 1px solid #ccc;
-    width: 70%; /* Restrict width to make it more compact */
-    max-width: 900px; /* Max width to prevent stretching too much */
-    border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); 
-}
+        @media screen and (max-width: 480px) {          
+            .same_row_wrapper {
+                display: block;
+            }
+        }
 
-/* Close Button */
-.close {
-    color: #aaa;
-    font-size: 32px;
-    font-weight: bold;
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    cursor: pointer;
-}
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #333;
+        }
 
-.close:hover,
-.close:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
+        /* Modal Styling */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
+            padding-top: 60px;
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+        }
 
-/* Title Styling */
-h2 {
-    text-align: center;
-    font-size: 26px;
-    margin-bottom: 20px;
-    color: #333;
-}
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 10px 30px;
+            border: 1px solid #ccc;
+            width: 70vw; /* Restrict width to make it more compact */
+            max-width: 900px; /* Max width to prevent stretching too much */
+            height: 80vh;
+            overflow: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); 
+        }
 
-/* Form Layout (Grid) */
-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Adjust width to make form compact */
-    gap: 15px;
-    width: 100%;
-   
-}
+        /* Close Button */
+        .close {
+            color: #ffffff;
+            font-size: 36px;
+            font-weight: bold;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+        }
 
-label {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 5px;
-    display: block;
-}
-
-/* Input, Select and Date Input Styling */
-input[type="text"],
-select,
-input[type="date"] {
-    padding: 10px;
-    font-size: 16px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-input[type="text"]:focus,
-select:focus,
-input[type="date"]:focus {
-    border-color: #4CAF50;
-    outline: none;
-}
-
-/* Button Styles */
-button[type="submit"] {
-    background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 14px 20px;
-    font-size: 18px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button[type="submit"]:hover {
-    background-color: #0056b3;
-}
-
-/* Reset Link Styles */
-a {
-    display: inline-block;
-    text-align: center;
-    background-color: #f44336;
-    color: white;
-    text-decoration: none;
-    padding: 14px 20px;
-    font-size: 16px;
-    border-radius: 5px;
-
-    transition: background-color 0.3s;
-    margin-top: 10px;
-}
-
-a:hover {
-    background-color: #d32f2f;
-}
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
 
 
 
-/* Apply No-Style to Reset Link if Specified */
-a.no-style {
-    all: unset; /* Resets all styles */
-    color: red;
-    cursor: pointer;
-}
-
-/* Custom Styles for Navigation (if any) */
-.navigation {
-    margin-top: 30px;
-    text-align: center;
-    width: 12rem;
-    margin: auto;
-}
-
-.date-wrapper{
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
+        /* Title Styling */
+        h2 {
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 30px;
+            color: #ff0000;          
+        }
 
 
-/* General Styling for Checkboxes in Manage Modal */
-.checkbox-group {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Grid format for checkboxes */
-    gap: 10px; /* Space between checkboxes */
-    align-items: center; /* Center the checkboxes vertically */
-    margin-top: 10px;
-}
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }
 
-.checkbox-group label {
-    font-size: 16px;
-    color: #333;
-    margin-right: 10px;
-}
+        /* Input, Select and Date Input Styling */
+        input[type="text"],
+        select,
+        input[type="date"] {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-/* Checkbox input styling */
-.checkbox-group input[type="checkbox"] {
-    margin-right: 5px; /* Space between checkbox and label */
-    transform: scale(1.2); /* Make checkboxes slightly larger */
-}
+        input[type="text"]:focus,
+        select:focus,
+        input[type="date"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+
+       
+
+        /* Reset Link Styles */
+        a {
+            text-decoration: none;
+        }
+
+        .update{
+            all: unset; /* Resets all styles */
+            color: green;
+            cursor: pointer;
+        }
+
+        .delete{
+            all: unset; /* Resets all styles */
+            color: red;
+            cursor: pointer;
+        }
 
 
+        /* Apply No-Style to Reset Link if Specified */
+        a.no-style {
+            all: unset; /* Resets all styles */
+            cursor: pointer;
+        }
+
+        /* Custom Styles for Navigation (if any) */
+        .navigation {
+            margin-top: 30px;
+            text-align: center;
+            width: 12rem;
+            margin: auto;
+        }
+
+        .date-wrapper{
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        th{
+            cursor: pointer;
+            text-align: center;
+            min-width: 150px;
+            background-color: #00ffcc63;
+        }
+
+        /* ::after pseudo-element inserts content after the existing content inside the selected element.
+        */
+        th.asc .sort-icon::after {
+            content: "\25B2"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0051ffba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;    
+            display: block;
+            width: 13px;
+            margin: 10px auto;
+        }
+
+        th.desc .sort-icon::after {
+            content: "\25BC"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0051ffba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;    
+            display: block;
+            width: 13px;
+            margin: 10px auto;        
+        }
+
+
+        /* General Styling for Checkboxes in Manage Modal */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Grid format for checkboxes */
+            gap: 10px; /* Space between checkboxes */
+            align-items: center; /* Center the checkboxes vertically */
+            margin-top: 10px;
+        }
+
+        .checkbox-group label {
+            font-size: 16px;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        /* Checkbox input styling */
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 5px; /* Space between checkbox and label */
+            transform: scale(1.2); /* Make checkboxes slightly larger */
+        }
+
+        .btn-back{
+            background-color: #007BFF;
+            margin-top :25px;
+        }
+
+        td, th{
+            border: 1px solid #b3b1b1;
+        }
+
+        #inquiryTable{
+            margin-top: 20px;
+        }
+
+        button {            
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 15px 10px 10px 10px;
+        }
+        .filter{
+            background-color: #ff383c;
+        }
+        .manage{
+            background-color: #2f5ef9e9;
+        }
+        .add-inquiry{
+            background-color: #07a038;
+        }
+        .dashboard{
+            background-color: #2a74ec;
+        }
+        #filter_date{
+            font-size: 18px;
+            font-weight: 600;    
+            color: rgb(100, 100, 100);      
+        }
+    
+
+        .filter_modal_btn{
+            background-color: #2a74ec;
+            padding: 15px;         
+            width: 70px; 
+        }
+
+        .reset_modal_a{          
+            cursor: pointer;
+            background-color: rgb(4, 198, 101);
+            color: white;
+            padding: 15px;
+            width: 70px; 
+            
+        } 
+
+        .reset_modal_a:hover,
+        .reset_modal_a:focus,
+        .reset_modal_a:active {
+            background: rgb(4, 198, 101); /* Prevents hover color change */
+            color: white; /* Prevents text color change */
+            text-decoration: none;
+            outline: none; /* Removes focus outline */
+        }
+
+        .select2-selection {            
+            font-size: 16px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            background-color: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        /* Style the Select2 search input */
+        .select2-search__field {    
+            font-size: 14px;
+            padding: 6px !important;      
+            border: 1px solid #999 !important;
+            border-radius: 4px; /* Rounded corners */
+            outline: none;
+        }
+
+        .select2-search__field::placeholder {
+            color: #d03636; /* Placeholder text color */
+            font-style: italic;
+        }
 
     </style>
 </head>
@@ -215,88 +331,241 @@ a.no-style {
     <h1>Inquiry List</h1>
 
     <!-- Buttons to open modals -->
-    <button onclick="openModal('filterModal')">Open Filters</button>
-    <button onclick="openModal('columnsModal')">Manage Columns</button>
+    <button class="filter" onclick="openModal('filterModal')">Open Filters</button>
+    <button class="manage" onclick="openModal('columnsModal')">Manage Columns</button>
+    <button class="add-inquiry">
+        <a class="no-style" href="{% url 'add_inquiry' %}">Add New Inquiry</a>
+    </button>
+    
+    
 
     <!-- Filters Modal -->
     <div id="filterModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('filterModal')">&times;</span>
             <h2>Filter Inquiries</h2>
-            <form method="get">
-                <!-- Existing Filters -->
-                <input type="text" name="student_name" placeholder="Student Name" value="{{ request.GET.student_name }}">
-                <input type="text" name="mobile_number" placeholder="Mobile Number" value="{{ request.GET.mobile_number }}">
-                
-                <select name="student_class" class="searchable-select" data-placeholder="Select the Class">
-                    <option value="">All Classes</option>
-                    {% for class in student_classes %}
-                    <option value="{{ class }}" {% if request.GET.student_class == class %}selected{% endif %}>{{ class }}</option>
-                    {% endfor %}
-                </select>
-                
-                <select name="inquiry_source" class="searchable-select" data-placeholder="Select the Inquiry Source">
-                    <option value="">All Sources</option>
-                    {% for inquiry_source in inquiry_sources %}
-                    <option value="{{ inquiry_source }}" {% if request.GET.inquiry_source == inquiry_source %}selected{% endif %}>{{ inquiry_source }}</option>
-                    {% endfor %}
-                </select>
-                
-                <!-- New Filters -->
-                <select name="status" class="searchable-select" data-placeholder="Select the Inquiry Status">
-                    <option value="">All Statuses</option>
-                    {% for status in statuses %}
-                    <option value="{{ status }}" {% if request.GET.status == status %}selected{% endif %}>{{ status }}</option>
-                    {% endfor %}
-                </select>
-                
-                <select name="agent" class="searchable-select" data-placeholder="Select the Agent">
-                    <option value="">All Agents</option>
-                    {% for agent in agents %}
-                    <option value="{{ agent.id }}" {% if request.GET.agent == agent.id|stringformat:"s" %}selected{% endif %}>{{ agent.name }}</option>
-                    {% endfor %}
-                </select>
-                             
+            <form method="get">       
+                <div class="same_row_wrapper">
+                    <select name="lead_id" class="searchable-select" data-placeholder="Choose Lead Id">
+                        <option value="">All Ids</option>
+                        {% for id in lead_ids %}
+                        <option value="{{ id }}" {% if request.GET.lead_id == id|stringformat:"s" %}selected{% endif %}>{{ id }}</option>
+                        {% endfor %}
+                    </select>
 
-                <input type="text" name="agent_email" placeholder="Agent Email" value="{{ request.GET.agent_email }}">
-                <input type="text" name="block" placeholder="Block Name" value="{{ request.GET.block }}">
-                <input type="text" name="location_panchayat" placeholder="Location/Panchayat" value="{{ request.GET.location_panchayat }}">
-                <input type="text" name="admin_name" placeholder="Admin Name" value="{{ request.GET.admin_name }}">
-                <input type="text" name="admin_email" placeholder="Admin Email" value="{{ request.GET.admin_email }}">
-                
-                <!-- Date Filters -->
-                <div class="date-wrapper">
-                    <label>Follow-up Date:</label>
-                    <input type="date" name="follow_up_date" value="{{ request.GET.follow_up_date }}">
-                </div>
+                    <select name="student_class" class="searchable-select" data-placeholder="Select the Class">
+                        <option value="">All Classes</option>
+                        {% for class in student_classes %}
+                        <option value="{{ class }}" {% if request.GET.student_class == class %}selected{% endif %}>{{ class }}</option>
+                        {% endfor %}
+                    </select>
+
+                </div>                    
+                <div class="same_row_wrapper">
+                    <select name="student_name" class="searchable-select" data-placeholder="Choose Student Name">
+                        <option value="">All Students</option>
+                        {% for student in students %}
+                        <option value="{{ student }}" {% if request.GET.student_name == student %}selected{% endif %}>{{ student }}</option>
+                        {% endfor %}
+                    </select>
     
-                <div class="date-wrapper">
-                    <label>Inquiry Date:</label>
-                    <input type="date" name="inquiry_date" value="{{ request.GET.inquiry_date }}">
-                </div>
-                
-                <div class="date-wrapper">
-                    <label>Registration Date:</label>
-                    <input type="date" name="registration_date" value="{{ request.GET.registration_date }}">
+                    <select name="parent_name" class="searchable-select" data-placeholder="Choose Parent Name">
+                        <option value="">All Parents</option>
+                        {% for parent in parents %}
+                        <option value="{{ parent }}" {% if request.GET.parent_name == parent %}selected{% endif %}>{{ parent }}</option>
+                        {% endfor %}
+                    </select>                    
                 </div>
 
-                <div class="date-wrapper">
-                    <label>Admission Test Date:</label>
-                    <input type="date" name="admission_test_date" value="{{ request.GET.admission_test_date }}">
+                <div class="same_row_wrapper">
+                    <select name="lead_email" class="searchable-select" data-placeholder="Choose Lead Email">
+                        <option value="">All Leads Email</option>
+                        {% for lead_email in lead_emails %}
+                        <option value="{{ lead_email }}" {% if request.GET.lead_email == lead_email %}selected{% endif %}>{{ lead_email }}</option>
+                        {% endfor %}
+                    </select>
+    
+                    <select name="mobile_number" class="searchable-select" data-placeholder="Choose Mobile Number">
+                        <option value="">All Mobile Numbers</option>
+                        {% for mobile_number in mobile_numbers %}
+                        <option value="{{ mobile_number }}" {% if request.GET.mobile_number == mobile_number %}selected{% endif %}>{{ mobile_number }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
-                <div class="date-wrapper">
-                    <label>Admission Offered Date:</label>
-                    <input type="date" name="admission_offered_date" value="{{ request.GET.admission_offered_date }}">
+                <div class="same_row_wrapper">
+                    <select name="block" class="searchable-select" data-placeholder="Select the Block">
+                        <option value="">All Blocks</option>
+                        {% for block in blocks %}
+                        <option value="{{ block }}" {% if request.GET.block == block %}selected{% endif %}>{{ block }}</option>
+                        {% endfor %}
+                    </select>
+    
+                    <select name="location_panchayat" class="searchable-select" data-placeholder="Select the Location/Panchayat">
+                        <option value="">All Locations</option>
+                        {% for location in location_panchayats %}
+                        <option value="{{ location }}" {% if request.GET.location_panchayat == location %}selected{% endif %}>{{ location }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
-                
-                <div class="date-wrapper">
-                    <label>Admission Confirmed Date:</label>
-                    <input type="date" name="admission_confirmed_date" value="{{ request.GET.admission_confirmed_date }}">
+
+                <div class="same_row_wrapper">                                        
+                    <select name="inquiry_source" class="searchable-select" data-placeholder="Select the Inquiry Source">
+                        <option value="">All Sources</option>
+                        {% for inquiry_source in inquiry_sources %}
+                        <option value="{{ inquiry_source }}" {% if request.GET.inquiry_source == inquiry_source %}selected{% endif %}>{{ inquiry_source }}</option>
+                        {% endfor %}
+                    </select>     
+                    
+                    <select name="status" class="searchable-select" data-placeholder="Select the Inquiry Status">
+                        <option value="">All Statuses</option>
+                        {% for status in statuses %}
+                        <option value="{{ status }}" {% if request.GET.status == status %}selected{% endif %}>{{ status }}</option>
+                        {% endfor %}
+                    </select>
+                    
                 </div>
+
+                <div class="same_row_wrapper">                                                           
+                    <select name="agent_id" class="searchable-select" data-placeholder="Select the Agent">
+                        <option value="">All Agents</option>
+                        {% for agent in agents %}
+                        <option value="{{ agent.id }}" {% if request.GET.agent_id == agent.id|stringformat:"s" %}selected{% endif %}>#{{ agent.id }} {{agent.name}}: {{agent.user.email}}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="admin_id" class="searchable-select" data-placeholder="Select the Admin">
+                        <option value="">All Admins</option>
+                        {% for admin in admins %}
+                        <option value="{{ admin.id }}" {% if request.GET.admin_id == admin.id|stringformat:"s" %}selected{% endif %}>#{{admin.id}} {{admin.name}}: {{admin.email}}</option>
+                        {% endfor %}
+                    </select>    
+                </div>
+
+              
+                    
+                                                                                                                                      
+                <!-- Date Filters -->
+                <div>
+                    <span id="filter_date">Select Inquiry Date</span>
+
+                    <div class="same_row_wrapper">
+                        <div class="date-wrapper">
+                            <label>From:</label>
+                            <input type="date" name="inquiry_date_from" value="{{ request.GET.inquiry_date_from }}">
+                        </div>
+    
+                        <div class="date-wrapper">
+                            <label>To:</label>
+                            <input type="date" name="inquiry_date_to" value="{{ request.GET.inquiry_date_to }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <span id="filter_date">Select Registration Date</span>
+
+                    <div class="same_row_wrapper">
+                        <div class="date-wrapper">
+                            <label>From:</label>
+                            <input type="date" name="registration_date_from" value="{{ request.GET.registration_date_from }}">
+                        </div>
+    
+                        <div class="date-wrapper">
+                            <label>To:</label>
+                            <input type="date" name="registration_date_to" value="{{ request.GET.registration_date_to }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <span id="filter_date">Select Admission Test Date</span>
+
+                    <div class="same_row_wrapper">
+                        <div class="date-wrapper">
+                            <label>From:</label>
+                            <input type="date" name="admission_test_date_from" value="{{ request.GET.admission_test_date_from }}">
+                        </div>
+    
+                        <div class="date-wrapper">
+                            <label>To:</label>
+                            <input type="date" name="admission_test_date_to" value="{{ request.GET.admission_test_date_to }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <span id="filter_date">Select Admission Offered Date</span>
+
+                    <div class="same_row_wrapper">
+                        <div class="date-wrapper">
+                            <label>From:</label>
+                            <input type="date" name="admission_offered_date_from" value="{{ request.GET.admission_offered_date_from }}">
+                        </div>
+    
+                        <div class="date-wrapper">
+                            <label>To:</label>
+                            <input type="date" name="admission_offered_date_to" value="{{ request.GET.admission_offered_date_to }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <span id="filter_date">Select Admission Confirmed Date</span>
+
+                    <div class="same_row_wrapper">
+                        <div class="date-wrapper">
+                            <label>From:</label>
+                            <input type="date" name="admission_confirmed_date_from" value="{{ request.GET.admission_confirmed_date_from }}">
+                        </div>
+    
+                        <div class="date-wrapper">
+                            <label>To:</label>
+                            <input type="date" name="admission_confirmed_date_to" value="{{ request.GET.admission_confirmed_date_to }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <span id="filter_date">Select Rejected Date</span>
+
+                    <div class="same_row_wrapper">
+                        <div class="date-wrapper">
+                            <label>From:</label>
+                            <input type="date" name="rejected_date_from" value="{{ request.GET.rejected_date_from }}">
+                        </div>
+    
+                        <div class="date-wrapper">
+                            <label>To:</label>
+                            <input type="date" name="rejected_date_to" value="{{ request.GET.rejected_date_to }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <span id="filter_date">Select Follow-up Date</span>
+
+                    <div class="same_row_wrapper">
+                        <div class="date-wrapper">
+                            <label>From:</label>
+                            <input type="date" name="follow_up_date_from" value="{{ request.GET.follow_up_date_from }}">
+                        </div>
+    
+                        <div class="date-wrapper">
+                            <label>To:</label>
+                            <input type="date" name="follow_up_date_to" value="{{ request.GET.follow_up_date_to }}">
+                        </div>
+                    </div>
+                </div>
+
+                                               
                 <!-- Submit and Reset -->
-                <button type="submit">Filter</button>
-                <a href="{% url 'inquiry_list' %}">Reset</a>
+                <button type="submit" class="filter_modal_btn">Filter</button>
+                
+                <a class="reset_modal_a" href="{% url 'inquiry_list' %}">
+                   Reset
+                </a>
+             
             </form>
         </div>
     </div>
@@ -307,7 +576,7 @@ a.no-style {
     <div id="columnsModal" class="modal" style="overflow-x: auto; max-width: 90%;">
         <div class="modal-content">
             <span class="close" onclick="closeModal('columnsModal')">&times;</span>
-            <h2>Manage Columns</h2>
+            <h2>View/Hide Columns</h2>
             <div class="checkbox-group">
                 <label><input type="checkbox" class="filter-checkbox" data-column="0" checked> Student Name</label>
                 <label><input type="checkbox" class="filter-checkbox" data-column="1" checked> Lead Email</label>
@@ -324,40 +593,101 @@ a.no-style {
                 <label><input type="checkbox" class="filter-checkbox" data-column="16" checked> Location/Panchayat</label>               
                 <label><input type="checkbox" class="filter-checkbox" data-column="13" checked> Admin Email</label>
                 <label><input type="checkbox" class="filter-checkbox" data-column="14" checked> Actions</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="15" checked> Delete</label>
             </div>
             <button id="SelectAllButton">Check All</button>
             <button id="UnSelectAllButton">Uncheck All</button>
         </div>
     </div>
 
-    <a href="{% url 'add_inquiry' %}">Add New Inquiry</a>
+    
     
     <div style="overflow-x: auto; max-width: 100%;">
     <table id="inquiryTable">
         <thead>
             <tr>
-                <th onclick="sortColumn(0)">Student Name <button class="sort-btn none" data-column="0"></button></th>
-                <th onclick="sortColumn(1)">Lead Email <button class="sort-btn none" data-column="1"></button></th>
-                <th onclick="sortColumn(2)">Parent Name <button class="sort-btn none" data-column="2"></button></th>
-                <th onclick="sortColumn(3)">Mobile Number <button class="sort-btn none" data-column="3"></button></th>
-                <th onclick="sortColumn(4)">Address <button class="sort-btn none" data-column="4"></button></th>
-                <th onclick="sortColumn(5)">Inquiry Source <button class="sort-btn none" data-column="5"></button></th>
-                <th onclick="sortColumn(6)">Student Class <button class="sort-btn none" data-column="6"></button></th>
-                <th onclick="sortColumn(7)">Follow-up Date <button class="sort-btn none" data-column="7"></button></th>
-                <th onclick="sortColumn(8)">Status <button class="sort-btn none" data-column="8"></button></th>
-                <th onclick="sortColumn(9)">Agent <button class="sort-btn none" data-column="9"></button></th>
-                <th onclick="sortColumn(10)">Agent Email <button class="sort-btn none" data-column="10"></button></th>
-                <th onclick="sortColumn(11)">Block <button class="sort-btn none" data-column="11"></button></th>
-                <th onclick="sortColumn(12)">Location/Panchayat <button class="sort-btn none" data-column="12"></button></th>               
-                <th onclick="sortColumn(14)">Admin Email <button class="sort-btn none" data-column="14"></button></th>
-                <th>Actions</th>
-                <th>Delete</th>
+                <th id="lead_id" onclick="sortColumn(event,0)">
+                    Lead Id
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="student_name" onclick="sortColumn(event,1)">
+                    Student Name
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="email" onclick="sortColumn(event,2)">
+                    Lead Email
+                    <span class="sort-icon"></span>
+                </th>     
+                
+                <th id="parent_name" onclick="sortColumn(event,3)">
+                    Parent Name
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="mobile_number" onclick="sortColumn(event,4)">
+                    Mobile Number
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="address" onclick="sortColumn(event,5)">
+                    Address
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="inquiry_source" onclick="sortColumn(event,6)">
+                    Inquiry Source
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="student_class" onclick="sortColumn(event,7)">
+                    Student Class 
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="follow_up_date" onclick="sortColumn(event,8)">
+                    Follow-up Date 
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="status" onclick="sortColumn(event,9)">
+                    Status
+                    <span class="sort-icon"></span>
+                </th>
+          
+                <th id="assigned_agent.name" onclick="sortColumn(event,10)">
+                    Agent
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="assigned_agent.user.email" onclick="sortColumn(event,11)">
+                    Agent Email
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="block" onclick="sortColumn(event,12)">
+                    Block
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="location_panchayat" onclick="sortColumn(event,13)">
+                    Location/Panchayat
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="admin_assigned.email" onclick="sortColumn(event,14)">
+                    Admin Email
+                    <span class="sort-icon"></span>
+                </th>
+                                                             
+                <th style="cursor: default">Actions</th>
+
             </tr>
         </thead>
         <tbody>
             {% for inquiry in inquiries %}
             <tr>
+                <td>{{ inquiry.id }}</td>
                 <td>{{ inquiry.student_name }}</td>
                 <td>{{ inquiry.email }}</td>
                 <td>{{ inquiry.parent_name }}</td>
@@ -372,12 +702,14 @@ a.no-style {
                 <td>{{ inquiry.block|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->
                 <td>{{ inquiry.location_panchayat|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->                
                 <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>
-                <td>
-                    <a class="no-style" href="{% url 'update_status' inquiry.id %}">Manage</a>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap:25px; justify-content: center;">
+                        <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
+
+                        <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>
+                    </div>
                 </td>
-                <td>
-                    <a class="no-style" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>
-                </td>
+                       
             </tr>
             {% empty %}
             <tr>
@@ -390,11 +722,10 @@ a.no-style {
 </div>
 
 
-    <!-- Navigation Link -->
-    <div class="navigation">
-        <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
-    </div>
-
+    <!--Dashboard Link -->
+     <button class="dashboard">
+        <a href="{% url 'dashboard' %}" class="no-style">Back to Dashboard</a>
+     </button>
     
 
     <!-- Modal Scripts -->
@@ -423,18 +754,39 @@ a.no-style {
         });
 
        // Apply Select2 to all searchable select elements with custom placeholders
-$(document).ready(function() {
-    $('.searchable-select').each(function() {
-        var placeholderText = $(this).data('placeholder');
-        $(this).select2({
-            placeholder: placeholderText,
-            allowClear: true
+        $(document).ready(function() {
+            $('.searchable-select').each(function() {
+                var placeholderText = $(this).data('placeholder');
+                $(this).select2({
+                    placeholder: placeholderText,
+                    allowClear: true
+                });
+            });
         });
-    });
-});
+
+        
+        let curr_th_element = document.getElementById("student_name")
+        curr_th_element.classList.add("asc")
 
         // Sorting function
-        function sortColumn(columnIndex) {
+        function sortColumn(event, columnIndex) {
+            let new_th_element = event.target.closest('th')
+          
+            if(new_th_element.id == curr_th_element.id && new_th_element.classList.contains("asc")){
+                new_th_element.classList.remove('asc')
+                new_th_element.classList.add("desc")
+            }
+            else if(new_th_element.id == curr_th_element.id && new_th_element.classList.contains("desc")){
+                new_th_element.classList.remove('desc')
+                new_th_element.classList.add("asc")
+            }
+            else{
+                curr_th_element.classList.remove('asc')
+                curr_th_element.classList.remove('desc')
+                curr_th_element = new_th_element
+                new_th_element.classList.add("asc")
+            }
+
             var table = document.getElementById("inquiryTable");
             var rows = table.rows;
             var switching = true;
@@ -463,14 +815,18 @@ $(document).ready(function() {
                     rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                     switching = true;
                     switchcount++;
-                } else {
+                } 
+                else {
                     if (switchcount === 0 && dir === "asc") {
                         dir = "desc";
                         switching = true;
                     }
-                }
+                }            
             }
         }
+
+        
+
     </script>
 
     <script>
@@ -492,6 +848,29 @@ $(document).ready(function() {
         });
         
     </script>
+
+    <script>
+        // Initialize Select2 for dropdowns
+        $(document).ready(function () {
+            $('.searchable-select').select2({
+                placeholder: "Select an option",                
+            });
+        
+            /* When Select2 dropdown opens, set a placeholder for the search input. 
+
+            select2:open → This event fires whenever a Select2 dropdown is opened.
+
+            $('.select2-search__field') → Selects the search input inside the Select2 dropdown.
+
+            .attr('placeholder', 'Search here...') → Sets the placeholder text to "Search here..." inside the search input.
+            */
+            $(document).on('select2:open', function () {              
+                    $('.select2-search__field').attr('placeholder', 'Search here...');
+            });
+        });
+        
+    </script>
+
     
 </body>
 </html>

@@ -84,20 +84,22 @@ class Lead(models.Model):
     mobile_number = models.CharField(max_length=15)
     email = models.EmailField(max_length=100, blank=True, null=True)
     # no need to enforce unique constraint because the same person can ask more than 1 inquiries for his multiple children
-    address = models.TextField()    
+    address = models.TextField(null=True, blank=True)    
     block = models.CharField(choices=BLOCK_CHOICES, max_length=100, blank=False, null=False)
     location_panchayat = models.CharField(max_length=100, blank=False, null=False)
     inquiry_source = models.CharField(choices = INQUIRY_CHOICES, max_length=100)  # e.g., Advertisement, Walk-in, Online
     student_class = models.CharField(choices=STUDENT_CHOICES, max_length=10)
     status = models.CharField(choices=STATUS_CHOICES, max_length=100, default='Inquiry')  # Inquiry, Follow-up, Visit, etc.    
     remarks = models.TextField(blank=True, null=True)
-    inquiry_date = models.DateField(null=True, blank=True)
-    follow_up_date = models.DateField(null=True, blank=True)
+    
+    inquiry_date = models.DateField(null=True, blank=True)    
     registration_date = models.DateField(null=True, blank=True)
     admission_test_date = models.DateField(null=True, blank=True)
     admission_offered_date = models.DateField(null=True, blank=True)
     admission_confirmed_date = models.DateField(null=True, blank=True)
     rejected_date = models.DateField(null=True, blank=True)
+    follow_up_date = models.DateField(null=True, blank=True)
+    
     assigned_agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True)
     admin_assigned = models.ForeignKey(
         CustomUser,  # Refers to our Custom-User model

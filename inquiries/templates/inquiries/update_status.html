@@ -7,12 +7,21 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Status</title>
+    <title>Update Lead Status</title>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- jQuery (required for Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 </head>
 
 <body>
     <div class="container">
-        <h1>Update Status for {{ inquiry.student_name }} (Id = {{inquiry.id}}) </h1>
+        <h1>Update Lead</h1>
+        <h2>Name: {{ inquiry.student_name }}, Id = {{inquiry.id}}</h2>
 
         <!-- Display Follow-up Form -->
         <form method="POST" class="follow-up-form" id="followUpForm">
@@ -30,9 +39,7 @@
                 <div id="conditional-dates">
                     <div class="date-field" id="inquiry-date-field" style="display: none;">
                         <label for="id_inquiry_date">Inquiry Date:</label>
-                        <div class="date-container">
-                            <input type="date" id="id_inquiry_date" name="inquiry_date">
-                        </div>
+                        <input type="date" id="id_inquiry_date" name="inquiry_date">
                     </div>
                     <div class="date-field" id="registration-date-field" style="display: none;">
                         <label for="id_registration_date">Registration Date:</label>
@@ -71,7 +78,7 @@
 
             <div id="follow_up-date-field">
                 <label for="id_follow_up_date">Next Follow-up Date:</label>
-                <input type="date" id="id_follow_up_date" name="follow_up_date">
+                <input type="date" id="id_follow_up_date" name="follow_up_date" value="{{ inquiry.follow_up_date|date:'Y-m-d' }}">
             </div>
 
             <!-- Submit Button -->
@@ -91,8 +98,8 @@
 
             // Map of status values to corresponding date field IDs
             const dateFieldMapping = {
-                Inquiry: "inquiry-date-field",
-                Registration: "registration-date-field",
+                "Inquiry": "inquiry-date-field",
+                "Registration": "registration-date-field",
                 "Admission Test": "admission-test-date-field",
                 "Admission Offered": "admission-offered-date-field",
                 "Admission Confirmed": "admission-confirmed-date-field",
@@ -113,7 +120,34 @@
                 if (dateFieldMapping[selectedStatus]) {
                     const relevantField = document.getElementById(dateFieldMapping[selectedStatus]);
                     if (relevantField) {
-                        relevantField.style.display = "block";                                                           
+                        relevantField.style.display = "block";
+
+                        const inputElement = relevantField.querySelector('input');                        
+
+                        if (inputElement) {
+                            
+                            if(dateFieldMapping[selectedStatus] == "inquiry-date-field"){                               
+                                date_val = "{{ inquiry.inquiry_date|date:'Y-m-d' }}"
+                            }
+                            else if(dateFieldMapping[selectedStatus] == "registration-date-field"){
+                                date_val = "{{ inquiry.registration_date|date:'Y-m-d' }}"
+                            }
+                            else if(dateFieldMapping[selectedStatus] == "admission-test-date-field"){
+                                date_val = "{{ inquiry.admission_test_date|date:'Y-m-d' }}"
+                            }
+                            else if(dateFieldMapping[selectedStatus] == "admission-offered-date-field"){
+                                date_val = "{{ inquiry.admission_offered_date|date:'Y-m-d' }}"
+                            }
+                            else if(dateFieldMapping[selectedStatus] == "admission-confirmed-date-field"){
+                                date_val = "{{ inquiry.admission_confirmed_date|date:'Y-m-d' }}"
+                            }
+                            else{
+                                date_val = "{{ inquiry.rejected_date|date:'Y-m-d' }}"
+                            }
+
+                            // Set the value of the input element
+                            inputElement.value = date_val; // Pass the value to the input field
+                        }                                                                             
                     }
                 }
             }
@@ -126,8 +160,49 @@
         });
     </script>
 
+    <script>
+        // Initialize Select2 for dropdowns
+        $(document).ready(function () {
+            $('#id_assigned_agent').select2({
+                placeholder: "{{ inquiry.assigned_agent }}",                
+            });
+
+            $('#id_admin_assigned').select2({
+                placeholder: "{{ inquiry.admin_assigned }}",                
+            });
+
+        
+            /* When Select2 dropdown opens, set a placeholder for the search input. 
+
+            select2:open → This event fires whenever a Select2 dropdown is opened.
+
+            $('.select2-search__field') → Selects the search input inside the Select2 dropdown.
+
+            .attr('placeholder', 'Search here...') → Sets the placeholder text to "Search here..." inside the search input.
+            */
+            $(document).on('select2:open', function () {              
+                    $('.select2-search__field').attr('placeholder', 'Search here...');
+            });
+        });
+        
+    </script>
+
     <style>
-        /* General Styling */
+     
+
+        .select2-search__field {    
+            font-size: 14px;
+            padding: 6px !important;      
+            border: 1px solid #999 !important;
+            border-radius: 4px; /* Rounded corners */
+            outline: none;
+        }
+
+        .select2-search__field::placeholder {
+            color: #d03636; /* Placeholder text color */
+            font-style: italic;
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -147,11 +222,17 @@
         
 
         h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
+            color: #018658; /* A dark, professional color */         text-align: center; /* Center the heading */
+            margin-bottom: 10px; /* Add space below the heading */
         }
-
+        
+        /* Style for the sub-heading */
+        h2 {
+            color: #096ccf; /* Slightly lighter color for contrast */
+            text-align: center; /* Center the subheading */
+            margin-top: 10px; /* Add space above the subheading */
+            margin-bottom: 20px; /* Add space below the subheading */
+        }
         /* Form Styling */
         .follow-up-form {
             display: flex;
@@ -167,6 +248,7 @@
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 14px;
+            box-sizing: border-box;
         }
 
         .follow-up-form textarea {
@@ -175,13 +257,17 @@
         }
 
         .btn-submit {
-            background-color: #007BFF;
+            max-width: 200px;
+            margin: 20px auto 0px auto;
+            background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 14px 20px;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 16px; /* Increased font size */
+            font-weight: bold; /* Made font bold */
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         .btn-submit:hover {
@@ -197,7 +283,8 @@
         .btn-back {
             text-decoration: none;
             color: #007BFF;
-            font-size: 14px;
+            font-size: 17px;
+            font-weight: 600;
         }
 
         .btn-back:hover {
@@ -221,15 +308,29 @@
 
         .date-container {
             display: inline-block;
-            width: 80%;
+            width: 100%;
         }
 
+        label{
+            margin: 10px 0 10px 0;
+            display: block;
+            font-weight: 600;
+            color: rgb(105, 99, 99);
+        }
+
+      
 
         @media screen and (max-width: 480px) {
            
             .same_row_wrapper {
-                display: block;
+                display: flex; /* Make sure the container is a flexbox */
+                flex-direction: column; /* Stack child elements vertically */
             }
+            
+            .same_row_wrapper > * {
+                width: 100%; /* Make all child elements take up the full width */
+            }
+            
         }
     </style>
 </body>

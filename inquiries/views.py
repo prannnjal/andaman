@@ -20,6 +20,7 @@ import pandas as pd
 from django.db.models.functions import Coalesce
 from django.db.models import ExpressionWrapper
 from django.db.models import FloatField
+from datetime import datetime
 
 
 
@@ -64,7 +65,20 @@ def agent_login(request):
     return render(request, 'inquiries/agent_login.html')
 
 # ====================================================================================
-
+def Filter_By_Date(inquiries, choice, request_parameter, model_key):
+    if request_parameter: 
+        date_val = datetime.strptime(request_parameter, "%Y-%m-%d").date()
+        
+        if(choice == "from"):
+            inquiries = inquiries.filter(**{f"{model_key}__gte" : date_val})
+        
+        elif(choice == "to"):
+            inquiries = inquiries.filter(**{f"{model_key}__lte" : date_val})
+                                
+    return inquiries
+    
+        
+       
 @login_required
 def inquiry_list(request):
     user = request.user     # request.user returns the currently logged-in user, which is an instance of your CustomUser model (or User if you haven't switched to a custom model).
@@ -78,18 +92,38 @@ def inquiry_list(request):
         inquiries = Lead.objects.none()     # return an empty queryset if the user is neither an admin nor an agent
     
     # Handle filters from the GET request
+    lead_id = request.GET.get('lead_id')
+    if lead_id:
+        inquiries = inquiries.filter(id=int(lead_id))
+        
+    student_class = request.GET.get('student_class')
+    if student_class:
+        inquiries = inquiries.filter(student_class=student_class)
+        
     student_name = request.GET.get('student_name')
     if student_name:
         inquiries = inquiries.filter(student_name__icontains=student_name)  # icontains = Partial match (case insensitive)
+        
+    parent_name = request.GET.get('parent_name')
+    if parent_name:
+        inquiries = inquiries.filter(parent_name__icontains=parent_name)
+        
+    lead_email = request.GET.get('lead_email')
+    if lead_email:
+        inquiries = inquiries.filter(email__icontains=lead_email)
 
     mobile_number = request.GET.get('mobile_number')
     if mobile_number:
         inquiries = inquiries.filter(mobile_number__icontains=mobile_number)
-
-    student_class = request.GET.get('student_class')
-    if student_class:
-        inquiries = inquiries.filter(student_class=student_class)
-
+    
+    block = request.GET.get('block')
+    if block:
+        inquiries = inquiries.filter(block__icontains=block)
+            
+    location_panchayat = request.GET.get('location_panchayat')
+    if location_panchayat:
+        inquiries = inquiries.filter(location_panchayat__icontains=location_panchayat)
+        
     inquiry_source = request.GET.get('inquiry_source')
     if inquiry_source:
         inquiries = inquiries.filter(inquiry_source__icontains=inquiry_source)
@@ -98,67 +132,56 @@ def inquiry_list(request):
     if status:
         inquiries = inquiries.filter(status=status)
 
-    agent = request.GET.get('agent')
-    if agent:
-        inquiries = inquiries.filter(assigned_agent_id=agent)
+    agent_id = request.GET.get('agent_id')
+    if agent_id:
+        inquiries = inquiries.filter(assigned_agent_id=int(agent_id))  
 
-    agent_email = request.GET.get('agent_email')
-    if agent_email:
-        inquiries = inquiries.filter(assigned_agent__user__email__icontains=agent_email)    # we use double underscore(__) to access sub-attribute of a field. Like here we are accessing assigned_agent.user.email
-        
-    location_panchayat = request.GET.get('location_panchayat')
-    if location_panchayat:
-        inquiries = inquiries.filter(location_panchayat__icontains=location_panchayat)
-        
-    block = request.GET.get('block')
-    if block:
-        inquiries = inquiries.filter(block__icontains=block)
-
-    admin_name = request.GET.get('admin_name')
-    if admin_name:
-        inquiries = inquiries.filter(admin_assigned__isnull=False, admin_assigned__username__icontains=admin_name)
-
-    admin_email = request.GET.get('admin_email')
-    if admin_email:
-        inquiries = inquiries.filter(admin_assigned__isnull=False,admin_assigned__email__icontains=admin_email)
-        
-    follow_up_date = request.GET.get('follow_up_date')
-    if follow_up_date:
-        inquiries = inquiries.filter(follow_up_date=follow_up_date)
-
-    inquiry_date = request.GET.get('inquiry_date')
-    if inquiry_date:
-        inquiries = inquiries.filter(inquiry_date=inquiry_date)
-
-    registration_date = request.GET.get('registration_date')
-    if registration_date:
-        inquiries = inquiries.filter(registration_date=registration_date)
-
-    admission_test_date = request.GET.get('admission_test_date')
-    if admission_test_date:
-        inquiries = inquiries.filter(admission_test_date=admission_test_date)
-
-    admission_offered_date = request.GET.get('admission_offered_date')
-    if admission_offered_date:
-        inquiries = inquiries.filter(admission_offered_date=admission_offered_date)
-
-    admission_confirmed_date = request.GET.get('admission_confirmed_date')
-    if admission_confirmed_date:
-        inquiries = inquiries.filter(admission_confirmed_date=admission_confirmed_date)
-
+    admin_id = request.GET.get('admin_id')
+    if admin_id:
+        inquiries = inquiries.filter(admin_assigned__isnull=False,admin_assigned__id = admin_id)
+# ======================= Filtering via dates ========================                  
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('inquiry_date_from'), 'inquiry_date')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('inquiry_date_to'), 'inquiry_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('registration_date_from'), 'registration_date')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('registration_date_to'), 'registration_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('admission_test_date_from'), 'admission_test_date')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('admission_test_date_to'), 'admission_test_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('admission_offered_date_from'), 'admission_offered_date')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('admission_offered_date_to'), 'admission_offered_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('admission_confirmed_date_from'), 'admission_confirmed_date')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('admission_confirmed_date_to'), 'admission_confirmed_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('rejected_date_from'), 'rejected_date')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('rejected_date_to'), 'rejected_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('follow_up_date_from'), 'follow_up_date')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('follow_up_date_to'), 'follow_up_date')
+               
+           
     '''
     Populate options for dropdowns. "Populate" here means retrieving data from the database and making it available for dropdown options in a form.
     The flat=True argument is used when calling .values_list() on a Django QuerySet. It flattens the results into a single list instead of returning a list of tuples.
     '''
-    agents = Agent.objects.all()
-    # locations = City.objects.all()        
-    locations_panchayat = Lead.objects.values_list('location_panchayat', flat=True).distinct()
-    block = Lead.objects.values_list('block', flat=True).distinct()
+    
+    agents = Agent.objects.all()  
+    lead_ids = Lead.objects.values_list('id', flat=True)
+    students = Lead.objects.values_list('student_name', flat=True).distinct() 
+    parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
+    locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
+    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True)
+    mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
+    blocks = Lead.objects.values_list('block', flat=True).distinct()
     inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
     statuses = Lead.objects.values_list('status', flat=True).distinct()
     student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
     admins = CustomUser.objects.filter(is_staff=True)
+    
 
+    
     '''
     The below is Passing context dictionary to the template. 
     
@@ -174,10 +197,17 @@ def inquiry_list(request):
     '''
     
     return render(request, 'inquiries/inquiry_list.html', {
+        # 'sort_order': sort_order,
+        # 'sort_column': sort_column,
+        'lead_ids': lead_ids,
+        'students': students,
+        'parents': parents,
         'inquiries': inquiries,
         'agents': agents,
-        'location_panchayat': locations_panchayat,
-        'block': block,
+        'lead_emails': lead_emails,
+        'mobile_numbers': mobile_numbers,
+        'location_panchayats': locations_panchayats,
+        'blocks': blocks,
         'inquiry_sources': inquiry_sources,
         'statuses': statuses,
         'student_classes': student_classes,
