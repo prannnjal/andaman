@@ -215,11 +215,11 @@
         $(document).ready(function() {
             var blockDropdown = $('#id_block'); 
             var manualBlockField = $('#manual-block-field');    
-            var manualBlockInput = $('#manual_block');  
+            var manualBlockInput = $('#manual_block');
         
             var panchayatDropdown = $('#id_location_panchayat');
             var manualPanchayatField = $('#manual-panchayat-field');
-            var manualPanchayatInput = $('#manual_location_panchayat');
+            var manualPanchayatInput = $('#manual_location_panchayat');            
         
             function loadPanchayats(block) {
                 if (block && block !== "Other") {
@@ -267,8 +267,6 @@
                 loadPanchayats(block);
             });
         
-            // **Trigger the change event (after preloading options)**
-            blockDropdown.trigger("change");
         
             // **Handle Panchayat Dropdown Change**
             panchayatDropdown.change(function() {
@@ -284,6 +282,63 @@
         });
            
     </script>
+
+
+    <script>
+        /* Ensure context variables are safely passed as JavaScript variables */
+        var block_context = "{{ block_context|escapejs }}";
+        var location_panchayat_context = "{{ location_panchayat_context|escapejs }}";
+    
+        $(document).ready(function() {
+            var blockDropdown = $('#id_block'); 
+            var manualBlockField = $('#manual-block-field');    
+            var manualBlockInput = $('#manual_block');
+    
+            var panchayatDropdown = $('#id_location_panchayat');
+            var manualPanchayatField = $('#manual-panchayat-field');
+            var manualPanchayatInput = $('#manual_location_panchayat');
+    
+            function loadPanchayats(block_context, location_panchayat_context) {
+                if (block_context !== "Other") {
+                    $.ajax({
+                        url: "{% url 'get_panchayats' %}",
+                        data: { 'block': block_context },
+                        dataType: 'json',
+                        success: function(response) {   
+                            panchayatDropdown.empty();
+                            var found = false;
+                        
+                            $.each(response.panchayats, function(index, panchayat) {
+                                var isSelected = (panchayat.name === location_panchayat_context) ? "selected" : "";
+                                if (isSelected) {
+                                    found = true;
+                                }
+                                panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
+                            });
+                        
+                            if (location_panchayat_context && !found) {
+                                panchayatDropdown.append(`<option value="${location_panchayat_context}" selected>${location_panchayat_context}</option>`);
+                            }
+
+                            panchayatDropdown.append('<option value="Other">Other</option>');
+                        }
+                        
+                    });
+                }
+                else if (block_context === "Other") {
+                    panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
+
+                    panchayatDropdown.append('<option value="Other">Other</option>'); 
+                }
+            }
+    
+            // **If block_context exists, preload panchayats & select location_panchayat_context**
+            if (block_context && location_panchayat_context) {                
+                loadPanchayats(block_context, location_panchayat_context);
+            }
+        });
+    </script>
+    
 
     <style>
         /* General Styling */

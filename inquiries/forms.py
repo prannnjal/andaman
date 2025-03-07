@@ -13,12 +13,14 @@ df = pd.read_excel(file_path)
 # ====================================================================================
 
 class InquiryForm(forms.ModelForm):
-    class Meta:
+    class Meta:                
         model = Lead
         fields = ['student_name','parent_name','mobile_number','email','address','block','location_panchayat','inquiry_source','student_class','status','remarks','inquiry_date','follow_up_date','registration_date','admission_test_date','admission_offered_date','admission_confirmed_date','rejected_date','assigned_agent','admin_assigned']      # what fields from Lead model to be included in this form
         
     def __init__(self, *args, **kwargs):        # constructor
         user = kwargs.pop('user', None)  # Get the user from the kwargs. Django’s ModelForm does not accept user as a parameter by default. Pop and Extract user before calling super()
+        
+        instance = kwargs.get('instance')  # Get the existing instance, if available
         
         super().__init__(*args, **kwargs)       # calling parent class constructor
         
@@ -44,7 +46,7 @@ class InquiryForm(forms.ModelForm):
         self.fields['block'].widget = forms.Select(choices=[('', 'Select the Block')] + list(self.fields['block'].choices)[1:])
         
         # Set empty Location/Panchayat initially
-        self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])
+        self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])       
         
         self.fields['inquiry_source'].widget = forms.Select(choices=[('', 'Select Inquiry Source')] + list(self.fields['inquiry_source'].choices)[1:])
         

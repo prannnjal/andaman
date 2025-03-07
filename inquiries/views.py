@@ -245,7 +245,7 @@ def add_inquiry(request):
                     fail_silently=False,
                 )
             
-            return redirect('update_status')
+            return redirect('add_inquiry')
       
     else:
         form = UpdateLeadStatusForm(user=request.user)
@@ -296,7 +296,7 @@ def manage_lead_status(request, inquiry_id):
         # Prefill form with the inquiry's current details
         form = InquiryForm(instance=inquiry)  # Ensure form is tied to the existing instance
 
-    return render(request, 'inquiries/add_inquiry.html', {'form': form, 'title': 'Update Lead Status'})
+    return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
 
 # ====================================================================================
 
