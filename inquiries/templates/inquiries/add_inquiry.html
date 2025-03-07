@@ -14,7 +14,7 @@
 
 <body>
     <div class="container">
-        <h1>Add New Inquiry</h1>
+        <h1>{{title}}</h1>
 
         <!-- Display success or error message -->
         {% if messages %}
@@ -32,7 +32,7 @@
         <form method="POST" class="inquiry-form">
             {% csrf_token %}
             
-            <div class="same_row_wrapper">   
+            <div class="same_row_wrapper">
                 <div class="form-group">
                     <!-- {{ form.student_name.id_for_label }} generates the id of the input field associated with student_name. -->
                     <label for="{{ form.student_name.id_for_label }}">Student Name</label>
@@ -330,6 +330,12 @@
             min-height: 100px;
         }
 
+        .form-group {       /* Some elements (like <input>) won't shrink past a certain width unless explicitly told to. Without min-width: 0, .form-group might resist shrinking and cause overflow.
+        
+        min-width: 0; forces the .form-group elements to shrink if needed. */
+            min-width: 0;
+        }
+
         .btn-submit {
             background-color: #4CAF50;
             color: white;
@@ -392,11 +398,7 @@
             text-align: center;
         }
                 
-        .form-group {       /* Some elements (like <input>) won't shrink past a certain width unless explicitly told to. Without min-width: 0, .form-group might resist shrinking and cause overflow.
         
-        min-width: 0; forces the .form-group elements to shrink if needed. */
-            min-width: 0;
-        }
        
         .same_row_wrapper {
             display: flex;

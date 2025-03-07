@@ -29,10 +29,7 @@ class InquiryForm(forms.ModelForm):
             'admission_confirmed_date', 'rejected_date'
         ]
         for field in date_fields:
-            self.fields[field].widget = forms.DateInput(attrs={'type': 'date'})
-                                
-        # Set empty Location/Panchayat initially
-        self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])
+            self.fields[field].widget = forms.DateInput(attrs={'type': 'date'})                                        
         
         # Modify the select field to have a default placeholder
         '''
@@ -46,28 +43,33 @@ class InquiryForm(forms.ModelForm):
         '''
         self.fields['block'].widget = forms.Select(choices=[('', 'Select the Block')] + list(self.fields['block'].choices)[1:])
         
+        # Set empty Location/Panchayat initially
+        self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])
+        
         self.fields['inquiry_source'].widget = forms.Select(choices=[('', 'Select Inquiry Source')] + list(self.fields['inquiry_source'].choices)[1:])
         
-        self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Inquiry Source')] + list(self.fields['student_class'].choices)[1:])
+        self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Student Class')] + list(self.fields['student_class'].choices)[1:])
         
         self.fields['assigned_agent'].widget = forms.Select(choices=[('', 'Choose Agent')] + list(self.fields['assigned_agent'].choices)[1:])
         
         self.fields['admin_assigned'].widget = forms.Select(choices=[('', 'Choose Admin')] + list(self.fields['admin_assigned'].choices)[1:])
 
-        
+                
+
         # Restrict Assigned Agent field to only email of that agent in dropdown for non admin users                
         if user and not user.is_staff:
             self.fields['assigned_agent'].queryset = Agent.objects.filter(user=user)
             
-# ====================================================================================
+# ====================================================================================  
 
-class ManageLeadStatusForm(forms.ModelForm):
-    # assigned_agent = forms.ModelChoiceField(queryset=Agent.objects.all(), required=True)       # to customize assigned_agent field in the form
-    
-    class Meta:
-        model = Lead
-        fields = ['assigned_agent', 'status','remarks','inquiry_date','follow_up_date','registration_date','admission_test_date','admission_offered_date','admission_confirmed_date','rejected_date','admin_assigned']        
+class UpdateLeadStatusForm(InquiryForm):
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get("instance")  # Get the instance if provided
+        super().__init__(*args, **kwargs)  # Call the parent constructor
         
+
+        
+
 # ====================================================================================  
 
 class AgentForm(forms.ModelForm):

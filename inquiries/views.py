@@ -1,9 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import Lead, Agent, CustomUser
-from cities_light.models import City
-from .forms import InquiryForm, ManageLeadStatusForm, AgentForm
-from django.contrib.auth.models import User
+from .forms import InquiryForm, AgentForm, UpdateLeadStatusForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
 from datetime import date, timedelta
@@ -43,14 +41,12 @@ def agent_login(request):
 
         if user is not None:
             if user.is_staff:  # Check if user is admin (staff user)
-                print("===============> Admin logged in\n")
                 login(request, user)
                 # The function sets a session cookie on the user's browser, and Django uses that cookie to identify the user in future requests. After this call, request.user will return the logged-in user on subsequent requests.
                 
                 return redirect('dashboard')  # Redirect to the admin dashboard
 
             try:
-                print("===============> Agent logged in\n")
                 # Check if the authenticated user is an Agent
                 agent = user.agent  # This will work only for users who are agents
                 login(request, user)
@@ -220,27 +216,19 @@ def inquiry_list(request):
 @login_required  
 def add_inquiry(request):
     if request.method == 'POST':
-        form = InquiryForm(request.POST, user=request.user)
+        form = UpdateLeadStatusForm(request.POST, user=request.user)
 
         if form.is_valid():
             inquiry = form.save(commit=False)
                         
             if request.POST.get('block') == "Other":
-                print("=================> yeh waaala case hit for block")
                 inquiry.block = request.POST.get('manual_block')
 
             if request.POST.get('location_panchayat') == "Other":
-                print("=================> yeh waaala case hit for panchayta")
                 inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
 
             
-            inquiry.save()
-            
-            # print("=================> Form was valid")
-            # # Print all submitted data
-            # print("=============> Submitted Form Data:")
-            # for field, value in request.POST.items():
-            #     print(f"{field}: {value}")            
+            inquiry.save() 
 
             # Get the assigned agent
             assigned_agent = inquiry.assigned_agent
@@ -255,20 +243,14 @@ def add_inquiry(request):
                     from_email='uncertain30@gmail.com',  # Sender email
                     recipient_list=recipient_list,  # Recipient email(s)
                     fail_silently=False,
-                )                        
+                )
             
-            return redirect('inquiry_list')
-        # else:
-        #     print("==================> form was not valid and form.location_panchayat = ")
-            
-        #     # Print all submitted data
-        #     print("Submitted Form Data:")
-        #     for field, value in request.POST.items():
-        #         print(f"{field}: {value}")
+            return redirect('update_status')
+      
     else:
-        form = InquiryForm(user=request.user)
+        form = UpdateLeadStatusForm(user=request.user)
         
-    return render(request, 'inquiries/add_inquiry.html', {'form': form})
+    return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Add new Inquiry'})
 
 # ====================================================================================
 
@@ -302,7 +284,7 @@ def manage_lead_status(request, inquiry_id):
 
     if request.method == 'POST':
         # Bind the form with POST data and the current inquiry instance. This ensures that the form updates the correct Lead object instead of creating a new one.
-        form = ManageLeadStatusForm(request.POST, instance=inquiry)
+        form = InquiryForm(request.POST, instance=inquiry)
         
         if form.is_valid(): # Ensures all required fields are correctly filled.
             form.save()  # Save the form with updated values
@@ -312,21 +294,9 @@ def manage_lead_status(request, inquiry_id):
             return redirect('inquiry_list')  # Redirect back to the inquiry list after saving
     else:
         # Prefill form with the inquiry's current details
-        form = ManageLeadStatusForm(initial={
-            'assigned_agent': inquiry.assigned_agent,
-            'status': inquiry.status,
-            'remarks': inquiry.remarks,
-            'inquiry_date': inquiry.inquiry_date,
-            'follow_up_date': inquiry.follow_up_date,            
-            'registration_date': inquiry.registration_date,
-            'admission_test_date': inquiry.admission_test_date,
-            'admission_offered_date': inquiry.admission_offered_date,
-            'admission_confirmed_date': inquiry.admission_confirmed_date,
-            'rejected_date': inquiry.rejected_date,            
-            'admin_assigned': inquiry.admin_assigned,
-        }, instance=inquiry)  # Ensure form is tied to the existing instance
+        form = InquiryForm(instance=inquiry)  # Ensure form is tied to the existing instance
 
-    return render(request, 'inquiries/update_status.html', {'form': form, 'inquiry': inquiry})
+    return render(request, 'inquiries/add_inquiry.html', {'form': form, 'title': 'Update Lead Status'})
 
 # ====================================================================================
 
@@ -335,10 +305,8 @@ def manage_lead_status(request, inquiry_id):
 @user_passes_test(is_admin)  # Restrict access to admins
 def remove_lead_from_agent_view(request):
     if request.method == 'POST':
-        # print("===============> request.POST = ",request.POST)
         lead_id = request.POST.get('lead_id')  # Get the lead ID
         
-        print("===============> lead_id = ",lead_id)
         if not lead_id:
             messages.error(request, "Please select a lead to remove.")
             return redirect('remove_lead')

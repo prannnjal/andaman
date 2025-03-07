@@ -32,21 +32,16 @@
 
         .same_row_wrapper {
             display: flex;
-            flex-direction: row;          
+            flex-direction: row;        
             gap: 20px;
-            align-items: center; 
+            align-items: start; 
             justify-content: space-between;   
-            margin: 10px 0 30px 0;               
+            margin: 10px 0 30px 0;    
+            flex-wrap: wrap;           
         }
 
-        .same_row_wrapper > * {       
+        .same_row_wrapper > * {
             flex: 1;
-        }
-
-        @media screen and (max-width: 480px) {          
-            .same_row_wrapper {
-                display: block;
-            }
         }
 
         h1 {
@@ -78,15 +73,19 @@
             border: 1px solid #ccc;
             width: 70vw; /* Restrict width to make it more compact */
             max-width: 900px; /* Max width to prevent stretching too much */
-            height: 80vh;
+            max-height: 80vh;
             overflow: auto;
             border-radius: 8px;
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); 
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centers the element */  
         }
 
         /* Close Button */
         .close {
-            color: #ffffff;
+            color: #000000;
             font-size: 36px;
             font-weight: bold;
             position: absolute;
@@ -214,7 +213,7 @@
         }
 
 
-        /* General Styling for Checkboxes in Manage Modal */
+        /* General Styling for Checkboxes in View/Hide columns Modal */
         .checkbox-group {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); /* Grid format for checkboxes */
@@ -291,6 +290,16 @@
             
         } 
 
+        .check_all_modal_btn{
+            background-color: rgb(4, 198, 101);
+            padding: 15px;                  
+        }
+
+        .uncheck_all_modal_btn{
+            background-color: #2a74ec;
+            padding: 15px;                  
+        }
+
         .reset_modal_a:hover,
         .reset_modal_a:focus,
         .reset_modal_a:active {
@@ -323,6 +332,24 @@
             color: #d03636; /* Placeholder text color */
             font-style: italic;
         }
+        
+        .view_hide_wrapper{
+            font-size: 19px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;         
+            gap: 10px;
+        }
+
+        .view_hide_wrapper input {
+            width: 16px; /* Adjust checkbox size */   
+            height: 16px;      
+        }
+
+        .hidden-column {
+            display: none;
+        }
+        
 
     </style>
 </head>
@@ -332,7 +359,7 @@
 
     <!-- Buttons to open modals -->
     <button class="filter" onclick="openModal('filterModal')">Open Filters</button>
-    <button class="manage" onclick="openModal('columnsModal')">Manage Columns</button>
+    <button class="manage" onclick="openModal('columnsModal')">View / Hide Columns</button>
     <button class="add-inquiry">
         <a class="no-style" href="{% url 'add_inquiry' %}">Add New Inquiry</a>
     </button>
@@ -573,29 +600,30 @@
     
 
     <!-- Columns Modal -->
-    <div id="columnsModal" class="modal" style="overflow-x: auto; max-width: 90%;">
+    <div id="columnsModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal('columnsModal')">&times;</span>
-            <h2>View/Hide Columns</h2>
-            <div class="checkbox-group">
-                <label><input type="checkbox" class="filter-checkbox" data-column="0" checked> Student Name</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="1" checked> Lead Email</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="2" checked> Parent Name</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="3" checked> Mobile Number</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="4" checked> Address</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="5" checked> Inquiry Source</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="6" checked> Student Class</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="7" checked> Follow-up Date</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="8" checked> Status</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="9" checked> Agent</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="10" checked> Agent Email</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="11" checked>Block</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="16" checked> Location/Panchayat</label>               
-                <label><input type="checkbox" class="filter-checkbox" data-column="13" checked> Admin Email</label>
-                <label><input type="checkbox" class="filter-checkbox" data-column="14" checked> Actions</label>
+            <h2>View / Hide Columns</h2>
+            <div class="same_row_wrapper">
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="0" checked> Lead Id</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="1" checked> Student Name</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="2" checked> Lead Email</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="3" checked> Parent Name</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="4" checked> Mobile Number</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="5" checked> Address</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="6" checked> Inquiry Source</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="7" checked> Student Class</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="8" checked> Follow-up Date</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="9" checked> Status</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="10" checked> Agent</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="11" checked> Agent Email</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="12" checked>Block</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="13" checked> Location/Panchayat</label>               
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="14" checked> Admin Email</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="15" checked> Actions</label>               
             </div>
-            <button id="SelectAllButton">Check All</button>
-            <button id="UnSelectAllButton">Uncheck All</button>
+            <button class="check_all_modal_btn" id="SelectAllButton">Check All</button>
+            <button class="uncheck_all_modal_btn" id="UnSelectAllButton">Uncheck All</button>
         </div>
     </div>
 
@@ -745,125 +773,90 @@
             }
         };
 
-        // Column Visibility Toggle
-        $('.filter-checkbox').change(function() {
-            var columnIndex = $(this).data('column');
-            var isVisible = $(this).prop('checked');
-            $('#inquiryTable th:nth-child(' + (columnIndex + 1) + ')').toggleClass('hidden-column', !isVisible);
-            $('#inquiryTable td:nth-child(' + (columnIndex + 1) + ')').toggleClass('hidden-column', !isVisible);
-        });
-
-       // Apply Select2 to all searchable select elements with custom placeholders
-        $(document).ready(function() {
-            $('.searchable-select').each(function() {
-                var placeholderText = $(this).data('placeholder');
-                $(this).select2({
-                    placeholder: placeholderText,
-                    allowClear: true
+        $(document).ready(function () {
+            // Column Visibility Toggle
+            $('.filter-checkbox').change(function () {
+                var columnIndex = $(this).data('column'); // Get the column index (0-based)
+                var isVisible = $(this).prop('checked');
+        
+                // Toggle visibility based on checkbox state
+                $('#inquiryTable th:nth-child(' + (columnIndex + 1) + ')').toggle(isVisible);
+                $('#inquiryTable tbody tr').each(function () {
+                    $(this).find('td:nth-child(' + (columnIndex + 1) + ')').toggle(isVisible);
                 });
             });
+        
+            // Select All Button
+            $('#SelectAllButton').click(function () {
+                $('.filter-checkbox').prop('checked', true).trigger('change');
+            });
+        
+            // Unselect All Button
+            $('#UnSelectAllButton').click(function () {
+                $('.filter-checkbox').prop('checked', false).trigger('change');
+            });
         });
+        
+      
 
         
-        let curr_th_element = document.getElementById("student_name")
+        let curr_th_element = document.getElementById("lead_id")
         curr_th_element.classList.add("asc")
 
         // Sorting function
         function sortColumn(event, columnIndex) {
-            let new_th_element = event.target.closest('th')
-          
-            if(new_th_element.id == curr_th_element.id && new_th_element.classList.contains("asc")){
-                new_th_element.classList.remove('asc')
-                new_th_element.classList.add("desc")
+            let new_th_element = event.target.closest('th');
+        
+            // Handle ASC/DESC classes
+            if (new_th_element.id === curr_th_element.id && new_th_element.classList.contains("asc")) {
+                new_th_element.classList.remove('asc');
+                new_th_element.classList.add("desc");
+            } 
+            else if (new_th_element.id === curr_th_element.id && new_th_element.classList.contains("desc")) {
+                new_th_element.classList.remove('desc');
+                new_th_element.classList.add("asc");
+            } 
+            else {
+                curr_th_element.classList.remove('asc', 'desc');
+                curr_th_element = new_th_element;
+                new_th_element.classList.add("asc");
             }
-            else if(new_th_element.id == curr_th_element.id && new_th_element.classList.contains("desc")){
-                new_th_element.classList.remove('desc')
-                new_th_element.classList.add("asc")
-            }
-            else{
-                curr_th_element.classList.remove('asc')
-                curr_th_element.classList.remove('desc')
-                curr_th_element = new_th_element
-                new_th_element.classList.add("asc")
-            }
-
+        
             var table = document.getElementById("inquiryTable");
-            var rows = table.rows;
-            var switching = true;
-            var shouldSwitch, i, x, y, dir, switchcount = 0;
-            dir = "asc";
-
-            while (switching) {
-                switching = false;
-                for (i = 1; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("TD")[columnIndex];
-                    y = rows[i + 1].getElementsByTagName("TD")[columnIndex];
-                    if (dir == "asc") {
-                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    } else if (dir === "desc") {
-                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    }
+            var rows = Array.from(table.rows).slice(1); // Get all rows except header
+            var dir = new_th_element.classList.contains("asc") ? "asc" : "desc";
+        
+            // Detect if column is numeric. row.cells is a collection of all <td> elements inside that row.
+            var isNumeric = rows.every(row => !isNaN(parseFloat(row.cells[columnIndex].innerText)));
+        
+            // Sorting function
+            rows.sort((rowA, rowB) => {
+                let x = rowA.cells[columnIndex].innerText.trim();
+                let y = rowB.cells[columnIndex].innerText.trim();
+        
+                // Convert to numbers if numeric
+                if (isNumeric) {
+                    x = parseFloat(x);
+                    y = parseFloat(y);
+                } else {
+                    x = x.toLowerCase();
+                    y = y.toLowerCase();
                 }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount++;
-                } 
-                else {
-                    if (switchcount === 0 && dir === "asc") {
-                        dir = "desc";
-                        switching = true;
-                    }
-                }            
-            }
+        
+                if (dir === "asc") return x > y ? 1 : -1;
+                else return x < y ? 1 : -1;
+            });
+        
+            // Re-add rows to the table
+            rows.forEach(row => table.appendChild(row));
         }
 
-        
-
-    </script>
-
-    <script>
-        document.getElementById("SelectAllButton").addEventListener("click", function() {
-            const checkboxes = document.querySelectorAll('.filter-checkbox');
-            checkboxes.forEach(function(checkbox) {
-                checkbox.checked = true;
-            });
-        });
-        
-    </script>
-
-    <script>
-        document.getElementById("UnSelectAllButton").addEventListener("click", function() {
-            const checkboxes = document.querySelectorAll('.filter-checkbox');
-            checkboxes.forEach(function(checkbox) {
-                checkbox.checked = false;
-            });
-        });
-        
-    </script>
-
-    <script>
         // Initialize Select2 for dropdowns
         $(document).ready(function () {
             $('.searchable-select').select2({
                 placeholder: "Select an option",                
             });
-        
-            /* When Select2 dropdown opens, set a placeholder for the search input. 
-
-            select2:open → This event fires whenever a Select2 dropdown is opened.
-
-            $('.select2-search__field') → Selects the search input inside the Select2 dropdown.
-
-            .attr('placeholder', 'Search here...') → Sets the placeholder text to "Search here..." inside the search input.
-            */
+           
             $(document).on('select2:open', function () {              
                     $('.select2-search__field').attr('placeholder', 'Search here...');
             });
@@ -871,6 +864,5 @@
         
     </script>
 
-    
 </body>
 </html>

@@ -5,292 +5,407 @@
 
 <head>
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Lead Status</title>
-    <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
-
-    <!-- jQuery (required for Select2) -->
+    <title>Add Inquiry</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 </head>
 
 <body>
     <div class="container">
-        <h1>Update Lead</h1>
-        <h2>Name: {{ inquiry.student_name }}, Id = {{inquiry.id}}</h2>
+        <h1>{{title}}</h1>
 
-        <!-- Display Follow-up Form -->
-        <form method="POST" class="follow-up-form" id="followUpForm">
+        <!-- Display success or error message -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <!-- It loops through messages and assigns CSS classes dynamically ({{ message.tags }}) for styling. e.g: class="alert success" or class="alert error"-->
+            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Display Form -->
+        <form method="POST" class="inquiry-form">
             {% csrf_token %}
-            {{ form.non_field_errors }}
+            
+            <div class="same_row_wrapper">
+                <div class="form-group">
+                    <!-- {{ form.student_name.id_for_label }} generates the id of the input field associated with student_name. -->
+                    <label for="{{ form.student_name.id_for_label }}">Student Name</label>
+    
+                    <!-- This will render the input field associated with student_name -->
+                    {{ form.student_name }}                     
+                </div>
+    
+                <div class="form-group">
+                    <label for="{{ form.parent_name.id_for_label }}">Parent Name</label>
+                    {{ form.parent_name }}
+                </div>  
+            </div>
+            
+
+            <div class="same_row_wrapper">   
+                <div class="form-group">
+                    <label for="{{ form.mobile_number.id_for_label }}">Mobile Number</label>
+                    {{ form.mobile_number }}
+                </div>
+    
+                <div class="form-group">
+                    <label for="{{ form.email.id_for_label }}">Email</label>
+                    {{ form.email }}
+                </div>
+            </div>
+            
+
+            <div class="form-group">
+                <label for="{{ form.address.id_for_label }}">Address</label>
+                {{ form.address }}
+            </div>
 
             <div class="same_row_wrapper">
-                <!-- Status Field -->
                 <div>
-                    <label for="id_status">Status:</label>
-                {{ form.status }}
+                    <div class="form-group">
+                        <label for="{{ form.block.id_for_label }}">Block</label>
+                        {{ form.block }}
+                    </div>
+        
+                    <!-- Manual Block Input Field (Initially Hidden) -->
+                    <div class="form-group" id="manual-block-field" style="display: none;">
+                        <label for="manual_block">Enter Block</label>
+                        <input type="text" name="manual_block" id="manual_block" placeholder="Enter Block">
+                    </div>
                 </div>
-
-                <!-- Conditional Date Fields -->
-                <div id="conditional-dates">
-                    <div class="date-field" id="inquiry-date-field" style="display: none;">
-                        <label for="id_inquiry_date">Inquiry Date:</label>
-                        <input type="date" id="id_inquiry_date" name="inquiry_date">
+    
+                <div>
+                    <div class="form-group">
+                        <label for="{{ form.location_panchayat.id_for_label }}">Location/Panchayat</label>
+                        {{ form.location_panchayat }}
                     </div>
-                    <div class="date-field" id="registration-date-field" style="display: none;">
-                        <label for="id_registration_date">Registration Date:</label>
-                        <input type="date" id="id_registration_date" name="registration_date">
-                    </div>
-                    <div class="date-field" id="admission-test-date-field" style="display: none;">
-                        <label for="id_admission_test_date">Admission Test Date:</label>
-                        <input type="date" id="id_admission_test_date" name="admission_test_date">
-                    </div>
-                    <div class="date-field" id="admission-offered-date-field" style="display: none;">
-                        <label for="id_admission_offered_date">Admission Offered Date:</label>
-                        <input type="date" id="id_admission_offered_date" name="admission_offered_date">
-                    </div>
-                    <div class="date-field" id="admission-confirmed-date-field" style="display: none;">
-                        <label for="id_admission_confirmed_date">Admission Confirmed Date:</label>
-                        <input type="date" id="id_admission_confirmed_date" name="admission_confirmed_date">
-                    </div>
-                    <div class="date-field" id="rejected-date-field" style="display: none;">
-                        <label for="id_rejected_date">Rejected Date:</label>
-                        <input type="date" id="id_rejected_date" name="rejected_date">
+        
+                    <!-- Manual input field (Hidden initially) -->
+                    <div class="form-group" id="manual-panchayat-field" style="display: none;">
+                        <label for="manual_location_panchayat">Enter Location/Panchayat</label>
+                        <input type="text" name="manual_location_panchayat" id="manual_location_panchayat" placeholder="Enter Location/Panchayat">
                     </div>
                 </div>
             </div>
 
-            <!-- Remarks Field -->
-            <label for="id_remarks">Remarks:</label>
-            {{ form.remarks }}            
+            <div class="same_row_wrapper">                
+                <div class="form-group">
+                    <label for="{{ form.inquiry_source.id_for_label }}">Inquiry Source</label>
+                    {{ form.inquiry_source }}
+                </div>
+    
+                <div class="form-group">
+                    <label for="{{ form.student_class.id_for_label }}">Student Class</label>
+                    {{ form.student_class }}
+                </div>           
+            </div>                        
+           
+            <div class="form-group">
+                <label for="{{ form.assigned_agent.id_for_label }}">Assigned Agent</label>
+                {{ form.assigned_agent }}
+            </div>
 
-            <!-- Assigned Agent Field -->
-            <label for="id_assigned_agent">Assigned Agent:</label>
-            {{ form.assigned_agent }}
+            <div class="form-group">
+                <label for="{{ form.admin_assigned.id_for_label }}">Admin Assigned</label>
+                {{ form.admin_assigned }}
+            </div>
+           
 
-            <!-- Admin Assigned Field -->
-            <label for="id_admin_assigned">Admin Assigned:</label>
-            {{ form.admin_assigned }}
+            <div class="form-group">
+                <label for="{{ form.remarks.id_for_label }}">Remarks</label>
+                {{ form.remarks }}
+            </div>                      
 
-            <div id="follow_up-date-field">
-                <label for="id_follow_up_date">Next Follow-up Date:</label>
-                <input type="date" id="id_follow_up_date" name="follow_up_date" value="{{ inquiry.follow_up_date|date:'Y-m-d' }}">
+            <div class="same_row_wrapper">
+                <div class="form-group">
+                    <label for="{{ form.status.id_for_label }}">Status</label>
+                    {{ form.status }}
+                </div>
+    
+                <!-- Conditional Date Fields -->
+                <div id="inquiry-date" class="form-group" style="display: none;">
+                    <label for="{{ form.inquiry_date.id_for_label }}">Inquiry Date</label>
+                    {{ form.inquiry_date }}
+                </div>
+
+                <div id="registration-date" class="form-group" style="display: none;">
+                    <label for="{{ form.registration_date.id_for_label }}">Registration Date</label>
+                    {{ form.registration_date }}
+                </div>
+    
+                <div id="admission-test-date" class="form-group" style="display: none;">
+                    <label for="{{ form.admission_test_date.id_for_label }}">Admission Test Date</label>
+                    {{ form.admission_test_date }}
+                </div>
+    
+                <div id="admission-offered-date" class="form-group" style="display: none;">
+                    <label for="{{ form.admission_offered_date.id_for_label }}">Admission Offered Date</label>
+                    {{ form.admission_offered_date }}
+                </div>
+    
+                <div id="admission-confirmed-date" class="form-group" style="display: none;">
+                    <label for="{{ form.admission_confirmed_date.id_for_label }}">Admission Confirmed Date</label>
+                    {{ form.admission_confirmed_date }}
+                </div>
+    
+                <div id="rejected-date" class="form-group" style="display: none;">
+                    <label for="{{ form.rejected_date.id_for_label }}">Rejected Date</label>
+                    {{ form.rejected_date }}
+                </div>
+            </div>   
+            
+            <div class="form-group">
+                <label for="{{ form.follow_up_date.id_for_label }}">Follow-Up Date</label>
+                {{ form.follow_up_date }}
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn-submit">Submit Follow-up</button>
+            <button type="submit" class="btn-submit">Submit Inquiry</button>
         </form>
 
-        <!-- Back to List Link -->
+        <!-- Navigation Link -->
         <div class="navigation">
-            <a href="{% url 'inquiry_list' %}" class="btn-back">Back to Inquiry List</a>
+            <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
         </div>
     </div>
 
+    <!-- JavaScript -->
+    <!-- Script to detect change in the Status dropdown and display that particular date field -->
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Reference to the status field
-            const statusField = document.querySelector("#id_status");
+        const statusField = document.querySelector('select[name="status"]');    // It selects the <select> dropdown element with name="status" and stores it in the statusField variable.
+        
+            const dateFields = {
+            'Inquiry': document.getElementById('inquiry-date'),
+            'Registration': document.getElementById('registration-date'),
+            'Admission Test': document.getElementById('admission-test-date'),
+            'Admission Offered': document.getElementById('admission-offered-date'),
+            'Admission Confirmed': document.getElementById('admission-confirmed-date'),
+            'Rejected': document.getElementById('rejected-date'),
+        };
 
-            // Map of status values to corresponding date field IDs
-            const dateFieldMapping = {
-                "Inquiry": "inquiry-date-field",
-                "Registration": "registration-date-field",
-                "Admission Test": "admission-test-date-field",
-                "Admission Offered": "admission-offered-date-field",
-                "Admission Confirmed": "admission-confirmed-date-field",
-                Rejected: "rejected-date-field"
-            };
+        function updateDateFields() {
+            const selectedStatus = statusField.value;
 
-            // Function to update the visibility of date fields
-            function updateDateFields() {
-                const selectedStatus = statusField.value; // Get the selected status
-                const allDateFields = document.querySelectorAll(".date-field");
+            // Hide all date fields: Object.values(dateFields) extracts all the values (not keys) from the dateFields object and returns them as an array.
+            Object.values(dateFields).forEach(field => field.style.display = 'none');
 
-                // Hide all date fields initially
-                allDateFields.forEach(field => {
-                    field.style.display = "none";
-                });
-
-                // Show the relevant date field for the selected status
-                if (dateFieldMapping[selectedStatus]) {
-                    const relevantField = document.getElementById(dateFieldMapping[selectedStatus]);
-                    if (relevantField) {
-                        relevantField.style.display = "block";
-
-                        const inputElement = relevantField.querySelector('input');                        
-
-                        if (inputElement) {
-                            
-                            if(dateFieldMapping[selectedStatus] == "inquiry-date-field"){                               
-                                date_val = "{{ inquiry.inquiry_date|date:'Y-m-d' }}"
-                            }
-                            else if(dateFieldMapping[selectedStatus] == "registration-date-field"){
-                                date_val = "{{ inquiry.registration_date|date:'Y-m-d' }}"
-                            }
-                            else if(dateFieldMapping[selectedStatus] == "admission-test-date-field"){
-                                date_val = "{{ inquiry.admission_test_date|date:'Y-m-d' }}"
-                            }
-                            else if(dateFieldMapping[selectedStatus] == "admission-offered-date-field"){
-                                date_val = "{{ inquiry.admission_offered_date|date:'Y-m-d' }}"
-                            }
-                            else if(dateFieldMapping[selectedStatus] == "admission-confirmed-date-field"){
-                                date_val = "{{ inquiry.admission_confirmed_date|date:'Y-m-d' }}"
-                            }
-                            else{
-                                date_val = "{{ inquiry.rejected_date|date:'Y-m-d' }}"
-                            }
-
-                            // Set the value of the input element
-                            inputElement.value = date_val; // Pass the value to the input field
-                        }                                                                             
-                    }
-                }
+            // Show the date field corresponding to the selected status
+            if (dateFields[selectedStatus]) {
+                dateFields[selectedStatus].style.display = 'flex';
+                dateFields[selectedStatus].style.flexDirection = 'column';
             }
+        }
 
-            // Update fields on page load
-            updateDateFields();
+        updateDateFields(); // Calls updateDateFields() immediately when the script runs. This ensures that the correct date field is shown (or hidden) on page load, based on the current value of statusField.
 
-            // Attach an event listener to handle changes in the status field
-            statusField.addEventListener("change", updateDateFields);
-        });
+        statusField.addEventListener('change', updateDateFields);
     </script>
 
+
+    <!-- Script to detect whether the user selected 'Others' in 'Block' or 'Location/Panchayat' dropdown field -->
     <script>
-        // Initialize Select2 for dropdowns
-        $(document).ready(function () {
-            $('#id_assigned_agent').select2({
-                placeholder: "{{ inquiry.assigned_agent }}",                
-            });
-
-            $('#id_admin_assigned').select2({
-                placeholder: "{{ inquiry.admin_assigned }}",                
-            });
-
+        /* The $(document).ready() function executes as soon as the entire HTML document (DOM) has fully loaded, but before images, CSS, and other external resources are completely loaded.
+        */
+        $(document).ready(function() {
+            var blockDropdown = $('#id_block'); 
+            var manualBlockField = $('#manual-block-field');    
+            var manualBlockInput = $('#manual_block');  
         
-            /* When Select2 dropdown opens, set a placeholder for the search input. 
-
-            select2:open → This event fires whenever a Select2 dropdown is opened.
-
-            $('.select2-search__field') → Selects the search input inside the Select2 dropdown.
-
-            .attr('placeholder', 'Search here...') → Sets the placeholder text to "Search here..." inside the search input.
-            */
-            $(document).on('select2:open', function () {              
-                    $('.select2-search__field').attr('placeholder', 'Search here...');
+            var panchayatDropdown = $('#id_location_panchayat');
+            var manualPanchayatField = $('#manual-panchayat-field');
+            var manualPanchayatInput = $('#manual_location_panchayat');
+        
+            function loadPanchayats(block) {
+                if (block && block !== "Other") {
+                    $.ajax({
+                        url: "{% url 'get_panchayats' %}",
+                        data: { 'block': block },
+                        dataType: 'json',
+                        success: function(response) {   
+                            panchayatDropdown.empty();
+                            panchayatDropdown.append('<option value="">Select Location/Panchayat</option>');
+                            $.each(response.panchayats, function(index, panchayat) {
+                                panchayatDropdown.append(`<option value="${panchayat.name}">${panchayat.name}</option>`);
+                            });
+                            panchayatDropdown.append('<option value="Other">Other</option>'); 
+                        }
+                    });
+                } 
+                else if (block === "Other") {
+                    panchayatDropdown.empty();
+                    panchayatDropdown.append('<option value="">Select Location/Panchayat</option>');
+                    panchayatDropdown.append('<option value="Other">Other</option>'); 
+                } 
+                else {
+                    panchayatDropdown.empty();
+                    panchayatDropdown.append('<option value="">Select Block First</option>');
+                }
+            }
+        
+            // **Check if there's a preselected block on page load**
+            var preselectedBlock = blockDropdown.val();
+            if (preselectedBlock) {
+                loadPanchayats(preselectedBlock);  // Fetch Panchayats on initial render
+            }
+        
+            // **Handle Block Dropdown Change**
+            blockDropdown.change(function() {
+                var block = $(this).val();
+                if (block === "Other") {
+                    manualBlockField.show();    
+                    manualBlockInput.prop('required', true);
+                } else {
+                    manualBlockField.hide();
+                    manualBlockInput.prop('required', false);
+                }
+                loadPanchayats(block);
+            });
+        
+            // **Trigger the change event (after preloading options)**
+            blockDropdown.trigger("change");
+        
+            // **Handle Panchayat Dropdown Change**
+            panchayatDropdown.change(function() {
+                if ($(this).val() === "Other") {
+                    manualPanchayatField.show();
+                    panchayatDropdown.hide();
+                    manualPanchayatInput.prop('required', true);
+                } else {
+                    manualPanchayatField.hide();                
+                    manualPanchayatInput.prop('required', false);
+                }
             });
         });
-        
+           
     </script>
 
     <style>
-     
-
-        .select2-search__field {    
-            font-size: 14px;
-            padding: 6px !important;      
-            border: 1px solid #999 !important;
-            border-radius: 4px; /* Rounded corners */
-            outline: none;
-        }
-
-        .select2-search__field::placeholder {
-            color: #d03636; /* Placeholder text color */
-            font-style: italic;
-        }
-
+        /* General Styling */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f9f9f9;
+            background-color: #f4f4f4;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 750px;
             margin: auto;
-            padding: 20px;
+            padding: 40px;
             background-color: white;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }   
-        
-        
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
 
         h1 {
-            color: #018658; /* A dark, professional color */         text-align: center; /* Center the heading */
-            margin-bottom: 10px; /* Add space below the heading */
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+            font-size: 26px;
         }
-        
-        /* Style for the sub-heading */
-        h2 {
-            color: #096ccf; /* Slightly lighter color for contrast */
-            text-align: center; /* Center the subheading */
-            margin-top: 10px; /* Add space above the subheading */
-            margin-bottom: 20px; /* Add space below the subheading */
-        }
-        /* Form Styling */
-        .follow-up-form {
+
+        .form-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            margin-bottom: 25px;
         }
 
-        .follow-up-form input,
-        .follow-up-form select,
-        .follow-up-form textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
+        .form-group label {
+            margin-bottom: 9px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 10px;
+            border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
-            box-sizing: border-box;
         }
 
-        .follow-up-form textarea {
+        .form-group textarea {
             resize: vertical;
             min-height: 100px;
         }
 
+        .form-group {       /* Some elements (like <input>) won't shrink past a certain width unless explicitly told to. Without min-width: 0, .form-group might resist shrinking and cause overflow.
+        
+        min-width: 0; forces the .form-group elements to shrink if needed. */
+            min-width: 0;
+        }
+
         .btn-submit {
-            max-width: 200px;
-            margin: 20px auto 0px auto;
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 14px 20px;
+            padding: 15px 25px;
             border-radius: 4px;
-            font-size: 16px; /* Increased font size */
-            font-weight: bold; /* Made font bold */
+            font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            margin: auto;
+            width: 50%;           
+            margin-top: 20px;
+            display: block;
         }
 
         .btn-submit:hover {
-            background-color: #0056b3;
+            background-color: #318135;
         }
 
-        /* Back Button */
         .navigation {
-            margin-top: 20px;
+            margin-top: 30px;
             text-align: center;
         }
 
         .btn-back {
             text-decoration: none;
             color: #007BFF;
-            font-size: 17px;
-            font-weight: 600;
+            font-size: 16px;
         }
 
         .btn-back:hover {
             text-decoration: underline;
         }
 
+        #id_location_panchayat option[value="Other"] {
+            color: red;
+        }
+
+        #id_block option[value="Other"] {
+            color: red;
+        }
+
+        /* Messages Styling */
+        .messages .alert, .success, .error {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .messages .success {
+            background-color: #21a606;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .messages .alert.error {
+            background-color: #f50317;
+            color: #ffffff;
+            text-align: center;
+        }
+                
+        
+       
         .same_row_wrapper {
             display: flex;
             flex-direction: row;          
@@ -299,40 +414,48 @@
             justify-content: space-between;         
         }
 
-        /* Applies to all direct children (*) of .same_row_wrapper
-        Makes each child element take up an equal share of the available space inside the flex container. 
-        */
+       /* Applies to all direct children (*) of .same_row_wrapper
+       Makes each child element take up an equal share of the available space inside the flex container. 
+       */
         .same_row_wrapper > * {       
-            flex: 1;            
-        }      
-
-        .date-container {
-            display: inline-block;
-            width: 100%;
+            flex: 1;
         }
+        
 
-        label{
-            margin: 10px 0 10px 0;
-            display: block;
-            font-weight: 600;
-            color: rgb(105, 99, 99);
+        @media screen and (max-width: 768px) {
+            .btn-submit {
+                padding: 12px 20px;
+                font-size: 16px;
+            }
+
+            .messages .alert, .success, .error {
+                margin-bottom: 12px;
+                padding: 10px;
+                border-radius: 4px;
+                font-size: 14px;
+            }
         }
-
-      
 
         @media screen and (max-width: 480px) {
-           
+            .btn-submit {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+
+            .messages .alert, .success, .error {
+                margin-bottom: 10px;
+                padding: 8px;
+                border-radius: 4px;
+                font-size: 12px;
+            }            
+
             .same_row_wrapper {
-                display: flex; /* Make sure the container is a flexbox */
-                flex-direction: column; /* Stack child elements vertically */
+                display: block;
             }
-            
-            .same_row_wrapper > * {
-                width: 100%; /* Make all child elements take up the full width */
-            }
-            
         }
+        
     </style>
+
 </body>
 
 </html>
