@@ -213,12 +213,12 @@ def inquiry_list(request):
 
 # ====================================================================================
 
-@login_required  
+@login_required
 def add_inquiry(request):
     if request.method == 'POST':
         form = UpdateLeadStatusForm(request.POST, user=request.user)
 
-        if form.is_valid():
+        if form.is_valid():            
             inquiry = form.save(commit=False)
                         
             if request.POST.get('block') == "Other":
@@ -228,7 +228,7 @@ def add_inquiry(request):
                 inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
 
             
-            inquiry.save() 
+            inquiry.save()
 
             # Get the assigned agent
             assigned_agent = inquiry.assigned_agent
@@ -254,6 +254,39 @@ def add_inquiry(request):
 
 # ====================================================================================
 
+@login_required
+def manage_lead_status(request, inquiry_id):
+    # Fetch the Lead instance for the given inquiry_id
+    inquiry = get_object_or_404(Lead, id=inquiry_id)    # fetches that instance from Lead model whose id is=inquiry_id 
+
+    if request.method == 'POST':
+        # print("=====================> request  = ",request.POST)
+        # Bind the form with POST data and the current inquiry instance. This ensures that the form updates the correct Lead object instead of creating a new one.
+        form = InquiryForm(request.POST, instance=inquiry)
+        
+        if form.is_valid(): # Ensures all required fields are correctly filled.
+            inquiry = form.save(commit=False)
+                        
+            if request.POST.get('block') == "Other":
+                inquiry.block = request.POST.get('manual_block')
+
+            if request.POST.get('location_panchayat') == "Other":
+                inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
+
+            
+            inquiry.save() 
+            
+            # Optionally, add logic for email notifications or additional actions here
+            
+            return redirect('inquiry_list')  # Redirect back to the inquiry list after saving
+    else:
+        # Prefill form with the inquiry's current details
+        form = InquiryForm(instance=inquiry)  # Ensure form is tied to the existing instance
+
+    return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
+
+# ====================================================================================
+
 def get_panchayats(request):
     block = request.GET.get('block', None)
     if block:
@@ -274,29 +307,6 @@ def get_panchayats(request):
         return JsonResponse({'panchayats': data})
 
     return JsonResponse({'panchayats': []})
-
-# ====================================================================================
-
-@login_required
-def manage_lead_status(request, inquiry_id):
-    # Fetch the Lead instance for the given inquiry_id
-    inquiry = get_object_or_404(Lead, id=inquiry_id)    # fetches that instance from Lead model whose id is=inquiry_id 
-
-    if request.method == 'POST':
-        # Bind the form with POST data and the current inquiry instance. This ensures that the form updates the correct Lead object instead of creating a new one.
-        form = InquiryForm(request.POST, instance=inquiry)
-        
-        if form.is_valid(): # Ensures all required fields are correctly filled.
-            form.save()  # Save the form with updated values
-            
-            # Optionally, add logic for email notifications or additional actions here
-            
-            return redirect('inquiry_list')  # Redirect back to the inquiry list after saving
-    else:
-        # Prefill form with the inquiry's current details
-        form = InquiryForm(instance=inquiry)  # Ensure form is tied to the existing instance
-
-    return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
 
 # ====================================================================================
 
