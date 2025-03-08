@@ -233,10 +233,9 @@
                 <label for="inquiry">Select Lead:</label>
                 <select name="inquiry_id" id="inquiry" required>
                     <option value="" disabled selected>-- Select Lead --</option>
-                    {% for inquiry in inquiries %}
-                    <option value="{{ inquiry.id }}">
-                        Id: {{ inquiry.id }} - 
-                        Email: {{ inquiry.email }}
+                    {% for lead in inquiries %}
+                    <option value="{{ lead.id }}">
+                        Id: {{ lead.id }}, Email: {{ lead.email }}, Phone: {{lead.mobile_number}}, Student Name: {{lead.student_name}}, Parent Name: {{lead.parent_name}}, Block: {{lead.block}}, Location: {{lead.location_panchayat}}
                     </option>                    
                     {% endfor %}
                 </select>
@@ -249,7 +248,7 @@
                     <option value="" disabled selected>-- Select Agent --</option>
                     {% for agent in agents %}
                         <option value="{{ agent.id }}">
-                            Id: {{ agent.id }} - Name: {{ agent.name }} - Email: {{ agent.user.email }}
+                            Id: {{agent.id}}, Name: {{agent.name}}, Phone: {{agent.mobile_number}}, Email: {{agent.user.email}}
                         </option>
                     {% endfor %}
                 </select>

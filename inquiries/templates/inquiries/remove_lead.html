@@ -130,6 +130,26 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
+        /* Messages Styling */
+        .messages .alert, .success, .error {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .messages .success {
+            background-color: #21a606;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .messages .alert.error {
+            background-color: #f50317;
+            color: #ffffff;
+            text-align: center;
+        }
         
         
     </style>
@@ -139,14 +159,18 @@
     <div class="container">
         <h1>Remove Lead from Agent</h1>
 
-        <!-- Display Success or Error Messages -->
+        <!-- Display success or error message -->
         {% if messages %}
-        <div>
+        <div class="messages">
             {% for message in messages %}
-            <p class="{{ message.tags }}">{{ message }}</p>
+            <!-- It loops through messages and assigns CSS classes dynamically ({{ message.tags }}) for styling. e.g: class="alert success" or class="alert error"-->
+            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
             {% endfor %}
         </div>
         {% endif %}
+
 
         <!-- Form for Removing Lead -->
         <form class="remove_lead_form" method="POST">
@@ -158,7 +182,7 @@
                 <option value="">--Select Agent--</option>
                 {% for agent in agents %}
                 <option value="{{ agent.id }}">
-                    Id: {{ agent.id }} - Name: {{ agent.name }} - Email: {{ agent.user.email }}
+                    Id: {{agent.id}}, Name: {{agent.name}}, Phone: {{agent.mobile_number}}, Email: {{agent.user.email}}
                 </option>
                 {% endfor %}
             </select>
@@ -172,8 +196,7 @@
                         <option value="">--Select Lead--</option>
                         {% for lead in agent.lead_set.all %}
                         <option value="{{ lead.id }}">
-                            Id: {{ lead.id }} - 
-                        Email: {{ lead.email }}
+                            Id: {{ lead.id }}, Email: {{ lead.email }}, Phone: {{lead.mobile_number}}, Student Name: {{lead.student_name}}, Parent Name: {{lead.parent_name}}, Block: {{lead.block}}, Location: {{lead.location_panchayat}}
                         </option>
                         {% endfor %}
                     </select>

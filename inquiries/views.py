@@ -218,7 +218,7 @@ def add_inquiry(request):
     if request.method == 'POST':
         form = UpdateLeadStatusForm(request.POST, user=request.user)
 
-        if form.is_valid():            
+        if form.is_valid():
             inquiry = form.save(commit=False)
                         
             if request.POST.get('block') == "Other":
@@ -245,7 +245,12 @@ def add_inquiry(request):
                     fail_silently=False,
                 )
             
+            # Add a success message
+            messages.success(request, "Lead successfully added !")
             return redirect('add_inquiry')
+        
+        else:
+            messages.error(request, "Some error occured !")
       
     else:
         form = UpdateLeadStatusForm(user=request.user)

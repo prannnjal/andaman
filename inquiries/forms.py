@@ -20,8 +20,6 @@ class InquiryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):        # constructor
         user = kwargs.pop('user', None)  # Get the user from the kwargs. Django’s ModelForm does not accept user as a parameter by default. Pop and Extract user before calling super()
         
-        instance = kwargs.get('instance')  # Get the existing instance, if available
-        
         super().__init__(*args, **kwargs)       # calling parent class constructor
         
         # Assign the 'date' widget to the date fields individually
@@ -52,9 +50,28 @@ class InquiryForm(forms.ModelForm):
         
         self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Student Class')] + list(self.fields['student_class'].choices)[1:])
         
-        self.fields['assigned_agent'].widget = forms.Select(choices=[('', 'Choose Agent')] + list(self.fields['assigned_agent'].choices)[1:])
+        # Set assigned_agent field
+        self.fields['assigned_agent'] = forms.ModelChoiceField(
+            queryset=Agent.objects.all(),
+            empty_label="Select the Agent"  # Replaces the default "--------" option
+        )
+        # Assign label_from_instance separately
+        self.fields['assigned_agent'].label_from_instance = lambda agent: f"Id: {agent.id}, Name: {agent.name}, Phone: {agent.mobile_number}, Email: {agent.user.email}"
         
-        self.fields['admin_assigned'].widget = forms.Select(choices=[('', 'Choose Admin')] + list(self.fields['admin_assigned'].choices)[1:])
+        
+        ''' First you have to create a Admin model to use the below code: 
+        
+        # Set admin_assigned field
+        self.fields['admin_assigned'] = forms.ModelChoiceField(
+            queryset=Amdin.objects.all(),
+            empty_label="Select the Admin"  # Replaces the default "--------" option
+        )
+        # Assign label_from_instance separately
+        self.fields['admin_assigned'].label_from_instance = lambda admin: f"Id: {admin.id}, Name: {admin.name}, Phone: {admin.mobile_number}, Email: {admin.user.email}"
+        '''
+        
+        
+        # self.fields['admin_assigned'].widget = forms.Select(choices=[('', 'Choose Admin')] + list(self.fields['admin_assigned'].choices)[1:])
 
                 
 
@@ -69,9 +86,6 @@ class UpdateLeadStatusForm(InquiryForm):
         instance = kwargs.get("instance")  # Get the instance if provided
         super().__init__(*args, **kwargs)  # Call the parent constructor
         
-
-        
-
 # ====================================================================================  
 
 class AgentForm(forms.ModelForm):
@@ -83,7 +97,7 @@ class AgentForm(forms.ModelForm):
 
     class Meta:
         model = Agent
-        fields = ['name', 'email']     # fields to display in the form. email is not present in the Agent schema as a field, so it would be taken from above.
+        fields = ['name', 'email', 'mobile_number']     # fields to display in the form. email is not present in the Agent schema as a field, so it would be taken from above.
         
         labels = {
             'name': 'Agent Name',

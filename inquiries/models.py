@@ -39,6 +39,8 @@ class Agent(models.Model):
     name = models.CharField(max_length=100)
     # email = models.EmailField(max_length=100, unique=True)
     performance_score = models.IntegerField(default=100)
+    mobile_number = models.CharField(max_length=14, null=True, blank=True)
+
 
     def __str__(self):
         return f"Name: {self.name},\nEmail: {self.user.email}"

@@ -20,6 +20,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -243,6 +246,13 @@
             border: 1px solid #b3b1b1;
         }
 
+        .flex-td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Ensures vertical alignment */
+            height: 100%;
+        }
+
         #inquiryTable{
             margin-top: 20px;
         }
@@ -348,6 +358,12 @@
 
         .hidden-column {
             display: none;
+        }
+        
+        .call-icon {
+            color: blue;
+            text-decoration: none;
+            font-size: 20px; /* Optional: Adjust size */
         }
         
 
@@ -715,11 +731,22 @@
         <tbody>
             {% for inquiry in inquiries %}
             <tr>
-                <td>{{ inquiry.id }}</td>
+                <td>
+                    <div style="display: flex; justify-content: center;">
+                        {{ inquiry.id }}
+                    </div>
+                </td>
                 <td>{{ inquiry.student_name }}</td>
                 <td>{{ inquiry.email }}</td>
                 <td>{{ inquiry.parent_name }}</td>
-                <td>{{ inquiry.mobile_number }}</td>
+                <td>
+                    <div class="flex-td">
+                        {{ inquiry.mobile_number }}
+                        <a href="tel:{{ inquiry.mobile_number }}" style="color: blue; text-decoration: none;">
+                            <i class="fa fa-phone"></i>
+                        </a>   
+                    </div>                      
+                </td>
                 <td>{{ inquiry.address }}</td>
                 <td>{{ inquiry.inquiry_source }}</td>
                 <td>{{ inquiry.student_class }}</td>
@@ -780,10 +807,11 @@
                 var isVisible = $(this).prop('checked');
         
                 // Toggle visibility based on checkbox state
-                $('#inquiryTable th:nth-child(' + (columnIndex + 1) + ')').toggle(isVisible);
+                $('#inquiryTable th').eq(columnIndex).toggle(isVisible);
                 $('#inquiryTable tbody tr').each(function () {
-                    $(this).find('td:nth-child(' + (columnIndex + 1) + ')').toggle(isVisible);
+                    $(this).find('td').eq(columnIndex).toggle(isVisible);
                 });
+
             });
         
             // Select All Button
@@ -823,10 +851,11 @@
             }
         
             var table = document.getElementById("inquiryTable");
-            var rows = Array.from(table.rows).slice(1); // Get all rows except header
+            var tbody = table.querySelector("tbody");
+            var rows = Array.from(tbody.querySelectorAll("tr")); // Get all rows except header
             var dir = new_th_element.classList.contains("asc") ? "asc" : "desc";
         
-            // Detect if column is numeric. row.cells is a collection of all <td> elements inside that row.
+            // Detect if column is numeric
             var isNumeric = rows.every(row => !isNaN(parseFloat(row.cells[columnIndex].innerText)));
         
             // Sorting function
@@ -847,9 +876,11 @@
                 else return x < y ? 1 : -1;
             });
         
-            // Re-add rows to the table
-            rows.forEach(row => table.appendChild(row));
+            // Append rows back to the table body
+            tbody.innerHTML = "";
+            rows.forEach(row => tbody.appendChild(row));
         }
+        
 
         // Initialize Select2 for dropdowns
         $(document).ready(function () {
