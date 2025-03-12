@@ -371,6 +371,26 @@
             text-decoration: none;
             font-size: 20px; /* Optional: Adjust size */
         }      
+
+        .btn-container {           
+            display: flex;  /* Flexbox for centering */
+            justify-content: center;  /* Centers the button horizontally */
+            margin-top: 30px; 
+        }
+
+       
+        a.nav {
+            display: inline-block; /* Prevents full-width stretching */
+            padding: 12px 25px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0056b3, #155bbe);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }        
         
 
     </style>
@@ -393,7 +413,7 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal('filterModal')">&times;</span>
             <h2>Filter Inquiries</h2>
-            <form method="get">       
+            <form method="get">
                 <div class="same_row_wrapper">
                     <select name="lead_id" class="searchable-select" data-placeholder="Choose Lead Id">
                         <option value="">All Ids</option>
@@ -655,82 +675,82 @@
     <table id="inquiryTable">
         <thead>
             <tr>
-                <th id="lead_id" onclick="sortColumn(event,0)">
+                <th id="lead_id" onclick="sortColumn(event,0,'number')">
                     Lead Id
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="student_name" onclick="sortColumn(event,1)">
+                <th style="cursor: default">Actions</th>
+
+                <th id="student_name" onclick="sortColumn(event,1,'string')">
                     Student Name
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="email" onclick="sortColumn(event,2)">
+                <th id="email" onclick="sortColumn(event,2,'string')">
                     Lead Email
                     <span class="sort-icon"></span>
                 </th>     
                 
-                <th id="parent_name" onclick="sortColumn(event,3)">
+                <th id="parent_name" onclick="sortColumn(event,3,'string')">
                     Parent Name
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="mobile_number" onclick="sortColumn(event,4)">
+                <th id="mobile_number" onclick="sortColumn(event,4,'string')">
                     Mobile Number
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="address" onclick="sortColumn(event,5)">
+                <th id="address" onclick="sortColumn(event,5,'string')">
                     Address
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="inquiry_source" onclick="sortColumn(event,6)">
+                <th id="inquiry_source" onclick="sortColumn(event,6,'string')">
                     Inquiry Source
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="student_class" onclick="sortColumn(event,7)">
+                <th id="student_class" onclick="sortColumn(event,7,'class')">
                     Student Class 
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="follow_up_date" onclick="sortColumn(event,8)">
+                <th id="follow_up_date" onclick="sortColumn(event,8,'date')">
                     Follow-up Date 
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="status" onclick="sortColumn(event,9)">
+                <th id="status" onclick="sortColumn(event,9,'string')">
                     Status
                     <span class="sort-icon"></span>
                 </th>
           
-                <th id="assigned_agent.name" onclick="sortColumn(event,10)">
+                <th id="assigned_agent.name" onclick="sortColumn(event,10,'string')">
                     Agent
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="assigned_agent.user.email" onclick="sortColumn(event,11)">
+                <th id="assigned_agent.user.email" onclick="sortColumn(event,11,'string')">
                     Agent Email
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="block" onclick="sortColumn(event,12)">
+                <th id="block" onclick="sortColumn(event,12,'string')">
                     Block
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="location_panchayat" onclick="sortColumn(event,13)">
+                <th id="location_panchayat" onclick="sortColumn(event,13,'string')">
                     Location/Panchayat
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="admin_assigned.email" onclick="sortColumn(event,14)">
+                <th id="admin_assigned.email" onclick="sortColumn(event,14,'string')">
                     Admin Email
                     <span class="sort-icon"></span>
-                </th>
-                                                             
-                <th style="cursor: default">Actions</th>
+                </th>                                                                             
 
             </tr>
         </thead>
@@ -740,6 +760,15 @@
                 <td>
                     <div style="display: flex; justify-content: center;">
                         {{ inquiry.id }}
+                    </div>
+                </td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap:25px; justify-content: center;">
+                        <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
+
+                        <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>
+
+                        <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
                     </div>
                 </td>
                 <td>{{ inquiry.student_name }}</td>
@@ -762,17 +791,7 @@
                 <td>{{ inquiry.assigned_agent.user.email|default:"NULL" }}</td>
                 <td>{{ inquiry.block|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->
                 <td>{{ inquiry.location_panchayat|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->                
-                <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>
-                <td style="text-align: center;">
-                    <div style="display: flex; gap:25px; justify-content: center;">
-                        <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
-
-                        <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>
-
-                        <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
-                    </div>
-                </td>
-                       
+                <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>                                       
             </tr>
             {% empty %}
             <tr>
@@ -783,12 +802,13 @@
         
     </table>
 </div>
-
+ 
 
     <!--Dashboard Link -->
-     <button class="dashboard">
-        <a href="{% url 'dashboard' %}" class="no-style">Back to Dashboard</a>
-     </button>
+    <div class="btn-container">     
+        <a href="{% url 'dashboard' %}" class="no-style nav">Back to Dashboard           
+        </a>       
+    </div>
     
 
     <!-- Modal Scripts -->
@@ -839,8 +859,26 @@
         let curr_th_element = document.getElementById("lead_id")
         curr_th_element.classList.add("asc")
 
+        classOrder = {
+            'Nursery': 1,
+            'LKG': 2,
+            'UKG': 3,
+            'Grade 1': 4,
+            'Grade 2': 5,
+            'Grade 3': 6,
+            'Grade 4': 7,
+            'Grade 5': 8,
+            'Grade 6': 9,
+            'Grade 7': 10,
+            'Grade 8': 11,
+            'Grade 9': 12,
+            'Grade 10': 13,
+            'Grade 11': 14,
+            'Grade 12': 15,
+        }
+
         // Sorting function
-        function sortColumn(event, columnIndex) {
+        function sortColumn(event, columnIndex, category) {
             let new_th_element = event.target.closest('th');
         
             // Handle ASC/DESC classes
@@ -863,19 +901,34 @@
             var rows = Array.from(tbody.querySelectorAll("tr")); // Get all rows except header
             var dir = new_th_element.classList.contains("asc") ? "asc" : "desc";
         
-            // Detect if column is numeric
-            var isNumeric = rows.every(row => !isNaN(parseFloat(row.cells[columnIndex].innerText)));
-        
             // Sorting function
             rows.sort((rowA, rowB) => {
                 let x = rowA.cells[columnIndex].innerText.trim();
                 let y = rowB.cells[columnIndex].innerText.trim();
+
+                // Handle empty/null values (send them to the end)
+                const isEmpty = (val) => {
+                    return val === "" || val === "None" || val === "null" || val === null || val === undefined || val === "NULL";
+                }
+
+                if (isEmpty(x) && isEmpty(y)) return 0; // Both are empty, keep order
+                if (isEmpty(x)) return 1; // x is empty, push it to the end
+                if (isEmpty(y)) return -1; // y is empty, push it to the end
         
                 // Convert to numbers if numeric
-                if (isNumeric) {
+                if (category == 'number') {
                     x = parseFloat(x);
                     y = parseFloat(y);
-                } else {
+                } 
+                else if(category == 'date') {
+                    x = new Date(x).getTime(); // Convert to timestamp
+                    y = new Date(y).getTime();
+                }
+                else if(category == 'class') {
+                    x = classOrder[x]; // Convert to timestamp
+                    y = classOrder[y];
+                }
+                else{
                     x = x.toLowerCase();
                     y = y.toLowerCase();
                 }
