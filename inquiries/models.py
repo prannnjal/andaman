@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User, AbstractUser
-from cities_light.models import City
 import pandas as pd
+from django.utils.timezone import now
+import json
 
 # print("======================> os.getcwd = ", os.getcwd())
 
@@ -29,9 +30,12 @@ class CustomUser(AbstractUser):
     Here, we override it so users log in using their email instead.
     '''
     REQUIRED_FIELDS = ['username']  # 'username' is required when creating a user via createsuperuser
-
+            
     def __str__(self):
-        return f"Username: {self.username},\nEmail: {self.email}"
+        if self.is_staff:
+            return f"Username: {self.username},\nEmail: {self.email} (Admin)"
+        else:
+            return f"Username: {self.username},\nEmail: {self.email} (Agent)"
     
     
 class Agent(models.Model):
@@ -114,3 +118,14 @@ class Lead(models.Model):
    
     def __str__(self):
         return f"Name: {self.student_name},\nParent Name: {self.parent_name},Email:{self.email},Student Class:{self.student_class},\nmobile_number:{self.mobile_number},\nAddress:{self.address},\nBlock:{self.block},\nLocation:{self.location_panchayat},\nInquiry Source:{self.inquiry_source},\nStatus:{self.status}"
+    
+
+class LeadLogs(models.Model):
+    lead = models.ForeignKey("Lead", on_delete=models.CASCADE, related_name="history")
+    changed_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    changed_at = models.DateTimeField(default=now)
+    previous_data = models.JSONField(default=dict)  # Stores previous values
+    new_data = models.JSONField(default=dict)   # Stores updated values
+    
+    def __str__(self):
+        return f"The Lead with ID = {self.lead.id} was changed by {self.changed_by} at {self.changed_at}"

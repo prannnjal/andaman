@@ -161,6 +161,12 @@
             cursor: pointer;
         }
 
+        .log{
+            all: unset; /* Resets all styles */
+            color: rgb(13, 0, 255);
+            cursor: pointer;
+        }
+
 
         /* Apply No-Style to Reset Link if Specified */
         a.no-style {
@@ -364,7 +370,7 @@
             color: blue;
             text-decoration: none;
             font-size: 20px; /* Optional: Adjust size */
-        }
+        }      
         
 
     </style>
@@ -762,6 +768,8 @@
                         <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
 
                         <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>
+
+                        <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
                     </div>
                 </td>
                        

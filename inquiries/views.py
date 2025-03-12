@@ -1,16 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Lead, Agent, CustomUser
+from .models import Lead, Agent, CustomUser, LeadLogs
 from .forms import InquiryForm, AgentForm, UpdateLeadStatusForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
-from datetime import date, timedelta
+from datetime import timedelta
 from django.http import HttpResponse
 from django.core.mail import send_mail
 from django.utils.timezone import now
 from django.contrib import messages
 from openpyxl import Workbook
-from django.db.models import Count, Q, DateField, F
+from django.db.models import Count, Q, F
 from django.db.models.functions import TruncDate
 from django.conf import settings
 from django.http import JsonResponse
@@ -19,6 +19,8 @@ from django.db.models.functions import Coalesce
 from django.db.models import ExpressionWrapper
 from django.db.models import FloatField
 from datetime import datetime
+from django.forms.models import model_to_dict
+import json
 
 
 
@@ -258,11 +260,37 @@ def add_inquiry(request):
     return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Add new Inquiry'})
 
 # ====================================================================================
-
+def Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, changed_by):    
+    previous_data = model_to_dict(old_inquiry_instance)
+    new_data = model_to_dict(new_inquiry_instance)
+    
+    # Get all unique field names from both dictionaries
+    all_fields = set(previous_data.keys()).union(set(new_data.keys()))
+    
+    # Compare previous and new data to track changes
+    changes = {
+        field: {'old': previous_data.get(field, None), 'new': new_data.get(field, None)}
+        for field in all_fields 
+        if previous_data.get(field) != new_data.get(field)
+    }
+    
+    # Save changes in LeadLogs only if there are differences
+    if changes:
+        LeadLogs.objects.create(
+            lead=new_inquiry_instance,
+            changed_by=changed_by,
+            changed_at=now(),
+            previous_data=json.dumps(previous_data, default=str),  
+            new_data=json.dumps(new_data, default=str)
+        )
+        
+    
 @login_required
 def manage_lead_status(request, inquiry_id):
     # Fetch the Lead instance for the given inquiry_id
-    inquiry = get_object_or_404(Lead, id=inquiry_id)    # fetches that instance from Lead model whose id is=inquiry_id 
+    inquiry = get_object_or_404(Lead, id=inquiry_id)    # fetches that instance from Lead model whose id is=inquiry_id
+    
+    
 
     if request.method == 'POST':
         # print("=====================> request  = ",request.POST)
@@ -270,6 +298,9 @@ def manage_lead_status(request, inquiry_id):
         form = InquiryForm(request.POST, instance=inquiry)
         
         if form.is_valid(): # Ensures all required fields are correctly filled.
+            old_inquiry_instance = Lead.objects.get(id=inquiry.id)  # Fetch a fresh copy of the old data
+    
+            
             inquiry = form.save(commit=False)
                         
             if request.POST.get('block') == "Other":
@@ -277,9 +308,14 @@ def manage_lead_status(request, inquiry_id):
 
             if request.POST.get('location_panchayat') == "Other":
                 inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
-
+                
             
             inquiry.save() 
+            
+            new_inquiry_instance = inquiry  # Store the new data after changes
+            
+            # Save logs of changes
+            Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, request.user)
             
             # Optionally, add logic for email notifications or additional actions here
             
@@ -806,4 +842,25 @@ def agent_list(request):
         "max_leads_handled_filter" : max_leads_handled_filter,
     })
     
+# ====================================================================================
+
+def lead_logs_view(request, lead_id):
+    lead = Lead.objects.get(id=lead_id)   
+    logs = LeadLogs.objects.filter(lead_id=lead_id).order_by('-changed_at')  # Sort by changed_at (ascending)
+
+    for log in logs:
+        previous_data = json.loads(log.previous_data)  # Convert JSON string to dictionary
+        new_data = json.loads(log.new_data)
+
+        # Identify changed fields
+        changes = {
+            field: {'old': previous_data.get(field), 'new': new_data.get(field)}
+            for field in previous_data
+            if previous_data.get(field) != new_data.get(field)
+        }
+
+        log.changes = changes  # Attach changes to the log object
+
+    return render(request, 'inquiries/lead_logs.html', {'lead': lead, 'logs': logs})
+
 # ====================================================================================

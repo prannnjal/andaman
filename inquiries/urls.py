@@ -12,6 +12,7 @@ urlpatterns = [
     path('remove_lead/', views.remove_lead_from_agent_view, name='remove_lead'),
     path('reassign_lead/', views.assign_lead_to_agent_view, name='assign_lead'),        
     path('update_status/<int:inquiry_id>/', views.manage_lead_status, name='update_status'),
+    path('lead_logs/<int:lead_id>/', views.lead_logs_view, name='view-lead-logs'),
     path('delete_inquiry/<int:id>/', views.delete_inquiry, name='delete_inquiry'),
     
     path('agents/', views.agent_list, name='agent_list'),

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Logs - {{ lead.student_name }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        /* Global Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;         
+            color: #333;
+        }
+
+        h2, h3 {
+            text-align: center;
+            color: #000000;
+            font-size: 28px;
+            font-weight: bold;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+            
+        }
+
+        /* Lead Info Styling */
+        .lead-info {                     
+            background: #fff;
+            padding: 20px;           
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            margin-bottom: 20px;            
+            margin: 0 auto;
+            animation: fadeIn 0.5s ease-in-out;
+        }       
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            padding: 15px;
+            text-align: left;            
+        }
+
+        .grid-container p {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            
+        }
+
+        .change-box {
+            flex: 1;
+            padding: 18px;
+            border-radius: 10px;
+            font-size: 15px;
+            line-height: 1.6;
+            transition: background 0.3s ease;
+        }
+
+        .change-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+                
+        .grid-container p strong {
+            color: #007bff;
+        }
+
+        /* Timeline Styling */
+        .timeline {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        .timeline-item {
+            background: linear-gradient(135deg, #ffffff, #f1f8ff);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Timestamp & Changed By */
+        .timestamp {
+            font-size: 15px;
+            color: #666;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .changed-by {
+            font-weight: bold;
+            color: #007bff;
+            display: block;
+            margin-bottom: 25px;            
+        }
+
+        /* Change Data Boxes */
+        .change-wrapper {
+            display: flex;
+            justify-content: space-between;
+            gap: 30px; /* Increased gap for better separation */
+            margin-top: 15px;
+            align-items: center;
+        }
+
+        .right-arrow{            
+            color: #000000;          
+        }
+
+        .down-arrow{            
+            display: none;
+            color: #000000;              
+        }
+
+
+        /* Old & New Data Styling */
+        .old-data {
+            background: #ffecec; /* Light Red */
+            color: #d9534f;
+            border-left: 5px solid #d9534f;
+        }
+
+        .new-data {
+            background: #e6ffe6; /* Light Green */
+            color: #2d862d;
+            border-left: 5px solid #2d862d;
+        }
+
+        /* Section Headers */
+        .log_data_header {
+            text-align: left; /* Align headers to the left */
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }                
+ 
+        
+
+        
+
+        @media(max-width: 1200px){
+            .grid-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        
+        @media(max-width: 970px){
+            .grid-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media(max-width: 800px){
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media(max-width: 640px){
+            .grid-container {
+                grid-template-columns: repeat(1, 1fr);
+            }
+            .right-arrow{
+                display: none;
+            }
+        }
+
+        @media(max-width: 510px){        
+            .down-arrow{
+                display: block;
+                margin: 10px auto;
+            }
+            .change-wrapper {
+                display: block;                    
+            }          
+        }
+       
+        .btn-container {           
+            display: flex;  /* Flexbox for centering */
+            justify-content: center;  /* Centers the button horizontally */
+            margin-top: 30px; 
+        }
+
+       
+        a.no-style {
+            display: inline-block; /* Prevents full-width stretching */
+            padding: 12px 25px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0056b3, #003580);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }        
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Lead Logs Timeline</h2>
+
+    <!-- Lead Info -->
+    <div class="lead-info">
+        <h3>Lead Details</h3>
+        <div class="grid-container">
+            <p><strong>Lead Id: </strong> {{ lead.id }}</p>
+            <p><strong>Student Name:</strong> {{ lead.student_name }}</p>
+            <p><strong>Lead Email:</strong> {{ lead.email }}</p>
+            <p><strong>Parent Name:</strong> {{ lead.parent_name }}</p>
+            <p>
+                <strong>Mobile Number:</strong> 
+                <span class="flex-td">
+                    {{ lead.mobile_number }}
+                    <a href="tel:{{ lead.mobile_number }}" style="color: blue; text-decoration: none;">
+                        <i style="margin: 5px;" class="fa fa-phone"></i>
+                    </a>   
+                </span>                      
+            </p>
+            <p><strong>Address:</strong> {{ lead.address }}</p>
+            <p><strong>Inquiry Source:</strong> {{ lead.inquiry_source }}</p>
+            <p><strong>Student Class:</strong> {{ lead.student_class }}</p>
+            <p><strong>Follow-up Date:</strong> {{ lead.follow_up_date }}</p>
+            <p><strong>Status:</strong> {{ lead.status }}</p>
+            <p><strong>Agent:</strong> {{ lead.assigned_agent.name|default:"UNASSIGNED" }}</p>
+            <p><strong>Agent Email:</strong> {{ lead.assigned_agent.user.email|default:"NULL" }}</p>
+            <p><strong>Block:</strong> {{ lead.block|default:"UNASSIGNED" }}</p>
+            <p><strong>Location/Panchayat:</strong> {{ lead.location_panchayat|default:"UNASSIGNED" }}</p>                
+            <p><strong>Admin Assigned Email:</strong> {{ lead.admin_assigned.email|default:"NULL" }}</p>
+        </div>
+    </div>
+    
+    
+    <!-- Logs Timeline -->
+    <h3>Logs Timeline</h3>
+    <div class="timeline">
+        {% for log in logs %}
+            <div class="timeline-item">
+                <div class="timestamp">{{ log.changed_at }}</div>
+                <span class="changed-by">Changed By: {{ log.changed_by }}</span>
+
+                <div class="change-wrapper">
+                    <div class="change-box old-data">
+                        <strong class="log_data_header">Previous Data:</strong>
+                        {% for key, value in log.changes.items %}
+                            <span><b>{{ key }}:</b> {{ value.old }}</span><br>
+                        {% endfor %}
+                    </div>
+
+           
+                    <svg class="right-arrow" width="100" height="20" viewBox="0 0 100 20">
+                        <line x1="0" y1="10" x2="80" y2="10" stroke="black" stroke-width="2"/>
+                        <polygon points="80,5 95,10 80,15" fill="black"/>
+                    </svg>
+                    
+                    <!-- Down Arrow (Hidden by default) -->
+                    <svg class="down-arrow" width="20" height="100" viewBox="0 0 20 100">
+                        <line x1="10" y1="0" x2="10" y2="80" stroke="black" stroke-width="2"/>
+                        <polygon points="5,80 10,95 15,80" fill="black"/>
+                    </svg>    
+                  
+                
+
+                    <div class="change-box new-data">
+                        <strong class="log_data_header">New Data:</strong>
+                        {% for key, value in log.changes.items %}
+                            <span><b>{{ key }}:</b> {{ value.new }}</span><br>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Back to List Button -->
+    <div class="btn-container">     
+        <a href="{% url 'inquiry_list' %}" class="no-style">Back to Inquiries List            
+        </a>       
+    </div>
+
+</body>
+</html>
