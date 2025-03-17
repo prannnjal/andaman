@@ -106,12 +106,22 @@ class Lead(models.Model):
     rejected_date = models.DateField(null=True, blank=True)
     follow_up_date = models.DateField(null=True, blank=True)
     
-    assigned_agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True)
+    # assigned_agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    assigned_agent = models.ForeignKey(
+        Agent,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        default=None  
+    )
+    
     admin_assigned = models.ForeignKey(
         CustomUser,  # Refers to our Custom-User model
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
+        default=None,
         limit_choices_to={'is_staff': True}  # Restrict to staff users (admins) in the dropdown of django forms. is_staff is a boolean field (True or False) in Django’s built-in User model. It is used to determine whether a user has access to the Django admin panel.
     )
     

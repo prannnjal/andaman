@@ -252,7 +252,7 @@ def add_inquiry(request):
             return redirect('add_inquiry')
         
         else:
-            messages.error(request, "Some error occured !")
+            messages.error(request, "Some error occured, please ensure that the form is valid !")
       
     else:
         form = UpdateLeadStatusForm(user=request.user)

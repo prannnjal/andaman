@@ -53,6 +53,7 @@ class InquiryForm(forms.ModelForm):
         # Set assigned_agent field
         self.fields['assigned_agent'] = forms.ModelChoiceField(
             queryset=Agent.objects.all(),
+            required=False,  # 👈 Make it optional
             empty_label="Select the Agent"  # Replaces the default "--------" option
         )
         # Assign label_from_instance separately
