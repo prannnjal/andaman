@@ -19,13 +19,12 @@ CustomUser = get_user_model()
 
 # List of agents to create
 agents_data = [
-    # {"name": "Uzma", "email": "uzma95427@gmail.com"},
-    # {"name": "Sangam", "email": "sangamsanjana76@gmai.com"},
-    # {"name": "Anisha", "email": "anishapantha91@gmail.com"},
-    # {"name": "Praveen Rifat", "email": "praveenrifat81@gmail.com"},
-    # {"name": "Chandan", "email": "eng.chandan@gmail.com"},
-    # {"name": "Swati", "email": "swati.og@gmail.com"},
-    {"name": "Sushant", "email": "sushant889427@gmail.com"},
+    {"name": "Uzma", "email": "uzma95427@gmail.com"},
+    {"name": "Sangam", "email": "sangamsanjana76@gmai.com"},
+    {"name": "Anisha", "email": "anishapantha91@gmail.com"},
+    {"name": "Praveen Rifat", "email": "praveenrifat81@gmail.com"},
+    {"name": "Chandan", "email": "eng.chandan@gmail.com"},
+    {"name": "Swati", "email": "swati.og@gmail.com"},    
 ]
 
 def create_agents():
