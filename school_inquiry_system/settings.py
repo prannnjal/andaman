@@ -176,3 +176,5 @@ If you define multiple backends, Django will try them one by one.
 '''
 
 AUTH_USER_MODEL = 'inquiries.CustomUser'        # It means I don't want to use the default User model of Django, rather I want to use my own Cutom User model (where I can enforce unique constraint to the email of users which is not there in default User model)
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
