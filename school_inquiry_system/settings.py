@@ -52,7 +52,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')    # Critical for cryptographic signing (e.
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['dejawoo.site', '44.220.151.122', '127.0.0.1']
+ALLOWED_HOSTS = ['dejawoo.site', '44.220.151.122', '54.226.177.168', '127.0.0.1']
 
 
 # Application definition
