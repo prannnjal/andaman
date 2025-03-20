@@ -52,7 +52,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')    # Critical for cryptographic signing (e.
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['dejawoo.site', '44.220.151.122', '54.226.177.168', '127.0.0.1']
+ALLOWED_HOSTS = ['dejawoo.site', 'www.dejawoo.site', '54.226.177.168', '127.0.0.1']
 
 
 # Application definition
@@ -176,5 +176,3 @@ If you define multiple backends, Django will try them one by one.
 '''
 
 AUTH_USER_MODEL = 'inquiries.CustomUser'        # It means I don't want to use the default User model of Django, rather I want to use my own Cutom User model (where I can enforce unique constraint to the email of users which is not there in default User model)
-
-SECURE_CROSS_ORIGIN_OPENER_POLICY = None
