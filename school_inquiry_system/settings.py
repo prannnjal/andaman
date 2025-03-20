@@ -104,8 +104,12 @@ WSGI_APPLICATION = 'school_inquiry_system.wsgi.application' # Defines the WSGI a
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',     # specifies what database you are using: mysql or mariadb etc...
-        'NAME': BASE_DIR / 'db.sqlite3',        # file location of that database
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'Inquiries',
+        'USER': 'admin',
+        'PASSWORD': 'School@2025',
+        'HOST': 'localhost',
+        'PORT': '3306',
     }
 }
 
