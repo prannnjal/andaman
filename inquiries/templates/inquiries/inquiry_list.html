@@ -9,7 +9,7 @@
     <title>Inquiry List</title>
 
     <!-- External CSS -->
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+    <!-- <link rel="stylesheet" href="{% static 'css/styles.css' %}"> -->
 
     <!-- jQuery (for Sorting and Select2) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -84,6 +84,22 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%); /* Centers the element */  
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
         }
 
         /* Close Button */
