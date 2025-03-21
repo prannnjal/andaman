@@ -154,7 +154,8 @@ STATIC_URL = '/static/'     # This URL (/static/) will be prefixed to all static
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')     # Used in production to store all collected static files in one place. When running: python manage.py collectstatic Django will copy all static files into STATIC_ROOT.
 
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # Optional, ells Django where to look for additional static files in development. Django will search these directories when resolving {% static %} tags.
+    # os.path.join(BASE_DIR, "static"),  
+    BASE_DIR / "static",  # Optional, tells Django where to look for additional static files in development. Django will search these directories when resolving {% static %} tags.
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
