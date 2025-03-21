@@ -628,8 +628,8 @@ def export_inquiries_excel(request):
             inquiry.admission_offered_date if inquiry.admission_offered_date else "N/A",
             inquiry.admission_confirmed_date if inquiry.admission_confirmed_date else "N/A",
             inquiry.rejected_date if inquiry.rejected_date else "N/A",
-            inquiry.assigned_agent.name if inquiry.assigned_agent else "N/A",
-            inquiry.admin_assigned.username if inquiry.admin_assigned else "N/A"
+            inquiry.assigned_agent.user.email if inquiry.assigned_agent else "N/A",
+            inquiry.admin_assigned.email if inquiry.admin_assigned else "N/A"
         ])
 
     # Set the response content type and save the workbook to the response
