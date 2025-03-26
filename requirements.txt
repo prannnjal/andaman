@@ -4,3 +4,4 @@ gunicorn
 pandas
 python-dotenv
 mysqlclient
+boto3
