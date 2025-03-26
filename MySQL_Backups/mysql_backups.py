@@ -5,9 +5,13 @@ import datetime
 import gzip
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variable.
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PARENT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))
+ENV_PATH = os.path.join(PARENT_DIR, ".env")
 
+# Load .env from the parent directory
+load_dotenv(ENV_PATH, override=True)
 # Database Credentials
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
@@ -16,12 +20,13 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION")
 
+
 # Backup Directory
-BACKUP_DIR = "MySQL_Backups"
+BACKUP_DIR = os.path.join(SCRIPT_DIR, "backups")
 S3_BUCKET = os.getenv("DB_S3_BUCKET")
 S3_FOLDER = "mysql-backups"
 
-# print("=====================> env = ",DB_NAME, DB_PASS)
+# print("=====================> env = ",DB_NAME, DB_PASS, " and env path = ",ENV_PATH)
 
 # Date Format
 DATE = datetime.datetime.now().strftime("%Y-%m-%d")
