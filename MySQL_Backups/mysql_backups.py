@@ -5,6 +5,8 @@ import datetime
 import gzip
 from dotenv import load_dotenv
 
+#print("=======================================> aaj mai chalungaa script")
+
 # Load environment variable.
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, ".."))

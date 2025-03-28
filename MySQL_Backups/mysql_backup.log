@@ -1,0 +1,7 @@
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+=======================================> aaj mai chalungaa script
+Backup completed and compressed: /home/ubuntu/School_Management/MySQL_Backups/backups/Inquiries-2025-03-27.sql.gz
+Uploaded to S3: s3://crm-school-management-db-backup/mysql-backups/Inquiries-2025-03-27.sql.gz
+mysqldump: [Warning] Using a password on the command line interface can be insecure.
+Backup completed and compressed: /home/ubuntu/School_Management/MySQL_Backups/backups/Inquiries-2025-03-28.sql.gz
+Uploaded to S3: s3://crm-school-management-db-backup/mysql-backups/Inquiries-2025-03-28.sql.gz
