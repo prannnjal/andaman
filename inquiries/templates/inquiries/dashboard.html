@@ -26,14 +26,13 @@
         h3 {
             color: #333;
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
         /* Container */
-        .container {
-            max-width: 1200px;
+        .container {           
             margin: auto;
-            padding: 20px;
+            padding: 30px;
         }
 
         /* Navigation Links */
@@ -44,23 +43,28 @@
             justify-content: center;
             flex-wrap: wrap;
             margin-bottom: 30px;
+            gap:10px;
         }
 
         li {
             display: inline-block;
-            margin: 10px 15px;
+            margin: 5px 15px;
+            border: 2px solid rgb(77, 76, 76);            
+            padding: 7px;
+            border-radius: 8px;
+            background-color: #d7d7d795;
         }
 
         a {
             text-decoration: none;
-            color: #007bff;
-            font-weight: bold;
-            font-size: 16px;
+            color: #000000;
+            font-weight: 500;
+            font-size: 14px;
         }
 
         a:hover {
             color: #0056b3;
-            text-decoration: underline;
+            color: #000000;
         }
 
         .table-wrapper {
@@ -95,7 +99,21 @@
         tr:hover {
             background-color: #f1f1f1;
         }
-       
+        
+        .status_table_wrapper{
+            border-top: 2px solid black;
+            padding-top: 30px;
+            margin-top: 50px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .status_table_wrapper div {
+            width: 45%; /* Adjust as needed */
+            min-width: 300px; /* Ensures they fit on smaller screens */
+        }
 
         /* Responsive Styling for Tables */
         @media screen and (max-width: 768px) {
@@ -112,11 +130,7 @@
 
         /* Responsive Flexbox Layout for Links */
         @media screen and (max-width: 768px) {
-            ul {
-                flex-direction: column;
-                align-items: center;
-            }
-
+           
             li {
                 margin: 5px 0;
             }
@@ -139,17 +153,17 @@
     </style>
 </head>
 
-<body>
 
+<body>
     <div class="container">
-        <h1>Dashboard</h1>
-        
+        <h1>Dashboard</h1>        
         <!-- Navigation Links -->
         <ul>
             <li><a href="{% url 'inquiry_list' %}">View Inquiries</a></li>
             <li><a href="{% url 'add_inquiry' %}">Add New Inquiry</a></li>
             <li><a href="{% url 'agent_performance' %}">Agent Performance</a></li>
             <li><a href="{% url 'export_inquiries_csv' %}">Export Inquiries to Excel</a></li>
+            <li><a href="{% url 'detailed_stats' %}">Detailed Stats</a></li>
             {% if user.is_staff %}
                 <li><a href="{% url 'remove_lead' %}">Remove Agent from Lead</a></li>
                 <li><a href="{% url 'assign_lead' %}">Assign Lead to Agent</a></li>
@@ -163,183 +177,87 @@
 
             <li><a href="{% url 'password_reset' %}">Password Reset</a></li>
             <li><a href="#" onclick="document.getElementById('logout-form').submit();">Logout</a></li>
-            
-            
         </ul>
 
-        <!-- Current Status -->
-        <h2 class="table-title">Current Status:</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Inquiries</td>
-                    <td>{{ total_inquiries }}</td>
-                </tr>
-                <tr>
-                    <td>Registrations</td>
-                    <td>{{ total_registrations }}</td>
-                </tr>
-                <tr>
-                    <td>Admission Tests</td>
-                    <td>{{ total_tests }}</td>
-                </tr>
-                <tr>
-                    <td>Admissions Offered</td>
-                    <td>{{ total_admissions_offered }}</td>
-                </tr>
-                <tr>
-                    <td>Admissions Confirmed</td>
-                    <td>{{ total_admissions_confirmed }}</td>
-                </tr>
-                <tr>
-                    <td>Rejected</td>
-                    <td>{{ rejected }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Today's Status -->
-        <h2 class="table-title">Today's Status:</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Today's Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Inquiries</td>
-                    <td>{{ inquiries_today }}</td>
-                </tr>
-                <tr>
-                    <td>Registrations</td>
-                    <td>{{ registrations_today }}</td>
-                </tr>
-                <tr>
-                    <td>Admission Tests</td>
-                    <td>{{ tests_today }}</td>
-                </tr>
-                <tr>
-                    <td>Admissions Offered</td>
-                    <td>{{ admissions_offered_today }}</td>
-                </tr>
-                <tr>
-                    <td>Admissions Confirmed</td>
-                    <td>{{ admissions_confirmed_today }}</td>
-                </tr>
-                <tr>
-                    <td>Rejected</td>
-                    <td>{{ rejected_today }}</td>
-                </tr>
-            </tbody>
-        </table>
-
-        <!-- Detailed Stats -->
-        <h2 class="table-title">Detailed Statistics</h2>
-
-        <!-- Inquiries by Class -->
-        <h3>Inquiries by Class:</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Class</th>
-                    <th>Inquiries Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for inquiry in inquiries_by_class %}
-                <tr>
-                    <td>{{ inquiry.student_class }}</td>
-                    <td>{{ inquiry.total }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Inquiries by Source -->
-        <h3>Inquiries by Source:</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Source</th>
-                    <th>Inquiries Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for source in inquiries_by_source %}
-                <tr>
-                    <td>{{ source.inquiry_source }}</td>
-                    <td>{{ source.total }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Inquiries by Block -->
-        <h3>Inquiries by Block:</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Block</th>
-                    <th>Inquiries Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for blocks in inquiries_by_block %}
-                <tr>
-                    <td>{{ blocks.block }}</td>
-                    <td>{{ blocks.total }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Inquiries by Location -->
-        <h3>Inquiries by Location:</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Location</th>
-                    <th>Inquiries Count</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for location in inquiries_by_location %}
-                <tr>
-                    <td>{{ location.location_panchayat }}</td>
-                    <td>{{ location.total }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <!-- Recent Inquiries -->
-        <h3>Recent Inquiries:</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Source</th>
-                    <th>Class</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for inquiry in recent_inquiries %}
-                <tr>
-                    <td>{{ inquiry.inquiry_date }}</td>
-                    <td>{{ inquiry.inquiry_source }}</td>
-                    <td>{{ inquiry.student_class }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>        
+        <div class="status_table_wrapper">
+            <div>
+                <!-- Overall Status -->
+                <h2 class="table-title">Overall Status:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Inquiries</td>
+                            <td>{{ total_inquiries }}</td>
+                        </tr>
+                        <tr>
+                            <td>Registrations</td>
+                            <td>{{ total_registrations }}</td>
+                        </tr>
+                        <tr>
+                            <td>Admission Tests</td>
+                            <td>{{ total_tests }}</td>
+                        </tr>
+                        <tr>
+                            <td>Admissions Offered</td>
+                            <td>{{ total_admissions_offered }}</td>
+                        </tr>
+                        <tr>
+                            <td>Admissions Confirmed</td>
+                            <td>{{ total_admissions_confirmed }}</td>
+                        </tr>
+                        <tr>
+                            <td>Rejected</td>
+                            <td>{{ rejected }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+    
+            <div>
+                <!-- Today's Status -->
+                <h2 class="table-title">Today's Status:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Today's Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Inquiries</td>
+                            <td>{{ inquiries_today }}</td>
+                        </tr>
+                        <tr>
+                            <td>Registrations</td>
+                            <td>{{ registrations_today }}</td>
+                        </tr>
+                        <tr>
+                            <td>Admission Tests</td>
+                            <td>{{ tests_today }}</td>
+                        </tr>
+                        <tr>
+                            <td>Admissions Offered</td>
+                            <td>{{ admissions_offered_today }}</td>
+                        </tr>
+                        <tr>
+                            <td>Admissions Confirmed</td>
+                            <td>{{ admissions_confirmed_today }}</td>
+                        </tr>
+                        <tr>
+                            <td>Rejected</td>
+                            <td>{{ rejected_today }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>        
     </div>
 
 </body>

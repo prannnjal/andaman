@@ -97,10 +97,6 @@
             text-align: left;
             border: 1px solid #ddd;
         }
-        
-        th {
-            background-color: #f2f2f2;
-        }
 
         /* Close Button */
         .close {
@@ -160,6 +156,8 @@
 
        
 
+       
+
         /* Reset Link Styles */
         a {
             text-decoration: none;
@@ -204,11 +202,15 @@
             gap: 5px;
         }
 
-        th{
+        th{           
             cursor: pointer;
             text-align: center;
             min-width: 150px;
-            background-color: #00ffcc63;
+            background-color: #6dffe2;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            
         }
 
         /* ::after pseudo-element inserts content after the existing content inside the selected element.
@@ -264,9 +266,20 @@
             margin-top :25px;
         }
 
-        td, th{
-            border: 1px solid #b3b1b1;
+        .table_wrapper{
+            border: 2px solid red;   
+            margin-top: 20px;     
+            overflow: auto; 
+            max-width: 100%;     
+            height: 70vh;          
         }
+
+        #inquiryTable{             
+        }        
+
+        td, th{
+            border: 1px solid #b3b1b1;                 
+        }       
 
         .flex-td {
             display: flex;
@@ -275,9 +288,7 @@
             height: 100%;
         }
 
-        #inquiryTable{
-            margin-top: 20px;
-        }
+        
 
         button {            
             color: white;
@@ -298,7 +309,7 @@
             background-color: #07a038;
         }
         .dashboard{
-            background-color: #2a74ec;
+            background-color: #ff00a6;
         }
         #filter_date{
             font-size: 18px;
@@ -421,8 +432,11 @@
     <button class="add-inquiry">
         <a class="no-style" href="{% url 'add_inquiry' %}">Add New Inquiry</a>
     </button>
-    
-    
+
+    <button class="dashboard">
+        <a class="no-style" href="{% url 'dashboard' %}">Dashboard</a>
+    </button>
+
 
     <!-- Filters Modal -->
     <div id="filterModal" class="modal">
@@ -687,7 +701,7 @@
 
     
     
-    <div style="overflow-x: auto; max-width: 100%;">
+    <div class="table_wrapper">
     <table id="inquiryTable">
         <thead>
             <tr>
@@ -818,14 +832,7 @@
         
     </table>
 </div>
- 
-
-    <!--Dashboard Link -->
-    <div class="btn-container">     
-        <a href="{% url 'dashboard' %}" class="no-style nav">Back to Dashboard           
-        </a>       
-    </div>
-    
+     
 
     <!-- Modal Scripts -->
     <script>

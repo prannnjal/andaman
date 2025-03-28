@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',  # Provides a temporary messaging system (flash messages). Often used for user notifications (e.g., success, error, warning messages).
     'django.contrib.staticfiles',   # Collects all static files from different apps into one directory.
     'inquiries',    # App created by you   
+    'livereload'
 ]
 
 MIDDLEWARE = [

@@ -352,7 +352,7 @@
                     <!-- agent.converted_leads would be None when there is no lead assigned to the Agent -->
                     <td>
                         {% if agent.conversion_rate is not None%}
-                            {{ agent.conversion_rate }} %   
+                            {{ agent.conversion_rate|floatformat:2 }} %   
                         {% else %}
                             N/A
                         {% endif %}

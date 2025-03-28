@@ -22,8 +22,6 @@ from datetime import datetime
 from django.forms.models import model_to_dict
 import json
 
-
-
 # ====================================================================================
 
 # Function to check if user is admin
@@ -419,6 +417,79 @@ def dashboard(request):
         
         3) order_by('-total'): Sorts the results in descending order, so classes with the most inquiries appear first.
     '''
+
+    # Inquiry Trends (Last 7 Days)
+    '''
+        1) filter(inquiry_date__gte=today - timedelta(days=7)):
+            Filters inquiries where inquiry_date is greater than or equal to (≥) 7 days ago.
+            timedelta(days=7) subtracts 7 days from today.
+            
+        2) annotate(day=TruncDate('inquiry_date')):
+            Truncates the inquiry_date to just the date (removes time) and add this as new field day.            
+            
+        3) .values('day'): Groups the data by day. 
+        
+        4) .annotate(total=Count('id')):
+            Counts the number of inquiries for each day and adds a new field total.
+    '''
+
+    context = {
+        # Overall Stats
+        'total_inquiries': total_inquiries,
+        'total_registrations': total_registrations,
+        'total_tests': total_tests,
+        'total_admissions_offered': total_admissions_offered,
+        'total_admissions_confirmed': total_admissions_confirmed,
+        'rejected': rejected,
+
+        # Today's Stats
+        'inquiries_today': inquiries_today,
+        'registrations_today': registrations_today,
+        'tests_today': tests_today,
+        'admissions_offered_today': admissions_offered_today,
+        'admissions_confirmed_today': admissions_confirmed_today,
+        'rejected_today': rejected_today,        
+    }
+
+    return render(request, 'inquiries/dashboard.html', context)
+
+# ====================================================================================
+
+@login_required
+def detailed_stats(request):
+    user = request.user  # Get the logged-in user
+
+    # Get all inquiries if user is admin, else filter by assigned_agent
+    if user.is_staff:  
+        inquiries = Lead.objects.all()  # Admin sees all
+    else:
+        inquiries = Lead.objects.filter(assigned_agent__user=user)  # Agent sees only their assigned inquiries
+
+    # Overall Counts
+    total_inquiries = inquiries.filter(status='Inquiry').count()
+    total_registrations = inquiries.filter(status='Registration').count()
+    total_tests = inquiries.filter(status='Admission Test').count()
+    total_admissions_offered = inquiries.filter(status='Admission Offered').count()
+    total_admissions_confirmed = inquiries.filter(status='Admission Confirmed').count()
+    rejected = inquiries.filter(status='Rejected').count()
+        
+    # Today's Counts
+    today = now().date()
+    inquiries_today = inquiries.filter(status='Inquiry', inquiry_date=today).count()
+    registrations_today = inquiries.filter(status='Registration', registration_date=today).count()
+    tests_today = inquiries.filter(status='Admission Test', admission_test_date=today).count()
+    admissions_offered_today = inquiries.filter(status='Admission Offered', admission_offered_date=today).count()
+    admissions_confirmed_today = inquiries.filter(status='Admission Confirmed', admission_confirmed_date=today).count()
+    rejected_today = inquiries.filter(status='Rejected', rejected_date=today).count()
+
+    # Counts by Student Class
+    '''
+        1) values('student_class'): Groups the data by student_class.
+        
+        2) annotate(total=Count('id')): annotate allows you to perform aggregations (like SUM, COUNT, AVG, etc.) on groups of data.This query counts the number of inquiries for each student_class. The result will include a new field total, which stores the count.
+        
+        3) order_by('-total'): Sorts the results in descending order, so classes with the most inquiries appear first.
+    '''
     inquiries_by_class = inquiries.values('student_class').annotate(total=Count('id')).order_by('-total')
 
     # Counts by Inquiry Source
@@ -479,7 +550,7 @@ def dashboard(request):
         'recent_inquiries': recent_inquiries,
     }
 
-    return render(request, 'inquiries/dashboard.html', context)
+    return render(request, 'inquiries/detailed_stats.html', context)
 
 # ====================================================================================
 
