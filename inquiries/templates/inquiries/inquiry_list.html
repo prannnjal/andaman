@@ -50,6 +50,7 @@
         h1 {
             font-size: 32px;
             margin-bottom: 20px;
+            margin-top: 5px;
             color: #333;
         }
 
@@ -152,11 +153,7 @@
         input[type="date"]:focus {
             border-color: #4CAF50;
             outline: none;
-        }
-
-       
-
-       
+        }        
 
         /* Reset Link Styles */
         a {
@@ -202,16 +199,37 @@
             gap: 5px;
         }
 
+       
+        td, th{
+            border: 1px solid #b3b1b1;          
+            box-sizing: border-box;
+        }     
+
         th{           
             cursor: pointer;
             text-align: center;
-            min-width: 150px;
+            min-width: 100px;
             background-color: #6dffe2;
             position: sticky;
             top: 0;
-            z-index: 2;
-            
+            z-index: 2;            
+        }  
+
+        .lead_id_cell{
+            position: sticky;
+            left: 0;           
+            z-index: 3;
+            border: 1px solid #b3b1b1; 
         }
+
+        th.lead_id_cell{
+            z-index: 4;            
+        }
+
+        td.lead_id_cell{
+            background-color: rgb(219, 219, 219);
+        }
+
 
         /* ::after pseudo-element inserts content after the existing content inside the selected element.
         */
@@ -271,16 +289,9 @@
             margin-top: 20px;     
             overflow: auto; 
             max-width: 100%;     
-            height: 70vh;          
+            height: 73vh;           
         }
-
-        #inquiryTable{             
-        }        
-
-        td, th{
-            border: 1px solid #b3b1b1;                 
-        }       
-
+                
         .flex-td {
             display: flex;
             justify-content: space-between;
@@ -417,8 +428,43 @@
             text-decoration: none;
             text-align: center;
             transition: background 0.3s ease, transform 0.2s ease;
-        }        
+        }
+
+        .buttons_wrapper{
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;            
+        }
+                
         
+        @media(max-width: 700px){
+            .table_wrapper{
+                height: 65vh;
+            }
+
+            th.asc .sort-icon::after, th.desc .sort-icon::after {
+                display: inline-flex;
+                padding: 0.8px;    
+            }
+            
+            th, td{
+                padding:8px;
+                min-width: 80px;              
+            }
+
+            .header-btn{
+                padding: 10px;                
+                font-size: 14px;
+                margin-bottom: 0;
+            }
+        }      
+        
+        @media(max-width: 318px){
+            .table_wrapper{
+                height: 50vh;
+            }            
+        }
+
 
     </style>
 </head>
@@ -427,15 +473,19 @@
     <h1>Inquiry List</h1>
 
     <!-- Buttons to open modals -->
-    <button class="filter" onclick="openModal('filterModal')">Open Filters</button>
-    <button class="manage" onclick="openModal('columnsModal')">View / Hide Columns</button>
-    <button class="add-inquiry">
-        <a class="no-style" href="{% url 'add_inquiry' %}">Add New Inquiry</a>
-    </button>
+    <div class="buttons_wrapper">
+        <button class="header-btn add-inquiry">
+            <a class="no-style" href="{% url 'add_inquiry' %}">Add New Inquiry</a>
+        </button>
 
-    <button class="dashboard">
-        <a class="no-style" href="{% url 'dashboard' %}">Dashboard</a>
-    </button>
+        <button class="header-btn filter" onclick="openModal('filterModal')">Open Filters</button>
+
+        <button class="header-btn manage" onclick="openModal('columnsModal')">View / Hide Columns</button>        
+
+        <button class="header-btn dashboard">
+            <a class="no-style" href="{% url 'dashboard' %}">Dashboard</a>
+        </button>
+    </div>
 
 
     <!-- Filters Modal -->
@@ -705,7 +755,7 @@
     <table id="inquiryTable">
         <thead>
             <tr>
-                <th id="lead_id" onclick="sortColumn(event,0,'number')">
+                <th class="lead_id_cell" id="lead_id" onclick="sortColumn(event,0,'number')">
                     Lead Id
                     <span class="sort-icon"></span>
                 </th>
@@ -787,7 +837,7 @@
         <tbody>
             {% for inquiry in inquiries %}
             <tr>
-                <td>
+                <td class="lead_id_cell">
                     <div style="display: flex; justify-content: center;">
                         {{ inquiry.id }}
                     </div>
