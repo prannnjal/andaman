@@ -58,7 +58,7 @@
         .modal {
             display: none; /* Hidden by default */
             position: fixed;
-            z-index: 1;
+            z-index: 5;
             left: 0;
             top: 0;
             width: 100%;
@@ -215,20 +215,7 @@
             z-index: 2;            
         }  
 
-        .lead_id_cell{
-            position: sticky;
-            left: 0;           
-            z-index: 3;
-            border: 1px solid #b3b1b1; 
-        }
-
-        th.lead_id_cell{
-            z-index: 4;            
-        }
-
-        td.lead_id_cell{
-            background-color: rgb(219, 219, 219);
-        }
+        
 
 
         /* ::after pseudo-element inserts content after the existing content inside the selected element.
@@ -434,6 +421,21 @@
             display: flex;
             justify-content: center;
             flex-wrap: wrap;            
+        }
+
+        .lead_id_cell{
+            position: sticky;
+            left: 0;           
+            z-index: 3;
+            border: 1px solid #b3b1b1; 
+        }
+
+        th.lead_id_cell{
+            z-index: 4;            
+        }
+
+        td.lead_id_cell{
+            background-color: rgb(219, 219, 219);
         }
                 
         
