@@ -21,14 +21,16 @@ from django.db.models import FloatField
 from datetime import datetime
 from django.forms.models import model_to_dict
 import json
+from datetime import datetime, date
+from collections import defaultdict
 
-# ====================================================================================
+# =======================================================================================================================================================================
 
 # Function to check if user is admin
 def is_admin(user):
     return user.is_authenticated and user.is_staff  # Only allow staff users (admins)
 
-# ====================================================================================
+# =======================================================================================================================================================================
 
 def agent_login(request):
     if request.method == 'POST':
@@ -60,7 +62,7 @@ def agent_login(request):
 
     return render(request, 'inquiries/agent_login.html')
 
-# ====================================================================================
+# =======================================================================================================================================================================
 def Filter_By_Date(inquiries, choice, request_parameter, model_key):
     if request_parameter: 
         date_val = datetime.strptime(request_parameter, "%Y-%m-%d").date()
@@ -73,10 +75,8 @@ def Filter_By_Date(inquiries, choice, request_parameter, model_key):
                                 
     return inquiries
     
-        
-       
-@login_required
-def inquiry_list(request):
+# ====================================================================================================================================================================== 
+def Filter_Inquiries(request):
     user = request.user     # request.user returns the currently logged-in user, which is an instance of your CustomUser model (or User if you haven't switched to a custom model).
 
     # Filter inquiries based on user type (staff or agent)
@@ -135,7 +135,8 @@ def inquiry_list(request):
     admin_id = request.GET.get('admin_id')
     if admin_id:
         inquiries = inquiries.filter(admin_assigned__isnull=False,admin_assigned__id = admin_id)
-# ======================= Filtering via dates ========================                  
+        
+    # ======================= Filtering via dates ========================                  
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('inquiry_date_from'), 'inquiry_date')
     inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('inquiry_date_to'), 'inquiry_date')
     
@@ -156,8 +157,15 @@ def inquiry_list(request):
     
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('follow_up_date_from'), 'follow_up_date')
     inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('follow_up_date_to'), 'follow_up_date')
-               
-           
+    
+    return inquiries
+    
+    
+    
+@login_required
+def inquiry_list(request):
+    inquiries = Filter_Inquiries(request)
+                              
     '''
     Populate options for dropdowns. "Populate" here means retrieving data from the database and making it available for dropdown options in a form.
     The flat=True argument is used when calling .values_list() on a Django QuerySet. It flattens the results into a single list instead of returning a list of tuples.
@@ -176,7 +184,6 @@ def inquiry_list(request):
     student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
     admins = CustomUser.objects.filter(is_staff=True)
     
-
     
     '''
     The below is Passing context dictionary to the template. 
@@ -210,8 +217,69 @@ def inquiry_list(request):
         'admins': admins,
     })
 
+# =======================================================================================================================================================================
 
-# ====================================================================================
+def follow_up_management(request):
+    date_from = date.today()
+    days = int(request.GET.get("days", "7"))
+    date_to = date_from + timedelta(days=days)
+
+    follow_up_leads = Filter_Inquiries(request)
+         
+    if(request.user.is_staff):
+        follow_up_leads = follow_up_leads.filter(
+            # admin_assigned=request.user,
+            follow_up_date__gte=date_from, 
+            follow_up_date__lte=date_to
+        )
+                            
+    else:
+        follow_up_leads = follow_up_leads.filter(
+            assigned_agent=request.user,
+            follow_up_date__gte=date_from, 
+            follow_up_date__lte=date_to
+        )
+        
+    follow_up_data = defaultdict(list)
+    
+    for lead in follow_up_leads:
+        follow_up_date = str(lead.follow_up_date)
+        follow_up_date = datetime.strptime(follow_up_date, "%Y-%m-%d").strftime("%B %d, %Y")
+        follow_up_data[follow_up_date].append(lead)        
+           
+    follow_up_data = dict(follow_up_data) 
+    
+    
+    agents = Agent.objects.all()  
+    lead_ids = Lead.objects.values_list('id', flat=True)
+    students = Lead.objects.values_list('student_name', flat=True).distinct() 
+    parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
+    locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
+    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True)
+    mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
+    blocks = Lead.objects.values_list('block', flat=True).distinct()
+    inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
+    statuses = Lead.objects.values_list('status', flat=True).distinct()
+    student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
+    admins = CustomUser.objects.filter(is_staff=True)
+    
+    return render(request, 'inquiries/follow_up_management.html', {
+            'lead_ids': lead_ids,
+            'students': students,
+            'parents': parents,
+            'follow_up_data':follow_up_data,
+            'Len_dict': len(follow_up_data),
+            'agents': agents,
+            'lead_emails': lead_emails,
+            'mobile_numbers': mobile_numbers,
+            'location_panchayats': locations_panchayats,
+            'blocks': blocks,
+            'inquiry_sources': inquiry_sources,
+            'statuses': statuses,
+            'student_classes': student_classes,
+            'admins': admins,
+        })
+# =======================================================================================================================================================================
 
 @login_required
 def add_inquiry(request):
