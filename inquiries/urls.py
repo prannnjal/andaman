@@ -4,6 +4,7 @@ from django.contrib.auth import views as auth_views # pre-built views for common
 
 urlpatterns = [
     path('list/', views.inquiry_list, name='inquiry_list'),
+    path('follow_up_management/', views.follow_up_management, name='follow_up_management'),
     path('add_inquiry/', views.add_inquiry, name='add_inquiry'),
     path('get_panchayats/', views.get_panchayats, name='get_panchayats'),
     path('agents_performance/', views.agent_performance, name='agent_performance'),

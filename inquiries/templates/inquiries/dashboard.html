@@ -159,16 +159,18 @@
         <h1>Dashboard</h1>        
         <!-- Navigation Links -->
         <ul>
-            <li><a href="{% url 'inquiry_list' %}">View Inquiries</a></li>
-            <li><a href="{% url 'add_inquiry' %}">Add New Inquiry</a></li>
-            <li><a href="{% url 'agent_performance' %}">Agent Performance</a></li>
-            <li><a href="{% url 'export_inquiries_csv' %}">Export Inquiries to Excel</a></li>
-            <li><a href="{% url 'detailed_stats' %}">Detailed Stats</a></li>
+            <a href="{% url 'inquiry_list' %}"><li>View Inquiries</li></a>
+            <a href="{% url 'follow_up_management' %}"><li>Follow-up Management</li></a>
+            <a href="{% url 'add_inquiry' %}"><li>Add New Inquiry</li></a>
+            <a href="{% url 'agent_performance' %}"><li>Agent Performance</li></a>
+            <a href="{% url 'export_inquiries_csv' %}"><li>Export Inquiries to Excel</li></a>
+            <a href="{% url 'detailed_stats' %}"><li>Detailed Stats</li>
+
             {% if user.is_staff %}
-                <li><a href="{% url 'remove_lead' %}">Remove Agent from Lead</a></li>
-                <li><a href="{% url 'assign_lead' %}">Assign Lead to Agent</a></li>
-                <li><a href="{% url 'agent_list' %}">View Agents</a></li>
-                <li><a href="{% url 'add_agent' %}">Add Agent</a></li>
+                <a href="{% url 'remove_lead' %}"><li>Remove Agent from Lead</li></a>
+                <a href="{% url 'assign_lead' %}"><li>Assign Lead to Agent</li></a>
+                <a href="{% url 'agent_list' %}"><li>View Agents</li></a>
+                <a href="{% url 'add_agent' %}"><li>Add Agent</li></a>
             {% endif %}
             
             <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: none;">
