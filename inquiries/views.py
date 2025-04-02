@@ -83,7 +83,9 @@ def Filter_Inquiries(request):
     if user.is_staff:
         inquiries = Lead.objects.all()
     elif getattr(user, "agent", None):  # Check if the user is linked to an Agent. Since Agent has a OneToOneField to CustomUser, we check if the user has an agent attribute before accessing user.agent.
-        inquiries = Lead.objects.filter(assigned_agent=user.agent)  # Agent has a OneToOneField linked to CustomUser. So you can simply access agent model instance of a user via user.agent.
+        inquiries = Lead.objects.all()
+        
+        # inquiries = Lead.objects.filter(assigned_agent=user.agent)  # Agent has a OneToOneField linked to CustomUser. So you can simply access agent model instance of a user via user.agent.
     else:
         inquiries = Lead.objects.none()     # return an empty queryset if the user is neither an admin nor an agent
     
@@ -235,7 +237,7 @@ def follow_up_management(request):
                             
     else:
         follow_up_leads = follow_up_leads.filter(
-            assigned_agent=request.user,
+            # assigned_agent=request.user,
             follow_up_date__gte=date_from, 
             follow_up_date__lte=date_to
         )
@@ -245,9 +247,15 @@ def follow_up_management(request):
     for lead in follow_up_leads:
         follow_up_date = str(lead.follow_up_date)
         follow_up_date = datetime.strptime(follow_up_date, "%Y-%m-%d").strftime("%B %d, %Y")
-        follow_up_data[follow_up_date].append(lead)        
+        follow_up_data[follow_up_date].append(lead)       
            
-    follow_up_data = dict(follow_up_data) 
+    follow_up_data = dict(follow_up_data)
+    
+    # ✅ Convert defaultdict to a regular dict and sort by date keys
+    follow_up_data = dict(sorted(
+        follow_up_data.items(),
+        key=lambda x: datetime.strptime(x[0], "%B %d, %Y")  # Convert key back to date for sorting
+    ))
     
     
     agents = Agent.objects.all()  
@@ -458,7 +466,8 @@ def dashboard(request):
     if user.is_staff:  
         inquiries = Lead.objects.all()  # Admin sees all
     else:
-        inquiries = Lead.objects.filter(assigned_agent__user=user)  # Agent sees only their assigned inquiries
+        inquiries = Lead.objects.all()
+        # inquiries = Lead.objects.filter(assigned_agent__user=user)  # Agent sees only their assigned inquiries
 
     # Overall Counts
     total_inquiries = inquiries.filter(status='Inquiry').count()
@@ -531,7 +540,8 @@ def detailed_stats(request):
     if user.is_staff:  
         inquiries = Lead.objects.all()  # Admin sees all
     else:
-        inquiries = Lead.objects.filter(assigned_agent__user=user)  # Agent sees only their assigned inquiries
+        inquiries = Lead.objects.all()
+        # inquiries = Lead.objects.filter(assigned_agent__user=user)  # Agent sees only their assigned inquiries
 
     # Overall Counts
     total_inquiries = inquiries.filter(status='Inquiry').count()
@@ -636,7 +646,8 @@ def agent_performance(request):
     if user.is_staff:
         agents = Agent.objects.all()  # Admins see all agents
     else:
-        agents = Agent.objects.filter(user=user)  # Agents see only their own data
+        agents = Agent.objects.all()
+        # agents = Agent.objects.filter(user=user)  # Agents see only their own data
 
     # Initialize list to store agent performance data
     agent_data = []
@@ -729,7 +740,9 @@ def export_inquiries_excel(request):
     if user.is_staff:
         inquiries = Lead.objects.all()
     else:
-        inquiries = Lead.objects.filter(assigned_agent__user=user)  # Filter only assigned inquiries for the agent
+        inquiries = Lead.objects.all()
+        
+        # inquiries = Lead.objects.filter(assigned_agent__user=user)  # Filter only assigned inquiries for the agent
 
     # Create a workbook and select the active worksheet
     workbook = Workbook()   # Create a new Excel workbook
