@@ -52,6 +52,7 @@ class Agent(models.Model):
 
 class Lead(models.Model):
     STUDENT_CHOICES = [
+        ('Play School', 'Play School'),
         ('Nursery', 'Nursery'),
         ('LKG', 'LKG'),
         ('UKG', 'UKG'),
@@ -94,7 +95,7 @@ class Lead(models.Model):
     block = models.CharField(choices=BLOCK_CHOICES, max_length=100, blank=False, null=False)
     location_panchayat = models.CharField(max_length=100, blank=False, null=False)
     inquiry_source = models.CharField(choices = INQUIRY_CHOICES, max_length=100)  # e.g., Advertisement, Walk-in, Online
-    student_class = models.CharField(choices=STUDENT_CHOICES, max_length=10)
+    student_class = models.CharField(choices=STUDENT_CHOICES, max_length=30)
     status = models.CharField(choices=STATUS_CHOICES, max_length=100, default='Inquiry')  # Inquiry, Follow-up, Visit, etc.    
     remarks = models.TextField(blank=True, null=True)
     
