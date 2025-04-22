@@ -799,10 +799,14 @@ def export_inquiries_excel(request):
 def assign_lead_to_agent_view(request):
     inquiries = Lead.objects.all()  # Fetch all inquiries
     agents = Agent.objects.all()  # Fetch all agents
+    
 
     if request.method == 'POST':
         inquiry_id = request.POST.get('inquiry_id')  # Get selected inquiry ID
         agent_id = request.POST.get('agent_id')  # Get selected agent ID
+        
+        # print("============================> inquiry_id and agent_id = ",inquiry_id,agent_id)
+        # return redirect('assign_lead')
 
         # Validate input
         if not inquiry_id or not agent_id:

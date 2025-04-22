@@ -19,68 +19,218 @@
 
     <style>
         /* General Styling */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #ffffff;
+            background-color: #f4f7fc;
             color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            text-align: center;
         }
 
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            margin-top: 5px;
+            color: #333;
+        }
+
+        /* Modal Styling */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            width :75vw;
+            max-width: 1000px;
+            z-index: 5;
+            left: 50%;
+            top: 50%;           
+            overflow: auto;
+            background-color: rgba(255, 255, 255); 
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            transform: translate(-50%, -50%);
+            border: 1px solid #ccc;
+            z-index: 1000;
+            padding: 20px;
+            border-radius: 8px;
+        }
+                   
+
+        table {
+            width: 95%;
+            border-collapse: collapse;
+        }
+        
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        /* Title Styling */
         h2 {
             text-align: center;
-            color: #333;
-            font-size: 28px;
-            margin: 20px 10px 40px 10px;
+            font-size: 26px;
+            margin-bottom: 30px;
+            color: #ff0000;          
         }
 
-        .form-container {
-            width: 100%;
-            max-width: 700px;
-            background: rgb(255, 255, 255);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 8px;            
-            padding: 25px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Form Styling */
-        .form-group {
-            margin-bottom: 24px;
-            display: flex;
-            flex-direction: column;
-        }
 
         label {
-            font-weight: bold;
             font-size: 16px;
-            margin-bottom: 6px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        select {
-            width: 100%;
+        /* Input, Select and Date Input Styling */
+        input[type="text"],
+        select,
+        input[type="date"] {
             padding: 10px;
             font-size: 16px;
+            border-radius: 5px;
             border: 1px solid #ccc;
-            border-radius: 6px;
-            background-color: #fafafa;
+            width: 100%;
             box-sizing: border-box;
         }
 
-        select:focus {
-            border-color: #007bff;
+        input[type="text"]:focus,
+        select:focus,
+        input[type="date"]:focus {
+            border-color: #4CAF50;
             outline: none;
+        }        
+
+        /* Reset Link Styles */
+        a {
+            text-decoration: none;
+        }
+
+        .delete{
+            all: unset; /* Resets all styles */
+            color: red;
+            cursor: pointer;
+        }
+
+        /* Apply No-Style to Reset Link if Specified */
+        a.no-style {
+            all: unset; /* Resets all styles */
+            cursor: pointer;
+        }
+
+        .date-wrapper{
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+       
+        td, th{
+            border: 1px solid #b3b1b1;          
+            box-sizing: border-box;
+        }     
+
+        th{           
+            cursor: pointer;
+            text-align: center;
+            min-width: 100px;
+            background-color: #6dffe2;
+            position: sticky;
+            top: 0;
+            z-index: 2;            
+        }  
+
+
+        /* ::after pseudo-element inserts content after the existing content inside the selected element.
+        */
+        th.asc .sort-icon::after {
+            content: "\25B2"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0051ffba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;    
+            display: block;
+            width: 13px;
+            margin: 10px auto;
+        }
+
+        th.desc .sort-icon::after {
+            content: "\25BC"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0051ffba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;    
+            display: block;
+            width: 13px;
+            margin: 10px auto;        
+        }
+
+        .table_wrapper{
+            border: 2px solid red;   
+            margin-top: 20px;     
+            overflow: auto;
+            max-width: 100%;     
+            max-height: 78vh;
+        }
+                
+        .flex-td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Ensures vertical alignment */
+            height: 100%;
+        }
+    
+        button {            
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 15px 10px 10px 10px;
+        }
+
+        .manage{
+            background-color: #2f5ef9e9;
+        }
+        .add-inquiry{
+            background-color: #07a038;
+        }
+        .dashboard{
+            background-color: #ff00a6;
+        }
+    
+        .reset_modal_a{          
+            cursor: pointer;
+            background-color: rgb(4, 198, 101);
+            color: white;
+            padding: 15px;
+            width: 70px; 
+            
+        } 
+
+        .check_all_modal_btn{
+            background-color: rgb(4, 198, 101);
+            padding: 15px;                  
+        }
+
+        .uncheck_all_modal_btn{
+            background-color: #2a74ec;
+            padding: 15px;                  
+        }
+
+        .reset_modal_a:hover,
+        .reset_modal_a:focus,
+        .reset_modal_a:active {
+            background: rgb(4, 198, 101); /* Prevents hover color change */
+            color: white; /* Prevents text color change */
+            text-decoration: none;
+            outline: none; /* Removes focus outline */
         }
 
         .select2-selection {            
@@ -91,94 +241,6 @@
             background-color: #fafafa;
             border-radius: 6px;
             border: 1px solid #ccc;
-        }
-
-        /* Button Styling */
-        button {
-            width: 100%;
-            padding: 12px;
-            font-size: 18px;
-            border: none;
-            border-radius: 6px;
-            background-color: #007bff;
-            color: white;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        /* Back Link */
-        .btn-secondary {
-            display: inline-block;  /* Ensures width matches text */
-            padding: 10px 15px;  /* Adds some spacing */
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            border-radius: 6px;
-            text-align: center;
-        }
-        
-        .btn-secondary:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-        
-        /* Centering the button */
-        .center-btn {
-            text-align: center;  /* Centers inline elements inside */           
-        }
-        
-
-        /* Responsive Styles */
-        @media screen and (max-width: 768px) {
-           
-
-            h2 {
-                font-size: 24px;
-            }
-
-            label {
-                font-size: 14px;
-            }
-
-            select,
-            button {
-                font-size: 14px;
-                padding: 10px;
-            }
-        }
-
-        .navigation {
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        @media screen and (max-width: 480px) {
-           
-
-            h2 {
-                font-size: 22px;
-            }
-
-            label {
-                font-size: 14px;
-            }
-
-            select,
-            button {
-                font-size: 14px;
-                padding: 8px;
-            }
-
-            .btn-secondary {
-                font-size: 14px;
-            }
         }
 
         /* Style the Select2 search input */
@@ -194,26 +256,249 @@
             color: #d03636; /* Placeholder text color */
             font-style: italic;
         }
+        
+        .view_hide_wrapper{
+            font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;         
+            gap: 10px;
+        }
 
-        .assign-btn{
-            max-width: 170px;
-            display: block;
-            margin: auto;
-            margin: 30px auto 20px auto;
-            background-color: #4CAF50;
+        .view_hide_wrapper input {
+            width: 16px; /* Adjust checkbox size */   
+            height: 16px;      
+        }
+
+        .hidden-column {
+            display: none;
+        }
+        
+        .call-icon {
+            color: blue;
+            text-decoration: none;
+            font-size: 20px; /* Optional: Adjust size */
+        }      
+
+        .btn-container {           
+            display: flex;  /* Flexbox for centering */
+            justify-content: center;  /* Centers the button horizontally */
+            margin-top: 30px; 
+        }
+
+       
+        a.nav {
+            display: inline-block; /* Prevents full-width stretching */
+            padding: 12px 25px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0056b3, #155bbe);
             color: white;
-            border: none;
-            padding: 9px 13px;
-            border-radius: 4px;
             font-size: 16px;
             font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            transition: background 0.3s ease, transform 0.2s ease;
         }
 
-        .assign-lead-form{
-            overflow-x: hidden;
+        .buttons_wrapper{
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;            
         }
+
+        .lead_id_cell{
+            position: sticky;
+            left: 0;           
+            z-index: 3;
+            border: 1px solid #b3b1b1; 
+        }
+
+        th.lead_id_cell{
+            z-index: 4;            
+        }
+
+        td.lead_id_cell{
+            background-color: rgb(219, 219, 219);
+        }
+                
+        
+        @media(max-width: 700px){
+            .table_wrapper{
+                max-height: 60vh;
+            }
+
+            th.asc .sort-icon::after, th.desc .sort-icon::after {
+                display: inline-flex;
+                padding: 0.8px;    
+            }
+            
+            th, td{
+                padding:8px;
+                min-width: 80px;      
+                font-size: 14px;        
+            }
+
+            .header-btn{
+                padding: 10px;                
+                font-size: 14px;
+                margin-bottom: 0;
+            }
+        }      
+        
+        @media(max-width: 318px){
+            .table_wrapper{
+                max-height: 50vh;
+            }            
+        }
+        
+        .agent-table {
+            max-height: 70vh;
+            width: 100%;
+            background-color: white;           
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: auto;
+            box-sizing: border-box;
+        }
+
+        
+
+        .btn {
+            display: inline-block;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn-secondary {
+            background-color: #007BFF;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+
+        .agent-table table {
+            max-width: 100%;     
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+
+        .agent-table th,
+        .agent-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .agent-table th {
+            background-color: #0a8dff;            
+        }
+
+        .navigation {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #007BFF;
+            font-size: 18px; /* Increased font size */
+            font-weight: bold; /* Made font bold */
+        }
+
+        .btn-back:hover {
+            text-decoration: underline;
+        }
+
+       
+
+        @media screen and (max-width: 768px) {
+            .agent-table {
+                padding: 15px;
+            }
+
+            .btn {
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+
+            .agent-table th, .agent-table td {
+                padding: 8px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .btn {
+                font-size: 10px;
+                padding: 6px 10px;
+            }
+
+            .agent-table th, .agent-table td {
+                padding: 6px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+        }
+
+        a.btn {
+            text-decoration: none; /* Remove the underline */
+            color: white; /* Set text color to match button */
+            display: inline-block; /* Ensure it's displayed as a block element like a button */
+            padding: 10px 15px; /* Add padding like a button */
+            background-color: #4CAF50; /* Use the same background color as the button */
+            border-radius: 4px; /* Match the button's border radius */
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        a.btn:hover {
+            background-color: #45a049; /* Change the background color on hover */
+        }
+
+        .add_new_agent{
+            background-color: #3054f5;
+            padding: 8px 25px;
+            color: white !important;
+            border-radius: 5px;
+            border: 2px solid black;
+            margin-bottom: 70px;
+            text-decoration: none;
+        }      
 
     </style>
 
@@ -224,46 +509,198 @@
 
     <h2>Assign / Reassign Lead to Agent</h2>
 
-    <div class="form-container">
-        <form class="assign-lead-form" method="post">
-            {% csrf_token %}
-
-            <!-- Select Lead Dropdown -->
-            <div class="form-group">
-                <label for="inquiry">Select Lead:</label>
-                <select name="inquiry_id" id="inquiry" required>
-                    <option value="" disabled selected>-- Select Lead --</option>
-                    {% for lead in inquiries %}
-                    <option value="{{ lead.id }}">
-                        Id: {{ lead.id }}, Email: {{ lead.email }}, Phone: {{lead.mobile_number}}, Student Name: {{lead.student_name}}, Parent Name: {{lead.parent_name}}, Block: {{lead.block}}, Location: {{lead.location_panchayat}}
-                    </option>                    
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Select Agent Dropdown -->
-            <div class="form-group">
-                <label for="agent">Assign to Agent:</label>
-                <select name="agent_id" id="agent" required>
-                    <option value="" disabled selected>-- Select Agent --</option>
-                    {% for agent in agents %}
-                        <option value="{{ agent.id }}">
-                            Id: {{agent.id}}, Name: {{agent.name}}, Phone: {{agent.mobile_number}}, Email: {{agent.user.email}}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <!-- Submit Button -->
-            <button class="assign-btn" type="submit">Assign</button>
-        </form>
-
-        <!-- Back Link -->
-        <div class="center-btn">
-            <a href="{% url 'dashboard' %}" class="btn-secondary">Back to Dashboard</a>
-        </div>
-        
+    <div class="navigation">
+        <a href="{% url 'dashboard' %}" class="add_new_agent">Back to Dashboard</a>
     </div>
+
+    <div class="table_wrapper">
+        <table id="inquiryTable">
+            <thead>
+                <tr>
+                    <th class="lead_id_cell" id="lead_id" onclick="sortColumn(event,0,'number')">
+                        Lead Id
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th style="cursor: default">Actions</th>
+    
+                    <th id="student_name" onclick="sortColumn(event,2,'string')">
+                        Student Name
+                        <span class="sort-icon"></span>
+                    </th>                    
+
+                    <th id="assigned_agent.name" onclick="sortColumn(event,3,'string')">
+                        Agent
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="assigned_agent.user.email" onclick="sortColumn(event,4,'string')">
+                        Agent Email
+                        <span class="sort-icon"></span>
+                    </th>
+
+                    <th id="email" onclick="sortColumn(event,5,'string')">
+                        Lead Email
+                        <span class="sort-icon"></span>
+                    </th>
+                    
+                    <th id="parent_name" onclick="sortColumn(event,6,'string')">
+                        Parent Name
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="mobile_number" onclick="sortColumn(event,7,'string')">
+                        Mobile Number
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="address" onclick="sortColumn(event,8,'string')">
+                        Address
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="inquiry_source" onclick="sortColumn(event,9,'string')">
+                        Inquiry Source
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="student_class" onclick="sortColumn(event,10,'class')">
+                        Student Class 
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="follow_up_date" onclick="sortColumn(event,11,'date')">
+                        Follow-up Date 
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="status" onclick="sortColumn(event,12,'string')">
+                        Status
+                        <span class="sort-icon"></span>
+                    </th>            
+    
+                    <th id="block" onclick="sortColumn(event,13,'string')">
+                        Block
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="location_panchayat" onclick="sortColumn(event,14,'string')">
+                        Location/Panchayat
+                        <span class="sort-icon"></span>
+                    </th>
+    
+                    <th id="admin_assigned.email" onclick="sortColumn(event,15,'string')">
+                        Admin Email
+                        <span class="sort-icon"></span>
+                    </th>                                                                             
+                </tr>
+            </thead>
+            <tbody>
+                {% for inquiry in inquiries %}
+                <tr>
+                    <td class="lead_id_cell">
+                        <div style="display: flex; justify-content: center;">
+                            {{ inquiry.id }}
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <div style="display: flex; gap:25px; justify-content: center;">                          
+                            <button type="button" class="delete" onclick="openAgentModal({{ inquiry.id }})">Assign Agent</button>
+                        </div>
+                    </td>
+                    <td>{{ inquiry.student_name }}</td>
+                    <td>{{ inquiry.assigned_agent.name|default:"UNASSIGNED" }}</td>
+                    <td>{{ inquiry.assigned_agent.user.email|default:"NULL" }}</td>
+                    <td>{{ inquiry.email }}</td>
+                    <td>{{ inquiry.parent_name }}</td>
+                    <td>
+                        <div class="flex-td">
+                            {{ inquiry.mobile_number }}
+                            <a href="tel:{{ inquiry.mobile_number }}" style="color: blue; text-decoration: none;">
+                                <i class="fa fa-phone"></i>
+                            </a>   
+                        </div>                      
+                    </td>
+                    <td>{{ inquiry.address }}</td>
+                    <td>{{ inquiry.inquiry_source }}</td>
+                    <td>{{ inquiry.student_class }}</td>
+                    <td>{{ inquiry.follow_up_date }}</td>
+                    <td>{{ inquiry.status }}</td>                    
+                    <td>{{ inquiry.block|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->
+                    <td>{{ inquiry.location_panchayat|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->                
+                    <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>                                       
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="16">No inquiries available.</td>  <!-- ✅ FIXED -->
+                </tr>
+                {% endfor %}
+            </tbody>
+            
+        </table>
+    </div>
+
+
+
+
+
+
+
+    <!-- Agent List Table -->
+    <div id="agent-modal" class="modal">
+
+        <span onclick="toggleAgentModal()" style="cursor: pointer; float: right; font-size: 32px;">&times;</span>
+    
+        <form method="POST" style="width: 98%; height: 98%;">
+            {% csrf_token %}
+            <input type="hidden" id="lead-id-input" name="inquiry_id" value="">
+            <h3>Select Agent to Assign</h3>
+
+            <div class="agent-table">
+                <table style="margin: 0; padding: 0;">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Name</th>
+                            <th>Email</th>                            
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agent in agents %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ agent.name }}</td>
+                            <td>{{ agent.user.email }}</td>                                                                                                
+                            <td style="padding: 0; text-align: center;">
+                                <div class="flex-td">
+                                    <label style="display: block; height: 100%; width: 100%; margin: 0; cursor: pointer;">
+                                        <input type="radio" name="agent_id" value="{{ agent.id }}" required style="transform: scale(1.2); accent-color: #007bff;">
+
+                                    </label>
+                                </div>                      
+                            </td>                                                                                   
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">No agents found matching your criteria.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="text-align:center; margin-top: 15px;">
+                <button type="submit" class="btn btn-primary">Assign Selected Agent</button>
+            </div>
+        </form>
+    </div>
+
+
+    <!-- Modal Background Overlay -->
+    <div id="modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 999;" onclick="toggleAgentModal()"></div>
+
+
     
 
     <script>
@@ -272,21 +709,32 @@
             $('#inquiry, #agent').select2({
                 placeholder: "Select an option",                
             });
-        
-            /* When Select2 dropdown opens, set a placeholder for the search input. 
-
-            select2:open → This event fires whenever a Select2 dropdown is opened.
-
-            $('.select2-search__field') → Selects the search input inside the Select2 dropdown.
-
-            .attr('placeholder', 'Search here...') → Sets the placeholder text to "Search here..." inside the search input.
-            */
+                    
             $(document).on('select2:open', function () {              
                     $('.select2-search__field').attr('placeholder', 'Search here...');
             });
         });
         
     </script>
+
+
+    <script>
+        let isModalOpen = false;
+    
+        function openAgentModal(leadId) {
+            isModalOpen = true;
+            document.getElementById('lead-id-input').value = leadId;
+            document.getElementById('agent-modal').style.display = "block";
+            document.getElementById('modal-backdrop').style.display = "block";
+        }
+    
+        function toggleAgentModal() {
+            isModalOpen = !isModalOpen;
+            document.getElementById('agent-modal').style.display = isModalOpen ? "block" : "none";
+            document.getElementById('modal-backdrop').style.display = isModalOpen ? "block" : "none";
+        }
+    </script>
+    
 
 </body>
 
