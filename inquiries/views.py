@@ -804,9 +804,6 @@ def assign_lead_to_agent_view(request):
     if request.method == 'POST':
         inquiry_id = request.POST.get('inquiry_id')  # Get selected inquiry ID
         agent_id = request.POST.get('agent_id')  # Get selected agent ID
-        
-        # print("============================> inquiry_id and agent_id = ",inquiry_id,agent_id)
-        # return redirect('assign_lead')
 
         # Validate input
         if not inquiry_id or not agent_id:
@@ -817,10 +814,16 @@ def assign_lead_to_agent_view(request):
             # Get the inquiry and agent objects
             inquiry = get_object_or_404(Lead, id=inquiry_id)
             agent = get_object_or_404(Agent, id=agent_id)
-
+            
+            old_inquiry_instance = Lead.objects.get(id=inquiry_id)
+                    
             # Assign the agent to the inquiry
             inquiry.assigned_agent = agent
             inquiry.save()
+            
+            new_inquiry_instance = inquiry
+            
+            Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, request.user)
 
             # Provide success feedback to the user
             messages.success(request, f"Inquiry for '{inquiry.student_name}' has been successfully assigned to Agent '{agent.name}'.")

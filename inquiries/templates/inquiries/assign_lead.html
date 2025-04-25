@@ -605,7 +605,8 @@
                     </td>
                     <td style="text-align: center;">
                         <div style="display: flex; gap:25px; justify-content: center;">                          
-                            <button type="button" class="delete" onclick="openAgentModal({{ inquiry.id }})">Assign Agent</button>
+                            <button type="button" class="delete" onclick="openAgentModal({{ inquiry.id }}, {{ inquiry.assigned_agent.id }})">Assign Agent</button>
+
                         </div>
                     </td>
                     <td>{{ inquiry.student_name }}</td>
@@ -701,29 +702,24 @@
     <div id="modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 999;" onclick="toggleAgentModal()"></div>
 
 
-    
-
-    <script>
-        // Initialize Select2 for dropdowns
-        $(document).ready(function () {
-            $('#inquiry, #agent').select2({
-                placeholder: "Select an option",                
-            });
-                    
-            $(document).on('select2:open', function () {              
-                    $('.select2-search__field').attr('placeholder', 'Search here...');
-            });
-        });
-        
-    </script>
-
-
     <script>
         let isModalOpen = false;
     
-        function openAgentModal(leadId) {
+        function openAgentModal(leadId, assignedAgentId) {
+            console.log("=============================> leadid and agentid = ", leadId, assignedAgentId)
             isModalOpen = true;
             document.getElementById('lead-id-input').value = leadId;
+
+            // Pre-check the radio button
+            const radios = document.getElementsByName('agent_id');
+            radios.forEach(radio => {
+                if (radio.value == assignedAgentId) {
+                    radio.checked = true;
+                } else {
+                    radio.checked = false;
+                }
+            });
+
             document.getElementById('agent-modal').style.display = "block";
             document.getElementById('modal-backdrop').style.display = "block";
         }
