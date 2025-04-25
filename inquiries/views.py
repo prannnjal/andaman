@@ -138,7 +138,9 @@ def Filter_Inquiries(request):
     if admin_id:
         inquiries = inquiries.filter(admin_assigned__isnull=False,admin_assigned__id = admin_id)
         
-    # ======================= Filtering via dates ========================                  
+    # ======================= Filtering via dates ========================      
+    # print("================================> inside filter inquiries and request.get.get inquiry date from =  ", request.GET.get('inquiry_date_from'))
+     
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('inquiry_date_from'), 'inquiry_date')
     inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('inquiry_date_to'), 'inquiry_date')
     
@@ -460,6 +462,7 @@ def remove_lead_from_agent_view(request):
 
 @login_required
 def dashboard(request):
+    # print("===========================> inside dashboard view")
     user = request.user  # Get the logged-in user
 
     # Get all inquiries if user is admin, else filter by assigned_agent
@@ -479,6 +482,8 @@ def dashboard(request):
         
     # Today's Counts
     today = now().date()
+    # print("===============================> today date in dashboard = ", today)
+    
     inquiries_today = inquiries.filter(status='Inquiry', inquiry_date=today).count()
     registrations_today = inquiries.filter(status='Registration', registration_date=today).count()
     tests_today = inquiries.filter(status='Admission Test', admission_test_date=today).count()
@@ -508,10 +513,11 @@ def dashboard(request):
         
         4) .annotate(total=Count('id')):
             Counts the number of inquiries for each day and adds a new field total.
-    '''
+    '''    
 
     context = {
         # Overall Stats
+        'todays_date': now().date().strftime('%Y-%m-%d'),
         'total_inquiries': total_inquiries,
         'total_registrations': total_registrations,
         'total_tests': total_tests,
@@ -601,7 +607,7 @@ def detailed_stats(request):
     recent_inquiries = inquiries.order_by('-inquiry_date')[:5]
 
     context = {
-        # Overall Stats
+        # Overall Stats       
         'total_inquiries': total_inquiries,
         'total_registrations': total_registrations,
         'total_tests': total_tests,
@@ -627,6 +633,8 @@ def detailed_stats(request):
         'recent_trends': recent_trends,
         'recent_inquiries': recent_inquiries,
     }
+    
+    # print("===============================> today date in detailed_stats = ", today)
 
     return render(request, 'inquiries/detailed_stats.html', context)
 

@@ -193,27 +193,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Inquiry">
                             <td>Inquiries</td>
                             <td>{{ total_inquiries }}</td>
                         </tr>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Registration">
                             <td>Registrations</td>
                             <td>{{ total_registrations }}</td>
                         </tr>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Test">
                             <td>Admission Tests</td>
                             <td>{{ total_tests }}</td>
                         </tr>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Offered">
                             <td>Admissions Offered</td>
                             <td>{{ total_admissions_offered }}</td>
                         </tr>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Confirmed">
                             <td>Admissions Confirmed</td>
                             <td>{{ total_admissions_confirmed }}</td>
                         </tr>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Rejected">
                             <td>Rejected</td>
                             <td>{{ rejected }}</td>
                         </tr>
@@ -232,27 +232,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Inquiry&inquiry_date_from={{todays_date}}">
                             <td>Inquiries</td>
                             <td>{{ inquiries_today }}</td>
                         </tr>
-                        <tr>
+
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Registration&registration_date_from={{todays_date}}">
                             <td>Registrations</td>
                             <td>{{ registrations_today }}</td>
                         </tr>
-                        <tr>
+
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Test&admission_test_date_from={{todays_date}}">
                             <td>Admission Tests</td>
                             <td>{{ tests_today }}</td>
                         </tr>
-                        <tr>
+
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Offered&admission_offered_date_from={{todays_date}}">
                             <td>Admissions Offered</td>
                             <td>{{ admissions_offered_today }}</td>
                         </tr>
-                        <tr>
+
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admissions Confirmed&admission_confirmed_date_from={{todays_date}}">
                             <td>Admissions Confirmed</td>
                             <td>{{ admissions_confirmed_today }}</td>
                         </tr>
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Rejected&rejected_date_from={{todays_date}}">
                             <td>Rejected</td>
                             <td>{{ rejected_today }}</td>
                         </tr>
@@ -261,6 +265,22 @@
             </div>
         </div>        
     </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const rows = document.querySelectorAll(".clickable-row");
+            rows.forEach(row => {
+                row.addEventListener("click", () => {
+                    const url = row.getAttribute("data-href");
+                    if (url) {
+                        window.location.href = url;
+                    }
+                });
+                row.style.cursor = 'pointer';
+            });
+        });
+    </script>
 
 </body>
 

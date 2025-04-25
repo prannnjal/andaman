@@ -183,7 +183,7 @@
                     </thead>
                     <tbody>
                         {% for inquiry in inquiries_by_class %}
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?student_class={{ inquiry.student_class }}">
                             <td>{{ inquiry.student_class }}</td>
                             <td>{{ inquiry.total }}</td>
                         </tr>
@@ -204,7 +204,7 @@
                     </thead>
                     <tbody>
                         {% for source in inquiries_by_source %}
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?inquiry_source={{ source.inquiry_source }}">
                             <td>{{ source.inquiry_source }}</td>
                             <td>{{ source.total }}</td>
                         </tr>
@@ -225,7 +225,7 @@
                     </thead>
                     <tbody>
                         {% for blocks in inquiries_by_block %}
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?block={{ blocks.block }}">
                             <td>{{ blocks.block }}</td>
                             <td>{{ blocks.total }}</td>
                         </tr>
@@ -246,7 +246,7 @@
                     </thead>
                     <tbody>
                         {% for location in inquiries_by_location %}
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?location_panchayat={{ location.location_panchayat }}">
                             <td>{{ location.location_panchayat }}</td>
                             <td>{{ location.total }}</td>
                         </tr>
@@ -268,7 +268,7 @@
                     </thead>
                     <tbody>
                         {% for inquiry in recent_inquiries %}
-                        <tr>
+                        <tr class="clickable-row" data-href="{% url 'view-lead-logs' inquiry.id %}">
                             <td>{{ inquiry.inquiry_date }}</td>
                             <td>{{ inquiry.inquiry_source }}</td>
                             <td>{{ inquiry.student_class }}</td>
@@ -282,6 +282,23 @@
         <div class="navigation">
             <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
         </div>
+
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const rows = document.querySelectorAll(".clickable-row");
+                rows.forEach(row => {
+                    row.addEventListener("click", () => {
+                        const url = row.getAttribute("data-href");
+                        if (url) {
+                            window.location.href = url;
+                        }
+                    });
+                    row.style.cursor = 'pointer';
+                });
+            });
+        </script>
+        
 
     </body>
 </html>

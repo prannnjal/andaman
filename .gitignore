@@ -1,6 +1,10 @@
 # Ignore the SQLite database
 db.sqlite3
 
+# Ignore ssh key for git connection
+sushant_crm_git
+sushant_crm_git.pub
+
 # Ignore all migrations in the "inquiries" app
 inquiries/migrations/
 
@@ -13,9 +17,7 @@ __pycache__/
 .env
 
 # Custom files
-running_django_instructions.txt
-To_do.txt
+Documentations/
 myenv/
 
-faaltu/
 MySQL_Backups/backups

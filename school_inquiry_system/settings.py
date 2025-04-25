@@ -104,13 +104,18 @@ WSGI_APPLICATION = 'school_inquiry_system.wsgi.application' # Defines the WSGI a
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'Inquiries',
-        'USER': 'admin',
-        'PASSWORD': 'School@2025',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': os.getenv('ENGINE'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASS'),
+        'HOST': os.getenv('HOST'),
+        'PORT': os.getenv('PORT'),
     }
+    
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
+    # }
 }
 
 
@@ -164,8 +169,6 @@ EMAIL_PORT = 587        # TLS
 EMAIL_USE_TLS = True    # Enables encryption for email security
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  # Your email address
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Your email account's app-specific password
-CITIES_LIGHT_TRANSLATION_LANGUAGES = ['en']
-CITIES_LIGHT_INCLUDE_COUNTRIES = ['IN']
 
 
 LOGIN_URL = '/inquiries/login/'     # The default login page URL

@@ -14,13 +14,13 @@ django.setup()
 from inquiries.models import Lead
 
 # Status-to-date field mapping
-STATUS_DATE_MAP = {
-    'Inquiry': 'inquiry_date',
-    'Registration': 'registration_date',
-    'Admission Test': 'admission_test_date',
-    'Admission Offered': 'admission_offered_date',
-    'Admission Confirmed': 'admission_confirmed_date',
-    'Rejected': 'rejected_date',
+STATUS_DATE_EXCEL_MAP = {
+    'Inquiry': 'Inquiry Date',
+    'Registration': 'Registration Date',
+    'Admission Test': 'Admission Test Date',
+    'Admission Offered': 'Admission Offered Date',
+    'Admission Confirmed': 'Admission Confirmed Date',
+    'Rejected': 'Rejected Date',
 }
 
 # Custom date parser to handle both string and float-based Excel dates
@@ -58,38 +58,41 @@ def import_data_from_excel(file_path):
             # print(f"🛠️ Row {index + 1}: {row.to_dict()}")
 
             lead = Lead(
-                student_name=row['student_name'],
-                parent_name=row['parent_name'],
-                mobile_number=row['mobile_number'],
-                # email=row['email'] if pd.notna(row['email']) else None,
-                address=row['address'] if pd.notna(row['address']) else None,
-                block=row['block'],
-                location_panchayat=row['location_panchayat'],
-                inquiry_source=row['inquiry_source'],
-                student_class=row['student_class'],
-                status=row['status'],
-                remarks=row['remarks'] if pd.notna(row['remarks']) else None,
-                follow_up_date=parse_custom_date(row['follow_up_date']),
+                student_name=row['Student Name'],
+                parent_name=row['Parent Name'],
+                mobile_number=row['Mobile Number'],
+                # email=row['Email'] if pd.notna(row['Email']) else None,
+                address=row['Address'] if pd.notna(row['Address']) else None,
+                block=row['Block'],
+                location_panchayat=row['Location/Panchayat'],
+                inquiry_source=row['Inquiry Source'],
+                student_class=row['Student Class'],
+                status=row['Status'],
+                remarks=row['Remarks'] if pd.notna(row['Remarks']) else None,
+                follow_up_date=parse_custom_date(row['Follow-up Date']),
                 assigned_agent_id = 4
             )
 
             # print(f"➡️ follow_up_date = {lead.follow_up_date}")
 
-            status_date_field = STATUS_DATE_MAP.get(row['status'])
-            if status_date_field and pd.notna(row['status_date']):
-                setattr(lead, status_date_field, parse_custom_date(row['status_date']))
+            status_date_field_excel = STATUS_DATE_EXCEL_MAP.get(row['Status'])
+            status_date_field_djsngo_model = status_date_field_excel.strip().lower().replace(' ', '_')
+            status_date_value_excel = row[status_date_field_excel]
+            
+            if status_date_field_excel and pd.notna(status_date_value_excel):
+                setattr(lead, status_date_field_djsngo_model, parse_custom_date(status_date_value_excel))
 
             lead.save()
             # print("+++++++++++++++> lead = ",lead)
-            # print(f"✅ Record saved for: {row['student_name']}")
+            # print(f"✅ Record saved for: {row['Student Name']}")
         
         except Exception as e:
-            print(f"❌ Error saving record for: {row['student_name']}, Error: {e}")
+            print(f"❌ Error saving record for: {row['Student Name']}, Error: {e}")
 
 
 
 if __name__ == "__main__":
-    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'dejawoo_data.xlsx')
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'inquiries (1).xlsx')
 
     if os.path.exists(file_path):
         print("🚀 Importing data...")
