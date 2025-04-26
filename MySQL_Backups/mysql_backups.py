@@ -22,6 +22,9 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION")
 
+# How many days of backups you want
+BACKUP_DAYS = int(os.getenv("BACKUP_DAYS", "3"))  # Default to 3 if not set
+print("=====================> BACKUP_DAYS = ",BACKUP_DAYS)
 
 # Backup Directory
 BACKUP_DIR = os.path.join(SCRIPT_DIR, "backups")
@@ -55,14 +58,14 @@ os.remove(BACKUP_FILE)
 
 print(f"Backup completed and compressed: {COMPRESSED_FILE}")
 
-# Delete Local Backups Older Than 7 Days
+# Delete Local Backups Older Than BACKUP_DAYS Days
 for file in os.listdir(BACKUP_DIR):
     file_path = os.path.join(BACKUP_DIR, file)
     if file.endswith(".gz"):
         file_date_str = file.replace(f"{DB_NAME}-", "").replace(".sql.gz", "")
         try:
             file_date = datetime.datetime.strptime(file_date_str, "%Y-%m-%d")
-            if (datetime.datetime.now() - file_date).days > 7:
+            if (datetime.datetime.now() - file_date).days > BACKUP_DAYS:
                 os.remove(file_path)
                 print(f"Deleted old local backup: {file_path}")
         except ValueError:
@@ -84,7 +87,7 @@ if "Contents" in response:
         try:
             file_date_str = file_name.replace(f"{DB_NAME}-", "").replace(".sql.gz", "")
             file_date = datetime.datetime.strptime(file_date_str, "%Y-%m-%d")
-            if (datetime.datetime.now() - file_date).days > 7:
+            if (datetime.datetime.now() - file_date).days > BACKUP_DAYS:
                 s3_client.delete_object(Bucket=S3_BUCKET, Key=obj["Key"])
                 print(f"Deleted old backup from S3: {obj['Key']}")
         except ValueError:
