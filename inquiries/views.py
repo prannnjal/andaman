@@ -224,9 +224,15 @@ def inquiry_list(request):
 # =======================================================================================================================================================================
 
 def follow_up_management(request):
-    date_from = date.today()
     days = int(request.GET.get("days", "7"))
-    date_to = date_from + timedelta(days=days)
+    
+    if(request.GET.get("follow-up-direction") == "previous"):
+        date_to = date.today()        
+        date_from = date_to - timedelta(days=days)
+
+    else:
+        date_from = date.today()        
+        date_to = date_from + timedelta(days=days)
 
     follow_up_leads = Filter_Inquiries(request)
          
@@ -289,7 +295,7 @@ def follow_up_management(request):
             'student_classes': student_classes,
             'admins': admins,
         })
-# =======================================================================================================================================================================
+# ======================================================================================================================================================================
 
 @login_required
 def add_inquiry(request):

@@ -302,6 +302,15 @@
             border-radius: 4px;
             text-align: center;
         }
+
+        .flex_container select {
+            width: 100px;
+            padding: 5px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
         
         #Go {
             background-color: #129116; 
@@ -571,7 +580,11 @@
 
 
     <div class="flex_container">
-        <span>Show follow-ups for the next</span>
+        <span>Show follow-ups for the</span>
+        <select id="follow-up-direction">
+            <option value="next" selected>Next</option>
+            <option value="previous">Previous</option>
+        </select>        
         <input type="number" id="follow-up-days" min="1" step="1" />        
         <span class="days-label">days</span>
         <button id="Go">Go</button>
@@ -651,9 +664,11 @@
         document.getElementById("Go").addEventListener("click", function () {
             // Get the number of follow-up days
             let days = document.getElementById("follow-up-days").value;
+
+            let follow_up_direction = document.getElementById("follow-up-direction").value;
                         
             // Construct the URL with query parameters
-            let url = `/inquiries/follow_up_management/?days=${days}`;
+            let url = `/inquiries/follow_up_management/?days=${days}&follow-up-direction=${follow_up_direction}`;
                     
             fetch(url)
             .then(response => response.text())  // Assuming your Django view returns HTML or text data
