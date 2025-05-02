@@ -2,18 +2,18 @@ from django.db import models
 from django.contrib.auth.models import User, AbstractUser
 import pandas as pd
 from django.utils.timezone import now
-import json
+from datetime import datetime
+from django.utils import timezone
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+import string
+import random
+import os
+
 
 # print("======================> os.getcwd = ", os.getcwd())
 
-# Load block and location_panchayat data from Excel
-file_path = "inquiries/static/Location_list.xlsx"
-df = pd.read_excel(file_path)
 
-
-# Extract unique blocks
-BLOCK_CHOICES = [(block, block) for block in df["BLOCK"].dropna().unique()]
-BLOCK_CHOICES.append(("Other", "Other"))  # Add the 'Other' option
 '''
 [('A', 'Block A'), ('B', 'Block B'), ('C', 'Block C')]
 
@@ -21,33 +21,85 @@ Now, in a Django form, the dropdown will show: Block A
 But the database will still store "A"
 '''
 
-class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)  # Enforce unique email. This thing was missing in default Django User model, thats why we needed to implement our Custom User model
+def get_block_choices():
+    try:
+        # Load block and location_panchayat data from Excel
+        file_path = os.path.join(os.path.dirname(__file__),"static\\Location_list.xlsx")
+        df = pd.read_excel(file_path)
+        block_choices = [(block, block) for block in df["BLOCK"].dropna().unique()]
+        block_choices.append(("Other", "Other"))
+        return block_choices
+    except Exception as e:
+        print(f"Warning: Could not load block choices from Excel: {e}")
+        return [("Other", "Other")]
 
-    USERNAME_FIELD = 'email'  # Use email as the primary identifier
-    '''
-    By default, Django uses username for authentication.
-    Here, we override it so users log in using their email instead.
-    '''
-    REQUIRED_FIELDS = ['username']  # 'username' is required when creating a user via createsuperuser
+
+
+def generate_random_password(length=10):
+    characters = string.ascii_letters + string.digits + '@' + '#'
+    return ''.join(random.choices(characters, k=length))
+
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, mobile_number, email, password=None, **extra_fields):
+        if not password:
+            password = generate_random_password()
             
-    def __str__(self):
-        if self.is_staff:
-            return f"Username: {self.username},\nEmail: {self.email} (Admin)"
-        else:
-            return f"Username: {self.username},\nEmail: {self.email} (Agent)"
+        # if not mobile_number:
+        #     raise ValueError("Users must have a mobile number")
+        
+        if not email:
+            raise ValueError("Users must have an email")
+
+        extra_fields.setdefault('is_superuser', False)
+        
+        user = self.model(mobile_number=mobile_number, email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, mobile_number, email, password=None, **extra_fields):
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('name', 'Dejawoo Admin')
+        extra_fields.setdefault('role', 'Admin')
+
+        return self.create_user(mobile_number, email, password, **extra_fields)
     
     
-class Agent(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)     # I want to link Agent to CustomUser model and also want to store additional fields for the Agents
+    
+ROLE_CHOICES = [
+    ('Admin', 'Admin'),
+    ('Agent', 'Agent'),
+    ('Viewer', 'Viewer'),
+    ('None', 'None'),
+]
+
+
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    email = models.EmailField(unique=True)
+    mobile_number = models.CharField(max_length=14, unique=True, null=True, blank=True)
+    
+    # To let admin grant permission to a user:
+    expiration_time = models.DateTimeField(default=timezone.make_aware(datetime(9999, 12, 31, 23, 59, 59)))  # Make it timezone-aware    
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Viewer')
     name = models.CharField(max_length=100)
-    # email = models.EmailField(max_length=100, unique=True)
-    performance_score = models.IntegerField(default=100)
-    mobile_number = models.CharField(max_length=14, null=True, blank=True)
 
+    # Removing the username field entirely
+    # No username field is needed since we're using mobile_number as the unique identifier
+
+    USERNAME_FIELD = 'mobile_number'
+    REQUIRED_FIELDS = ['email']
+    
+    objects = CustomUserManager()
 
     def __str__(self):
-        return f"Name: {self.name},\nEmail: {self.user.email}"
+        if self.role == "Admin":
+            return f"Mobile Number: {self.mobile_number},\nEmail: {self.email} (Admin)"
+        elif self.role == "Agent":
+            return f"Mobile Number: {self.mobile_number},\nEmail: {self.email} (Agent)"
+        else:
+            return f"Mobile Number: {self.mobile_number},\nEmail: {self.email} (User)"
+    
     
 
 class Lead(models.Model):
@@ -88,11 +140,11 @@ class Lead(models.Model):
 
     student_name = models.CharField(max_length=100)
     parent_name = models.CharField(max_length=100)
-    mobile_number = models.CharField(max_length=15)
+    mobile_number = models.CharField(max_length=15, blank=True, null=True)
     email = models.EmailField(max_length=100, blank=True, null=True)
     # no need to enforce unique constraint because the same person can ask more than 1 inquiries for his multiple children
-    address = models.TextField(null=True, blank=True)    
-    block = models.CharField(choices=BLOCK_CHOICES, max_length=100, blank=False, null=False)
+    address = models.TextField(null=True, blank=True)
+    block = models.CharField(choices=get_block_choices(), max_length=100, blank=False, null=False)
     location_panchayat = models.CharField(max_length=100, blank=False, null=False)
     inquiry_source = models.CharField(choices = INQUIRY_CHOICES, max_length=100)  # e.g., Advertisement, Walk-in, Online
     student_class = models.CharField(choices=STUDENT_CHOICES, max_length=30)
@@ -107,14 +159,19 @@ class Lead(models.Model):
     rejected_date = models.DateField(null=True, blank=True)
     follow_up_date = models.DateField(null=True, blank=True)
     
-    # assigned_agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True)
+    last_follow_up_updation = models.DateField(null=True, blank=True)
+    last_inquiry_updation = models.DateField(null=True, blank=True)
+    
+
     
     assigned_agent = models.ForeignKey(
-        Agent,
+        CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        default=None  
+        default=None,
+        limit_choices_to={'role': 'Agent'},
+        related_name='assigned_agent'
     )
     
     admin_assigned = models.ForeignKey(
@@ -123,7 +180,8 @@ class Lead(models.Model):
         null=True,
         blank=True,
         default=None,
-        limit_choices_to={'is_staff': True}  # Restrict to staff users (admins) in the dropdown of django forms. is_staff is a boolean field (True or False) in Django’s built-in User model. It is used to determine whether a user has access to the Django admin panel.
+        limit_choices_to={'role': 'Admin'},  # Restrict to staff users (admins) in the dropdown of django forms. is_staff is a boolean field (True or False) in Django’s built-in User model. It is used to determine whether a user has access to the Django admin panel.
+        related_name='admin_assigned'
     )
     
    

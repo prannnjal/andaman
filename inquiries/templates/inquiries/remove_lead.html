@@ -182,7 +182,7 @@
                 <option value="">--Select Agent--</option>
                 {% for agent in agents %}
                 <option value="{{ agent.id }}">
-                    Id: {{agent.id}}, Name: {{agent.name}}, Phone: {{agent.mobile_number}}, Email: {{agent.user.email}}
+                    Id: {{agent.id}}, Name: {{agent.name}}, Phone: {{agent.mobile_number}}
                 </option>
                 {% endfor %}
             </select>
@@ -194,7 +194,7 @@
                     <label for="lead-{{ agent.id }}">Select Lead:</label>
                     <select id="lead-{{ agent.id }}" name="lead_id" disabled>
                         <option value="">--Select Lead--</option>
-                        {% for lead in agent.lead_set.all %}
+                        {% for lead in agent.assigned_agent.all %}
                         <option value="{{ lead.id }}">
                             Id: {{ lead.id }}, Email: {{ lead.email }}, Phone: {{lead.mobile_number}}, Student Name: {{lead.student_name}}, Parent Name: {{lead.parent_name}}, Block: {{lead.block}}, Location: {{lead.location_panchayat}}
                         </option>
@@ -272,6 +272,17 @@
             }                                       
         }        
     </script>    
+
+    <script>
+        // Check if there are any messages to display
+        if (document.querySelector('.messages')) {
+          setTimeout(function() {
+            // Find the message container and hide it after 5 seconds
+            var messagesContainer = document.querySelector('.messages');
+            messagesContainer.style.display = 'none';
+          }, 4000);
+        }
+      </script>
 </body>
 
 </html>

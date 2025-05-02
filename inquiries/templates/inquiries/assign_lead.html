@@ -498,13 +498,44 @@
             border: 2px solid black;
             margin-bottom: 70px;
             text-decoration: none;
-        }      
+        }     
+        
+          /* Messages Styling */
+        .messages .alert, .success, .error {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .messages .success {
+            background-color: #21a606;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .messages .alert.error {
+            background-color: #f50317;
+            color: #ffffff;
+            text-align: center;
+        }
 
     </style>
 
 </head>
 
 <body>
+    <!-- Display success or error message -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <!-- It loops through messages and assigns CSS classes dynamically ({{ message.tags }}) for styling. e.g: class="alert success" or class="alert error"-->
+        <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
 
     <h2>Assign / Reassign Lead to Agent</h2>
@@ -534,7 +565,7 @@
                         <span class="sort-icon"></span>
                     </th>
     
-                    <th id="assigned_agent.user.email" onclick="sortColumn(event,4,'string')">
+                    <th id="assigned_agent.email" onclick="sortColumn(event,4,'string')">
                         Agent Email
                         <span class="sort-icon"></span>
                     </th>
@@ -611,7 +642,7 @@
                     </td>
                     <td>{{ inquiry.student_name }}</td>
                     <td>{{ inquiry.assigned_agent.name|default:"UNASSIGNED" }}</td>
-                    <td>{{ inquiry.assigned_agent.user.email|default:"NULL" }}</td>
+                    <td>{{ inquiry.assigned_agent.email|default:"NULL" }}</td>
                     <td>{{ inquiry.email }}</td>
                     <td>{{ inquiry.parent_name }}</td>
                     <td>
@@ -672,7 +703,7 @@
                         <tr>
                             <td>{{ forloop.counter }}</td>
                             <td>{{ agent.name }}</td>
-                            <td>{{ agent.user.email }}</td>                                                                                                
+                            <td>{{ agent.email }}</td>                                                                                                
                             <td style="padding: 0; text-align: center;">
                                 <div class="flex-td">
                                     <label style="display: block; height: 100%; width: 100%; margin: 0; cursor: pointer;">
@@ -730,6 +761,17 @@
             document.getElementById('modal-backdrop').style.display = isModalOpen ? "block" : "none";
         }
     </script>
+
+    <script>
+        // Check if there are any messages to display
+        if (document.querySelector('.messages')) {
+          setTimeout(function() {
+            // Find the message container and hide it after 5 seconds
+            var messagesContainer = document.querySelector('.messages');
+            messagesContainer.style.display = 'none';
+          }, 4000);
+        }
+      </script>
     
 
 </body>

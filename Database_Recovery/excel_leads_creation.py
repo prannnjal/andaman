@@ -70,7 +70,7 @@ def import_data_from_excel(file_path):
                 status=row['Status'],
                 remarks=row['Remarks'] if pd.notna(row['Remarks']) else None,
                 follow_up_date=parse_custom_date(row['Follow-up Date']),
-                assigned_agent_id = 4
+                assigned_agent_id = 5
             )
 
             # print(f"➡️ follow_up_date = {lead.follow_up_date}")

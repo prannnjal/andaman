@@ -258,11 +258,43 @@
             margin-bottom: 70px;
             text-decoration: none;
         }      
+
+          /* Messages Styling */
+          .messages .alert, .success, .error {
+            margin-bottom: 15px;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .messages .success {
+            background-color: #21a606;
+            color: #ffffff;
+            text-align: center;
+        }
+
+        .messages .alert.error {
+            background-color: #f50317;
+            color: #ffffff;
+            text-align: center;
+        }
      
     </style>
 </head>
 
 <body>
+    <!-- Display success or error message -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <!-- It loops through messages and assigns CSS classes dynamically ({{ message.tags }}) for styling. e.g: class="alert success" or class="alert error"-->
+        <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <h1>Agent List</h1>
 
     <!-- Filter Form -->
@@ -334,11 +366,15 @@
                 <tr>
                     <th>S.No</th>
                     <th>Name</th>
+                    <th>Phone</th>
                     <th>Email</th>
                     <th>Leads Handled</th>
                     <th>Leads Converted</th>
-                    <th>Conversion Rate (%)</th>                  
-                    <th>Actions</th>
+                    <th>Conversion Rate (%)</th>
+
+                    {% if user.role == "Admin" %}
+                        <th>Actions</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -346,7 +382,8 @@
                 <tr>
                     <td>{{ forloop.counter }}</td>
                     <td>{{ agent.name }}</td>
-                    <td>{{ agent.user.email }}</td>
+                    <td>{{ agent.mobile_number }}</td>
+                    <td>{{ agent.email }}</td>
                     <td>{{ agent.lead_count }}</td>                    
                     <td>{{ agent.converted_leads }}</td>
                     <!-- agent.converted_leads would be None when there is no lead assigned to the Agent -->
@@ -356,14 +393,17 @@
                         {% else %}
                             N/A
                         {% endif %}
-                    </td>                                       
-                    <td>
-                        <form method="POST" style="display: inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="agent_id" value="{{ agent.id }}">
-                            <button type="submit" class="btn btn-danger">Delete</button>
-                        </form>
                     </td>
+                    
+                    {% if user.role == "Admin" %}
+                        <td>
+                            <form method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="agent_id" value="{{ agent.id }}">
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    {% endif %} 
                 </tr>
                 {% empty %}
                 <tr>
@@ -382,6 +422,17 @@
      <div class="navigation">
         <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
     </div>
+
+    <script>
+        // Check if there are any messages to display
+        if (document.querySelector('.messages')) {
+          setTimeout(function() {
+            // Find the message container and hide it after 5 seconds
+            var messagesContainer = document.querySelector('.messages');
+            messagesContainer.style.display = 'none';
+          }, 4000);
+        }
+    </script>
 </body>
 
 </html>

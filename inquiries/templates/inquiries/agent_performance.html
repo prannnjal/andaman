@@ -186,11 +186,11 @@
                             </a>                            
                         </th>
 
-                        <th class="{% if sort_column == '2' %}{{sort_order}}{% endif %}">
+                        <!-- <th class="{% if sort_column == '2' %}{{sort_order}}{% endif %}">
                             <a href="?sort_order={% if sort_column == '2' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=2">Email
                                 <span class="sort-icon"></span>
                             </a>                            
-                        </th>
+                        </th> -->
 
                         <th class="{% if sort_column == '3' %}{{sort_order}}{% endif %}">
                             <a href="?sort_order={% if sort_column == '3' and sort_order == 'asc' %}desc{% else %}asc{% endif %}&sort_column=3">Total Leads
@@ -251,7 +251,7 @@
                     {% for agent in agent_data %}
                     <tr class="{% if forloop.first %}highlight{% endif %}">
                         <td>{{ agent.agent.name }}</td>
-                        <td>{{ agent.agent.user.email }}</td>
+                        <!-- <td>{{ agent.agent.email }}</td> -->
                         <td>{{ agent.total_leads }}</td>
                         <td>{{ agent.leads_inquiry }}</td>
                         <td>{{ agent.leads_to_registration }}</td>

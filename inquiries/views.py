@@ -1,12 +1,18 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Lead, Agent, CustomUser, LeadLogs
-from .forms import InquiryForm, AgentForm, UpdateLeadStatusForm
+from django.core.validators import validate_email
+from .models import CustomUser, Lead, CustomUser, LeadLogs
+from .forms import InquiryForm, AgentForm, UpdateLeadStatusForm, CustomUserForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
 from datetime import timedelta
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.core.mail import send_mail
+from django.utils import timezone
 from django.utils.timezone import now
 from django.contrib import messages
 from openpyxl import Workbook
@@ -23,48 +29,98 @@ from django.forms.models import model_to_dict
 import json
 from datetime import datetime, date
 from collections import defaultdict
+import random
+import string
+from django.urls import reverse
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth.views import PasswordResetView
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 
 # =======================================================================================================================================================================
+def is_authentic(user):
+    return user.is_authenticated and user.expiration_time > timezone.now()
 
-# Function to check if user is admin
 def is_admin(user):
-    return user.is_authenticated and user.is_staff  # Only allow staff users (admins)
+    return is_authentic(user) and user.role=="Admin"
 
+def is_agent_or_admin(user):
+    return  is_authentic(user) and user.role in ["Admin", "Agent"]
+    
+def is_staff(user):
+    return is_authentic(user) and user.role in ["Admin", "Agent", "Viewer"]
+
+
+def Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, changed_by):    
+    previous_data = model_to_dict(old_inquiry_instance) if old_inquiry_instance else {}
+    new_data = model_to_dict(new_inquiry_instance)
+    
+    # Get all unique field names from both dictionaries
+    all_fields = set(previous_data.keys()).union(set(new_data.keys()))
+    
+    # print("=======================> prev data = ",previous_data)
+    # print("\n=======================> new data = ",new_data)
+    # print("\n=======================> all_fields = ",all_fields)
+    
+    # Compare previous and new data to track changes
+    changes = {
+        field: {'old': previous_data.get(field, None), 'new': new_data.get(field, None)}
+        for field in all_fields 
+        if previous_data.get(field) != new_data.get(field)
+    }
+    
+    # print("========================> changes = ", changes)
+    
+    # Save changes in LeadLogs only if there are differences
+    if changes:
+        # print("==========================> inside if changes")
+        LeadLogs.objects.create(
+            lead=new_inquiry_instance,
+            changed_by=changed_by,
+            changed_at=now(),
+            previous_data=json.dumps(previous_data, default=str),  
+            new_data=json.dumps(new_data, default=str)
+        )
 # =======================================================================================================================================================================
 
 def agent_login(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
+                
+        username = request.POST.get('username')
         password = request.POST.get('password')
 
         # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. Authenticate user based on email and password. The authenticate is our custom def authenticate() function which we have created in our auth_backends.py file. 
         
-        user = authenticate(request, username=email, password=password)
+        if username.isdigit() and len(username) == 10:
+            print("=======================> username = ",username," and password = ",password)
+            user = authenticate(request, mobile_number=username, password=password)
+        else:
+            user = authenticate(request, email=username, password=password)
+        
 
         if user is not None:
-            if user.is_staff:  # Check if user is admin (staff user)
+            if user.role in ["Admin", "Agent", "Viewer"] and user.expiration_time > timezone.now():                
                 login(request, user)
                 # The function sets a session cookie on the user's browser, and Django uses that cookie to identify the user in future requests. After this call, request.user will return the logged-in user on subsequent requests.
                 
+                messages.success(request, 'Login successful !')
+                
                 return redirect('dashboard')  # Redirect to the admin dashboard
+            
 
-            try:
-                # Check if the authenticated user is an Agent
-                agent = user.agent  # This will work only for users who are agents
-                login(request, user)
-                return redirect('dashboard')  # Redirect to the agent's dashboard
-            except Agent.DoesNotExist:
-                messages.error(request, 'This account is not an agent.')
-                return redirect('agent_login')  # Stay on the login page
+            else:
+                messages.error(request, 'You do not have permission to login')
+                return redirect('login')
 
         else:
-            messages.error(request, 'Invalid email or password.')
+            messages.error(request, 'Invalid credentials')
 
     return render(request, 'inquiries/agent_login.html')
 
 # =======================================================================================================================================================================
+
 def Filter_By_Date(inquiries, choice, request_parameter, model_key):
-    if request_parameter: 
+    if request_parameter:
         date_val = datetime.strptime(request_parameter, "%Y-%m-%d").date()
         
         if(choice == "from"):
@@ -80,14 +136,14 @@ def Filter_Inquiries(request):
     user = request.user     # request.user returns the currently logged-in user, which is an instance of your CustomUser model (or User if you haven't switched to a custom model).
 
     # Filter inquiries based on user type (staff or agent)
-    if user.is_staff:
+    if user.role=="Admin":
         inquiries = Lead.objects.all()
-    elif getattr(user, "agent", None):  # Check if the user is linked to an Agent. Since Agent has a OneToOneField to CustomUser, we check if the user has an agent attribute before accessing user.agent.
+    elif user.role=="Agent":  # Check if the user is linked to an Agent. Since Agent has a OneToOneField to CustomUser, we check if the user has an agent attribute before accessing user.agent.
         inquiries = Lead.objects.all()
         
         # inquiries = Lead.objects.filter(assigned_agent=user.agent)  # Agent has a OneToOneField linked to CustomUser. So you can simply access agent model instance of a user via user.agent.
     else:
-        inquiries = Lead.objects.none()     # return an empty queryset if the user is neither an admin nor an agent
+        inquiries = Lead.objects.all()     # return an empty queryset if the user is neither an admin nor an agent
     
     # Handle filters from the GET request
     lead_id = request.GET.get('lead_id')
@@ -162,11 +218,18 @@ def Filter_Inquiries(request):
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('follow_up_date_from'), 'follow_up_date')
     inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('follow_up_date_to'), 'follow_up_date')
     
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('last_inquiry_updation_from'), 'last_inquiry_updation')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_inquiry_updation_to'), 'last_inquiry_updation')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('last_follow_up_updation_from'), 'last_follow_up_updation')
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_follow_up_updation_to'), 'last_follow_up_updation')    
+    
     return inquiries
     
     
     
 @login_required
+@user_passes_test(is_staff)
 def inquiry_list(request):
     inquiries = Filter_Inquiries(request)
                               
@@ -175,7 +238,7 @@ def inquiry_list(request):
     The flat=True argument is used when calling .values_list() on a Django QuerySet. It flattens the results into a single list instead of returning a list of tuples.
     '''
     
-    agents = Agent.objects.all()  
+    agents = CustomUser.objects.filter(role="Agent")  
     lead_ids = Lead.objects.values_list('id', flat=True)
     students = Lead.objects.values_list('student_name', flat=True).distinct() 
     parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
@@ -186,7 +249,7 @@ def inquiry_list(request):
     inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
     statuses = Lead.objects.values_list('status', flat=True).distinct()
     student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
-    admins = CustomUser.objects.filter(is_staff=True)
+    admins = CustomUser.objects.filter(role = "Admin")
     
     
     '''
@@ -222,42 +285,48 @@ def inquiry_list(request):
     })
 
 # =======================================================================================================================================================================
-
+@login_required
+@user_passes_test(is_staff)
 def follow_up_management(request):
     days = int(request.GET.get("days", "7"))
+    follow_up_direction = request.GET.get("follow-up-direction", "next")
+        
+    follow_up_leads = Lead.objects.all()
     
-    if(request.GET.get("follow-up-direction") == "previous"):
-        date_to = date.today()        
-        date_from = date_to - timedelta(days=days)
-
-    else:
-        date_from = date.today()        
-        date_to = date_from + timedelta(days=days)
-
-    follow_up_leads = Filter_Inquiries(request)
+    #print("============================> follow_up_leads = ", follow_up_leads)
          
-    if(request.user.is_staff):
+    if(follow_up_direction == "previous"):
+        date_to = date.today()
+        date_from = date_to - timedelta(days=days)
         follow_up_leads = follow_up_leads.filter(
-            # admin_assigned=request.user,
-            follow_up_date__gte=date_from, 
-            follow_up_date__lte=date_to
+            last_follow_up_updation__gte=date_from, 
+            last_follow_up_updation__lte=date_to
         )
-                            
+                 
     else:
+        date_from = date.today()
+        date_to = date_from + timedelta(days=days)
         follow_up_leads = follow_up_leads.filter(
-            # assigned_agent=request.user,
             follow_up_date__gte=date_from, 
             follow_up_date__lte=date_to
         )
         
+        
     follow_up_data = defaultdict(list)
     
     for lead in follow_up_leads:
-        follow_up_date = str(lead.follow_up_date)
-        follow_up_date = datetime.strptime(follow_up_date, "%Y-%m-%d").strftime("%B %d, %Y")
-        follow_up_data[follow_up_date].append(lead)       
-           
+        if follow_up_direction == "previous":
+            follow_up_date = lead.last_follow_up_updation
+        else:
+            follow_up_date = lead.follow_up_date
+            
+        if follow_up_date:
+            follow_up_date = str(follow_up_date)
+            follow_up_date = datetime.strptime(follow_up_date, "%Y-%m-%d").strftime("%B %d, %Y")
+            follow_up_data[follow_up_date].append(lead)
+        
     follow_up_data = dict(follow_up_data)
+        
     
     # ✅ Convert defaultdict to a regular dict and sort by date keys
     follow_up_data = dict(sorted(
@@ -266,7 +335,7 @@ def follow_up_management(request):
     ))
     
     
-    agents = Agent.objects.all()  
+    agents = CustomUser.objects.filter(role="Agent")
     lead_ids = Lead.objects.values_list('id', flat=True)
     students = Lead.objects.values_list('student_name', flat=True).distinct() 
     parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
@@ -277,13 +346,13 @@ def follow_up_management(request):
     inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
     statuses = Lead.objects.values_list('status', flat=True).distinct()
     student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
-    admins = CustomUser.objects.filter(is_staff=True)
+    admins = CustomUser.objects.filter(role = "Admin")
     
     return render(request, 'inquiries/follow_up_management.html', {
             'lead_ids': lead_ids,
             'students': students,
-            'parents': parents,
-            'follow_up_data':follow_up_data,
+            'parents': parents,            
+            'follow_up_data':follow_up_data,            
             'Len_dict': len(follow_up_data),
             'agents': agents,
             'lead_emails': lead_emails,
@@ -294,13 +363,16 @@ def follow_up_management(request):
             'statuses': statuses,
             'student_classes': student_classes,
             'admins': admins,
+            'follow_up_direction': follow_up_direction
         })
+
 # ======================================================================================================================================================================
 
 @login_required
+@user_passes_test(is_agent_or_admin)
 def add_inquiry(request):
     if request.method == 'POST':
-        form = UpdateLeadStatusForm(request.POST, user=request.user)
+        form = UpdateLeadStatusForm(request.POST)
 
         if form.is_valid():
             inquiry = form.save(commit=False)
@@ -310,24 +382,30 @@ def add_inquiry(request):
 
             if request.POST.get('location_panchayat') == "Other":
                 inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
-
-            
+                
+            if inquiry.follow_up_date:
+                inquiry.last_follow_up_updation = inquiry.follow_up_date
+                
+            inquiry.last_inquiry_updation = now().date()              
+        
             inquiry.save()
+            
+            Save_Lead_Logs(None, inquiry, request.user)
 
             # Get the assigned agent
             assigned_agent = inquiry.assigned_agent
 
             # Email recipient list
             recipient_list = []  # Default recipient email(s)
-            if assigned_agent and assigned_agent.user.email:
-                recipient_list.append(assigned_agent.user.email)
-                send_mail(
-                    subject='New Inquiry Arrived',
-                    message=f'A new inquiry has arrived.\n\nDetails:\n{inquiry}',
-                    from_email='uncertain30@gmail.com',  # Sender email
-                    recipient_list=recipient_list,  # Recipient email(s)
-                    fail_silently=False,
-                )
+            if assigned_agent and assigned_agent.email:
+                recipient_list.append(assigned_agent.email)
+                # send_mail(
+                #     subject='New Inquiry Arrived',
+                #     message=f'A new inquiry has arrived.\n\nDetails:\n{inquiry}',
+                #     from_email='uncertain30@gmail.com',  # Sender email
+                #     recipient_list=recipient_list,  # Recipient email(s)
+                #     fail_silently=False,
+                # )
             
             # Add a success message
             messages.success(request, "Lead successfully added !")
@@ -337,37 +415,14 @@ def add_inquiry(request):
             messages.error(request, "Some error occured, please ensure that the form is valid !")
       
     else:
-        form = UpdateLeadStatusForm(user=request.user)
+        form = UpdateLeadStatusForm()
         
     return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Add new Inquiry'})
 
 # ====================================================================================
-def Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, changed_by):    
-    previous_data = model_to_dict(old_inquiry_instance)
-    new_data = model_to_dict(new_inquiry_instance)
-    
-    # Get all unique field names from both dictionaries
-    all_fields = set(previous_data.keys()).union(set(new_data.keys()))
-    
-    # Compare previous and new data to track changes
-    changes = {
-        field: {'old': previous_data.get(field, None), 'new': new_data.get(field, None)}
-        for field in all_fields 
-        if previous_data.get(field) != new_data.get(field)
-    }
-    
-    # Save changes in LeadLogs only if there are differences
-    if changes:
-        LeadLogs.objects.create(
-            lead=new_inquiry_instance,
-            changed_by=changed_by,
-            changed_at=now(),
-            previous_data=json.dumps(previous_data, default=str),  
-            new_data=json.dumps(new_data, default=str)
-        )
-        
-    
+            
 @login_required
+@user_passes_test(is_agent_or_admin)
 def manage_lead_status(request, inquiry_id):
     # Fetch the Lead instance for the given inquiry_id
     inquiry = get_object_or_404(Lead, id=inquiry_id)    # fetches that instance from Lead model whose id is=inquiry_id
@@ -384,6 +439,12 @@ def manage_lead_status(request, inquiry_id):
     
             
             inquiry = form.save(commit=False)
+            
+            if inquiry.follow_up_date and inquiry.follow_up_date != old_inquiry_instance.follow_up_date:
+                inquiry.last_follow_up_updation = now().date()
+                
+            inquiry.last_inquiry_updation = now().date()
+            
                         
             if request.POST.get('block') == "Other":
                 inquiry.block = request.POST.get('manual_block')
@@ -399,9 +460,12 @@ def manage_lead_status(request, inquiry_id):
             # Save logs of changes
             Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, request.user)
             
-            # Optionally, add logic for email notifications or additional actions here
+            messages.success(request, "Lead successfully updated !")
             
             return redirect('inquiry_list')  # Redirect back to the inquiry list after saving
+
+        else:
+            messages.error(request, "Error updating lead !")
     else:
         # Prefill form with the inquiry's current details
         form = InquiryForm(instance=inquiry)  # Ensure form is tied to the existing instance
@@ -409,7 +473,8 @@ def manage_lead_status(request, inquiry_id):
     return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
 
 # ====================================================================================
-
+@login_required
+@user_passes_test(is_staff)
 def get_panchayats(request):
     block = request.GET.get('block', None)
     if block:
@@ -435,7 +500,7 @@ def get_panchayats(request):
 
 
 @login_required
-@user_passes_test(is_admin)  # Restrict access to admins
+@user_passes_test(is_admin)
 def remove_lead_from_agent_view(request):
     if request.method == 'POST':
         lead_id = request.POST.get('lead_id')  # Get the lead ID
@@ -455,7 +520,10 @@ def remove_lead_from_agent_view(request):
         return redirect('remove_lead')  # Redirect to the same page after removal
     
     else:
-        agents = Agent.objects.prefetch_related('lead_set').all()
+        agents = CustomUser.objects.filter(role='Agent').prefetch_related('assigned_agent')
+
+        # agents = CustomUser.objects.prefetch_related('assigned_agent').filter(role='Agent').all()
+        # print("=======================> agents prefetched in remove_lead_from_agent view = ", agents)
         '''
         This query retrieves all agents and their respective leads. Below is way to access it: 
         
@@ -467,12 +535,13 @@ def remove_lead_from_agent_view(request):
 # ====================================================================================
 
 @login_required
+@user_passes_test(is_staff)
 def dashboard(request):
     # print("===========================> inside dashboard view")
     user = request.user  # Get the logged-in user
 
     # Get all inquiries if user is admin, else filter by assigned_agent
-    if user.is_staff:  
+    if user.role == "Admin": 
         inquiries = Lead.objects.all()  # Admin sees all
     else:
         inquiries = Lead.objects.all()
@@ -545,11 +614,12 @@ def dashboard(request):
 # ====================================================================================
 
 @login_required
+@user_passes_test(is_staff)
 def detailed_stats(request):
     user = request.user  # Get the logged-in user
 
     # Get all inquiries if user is admin, else filter by assigned_agent
-    if user.is_staff:  
+    if user.role=="Admin":
         inquiries = Lead.objects.all()  # Admin sees all
     else:
         inquiries = Lead.objects.all()
@@ -647,6 +717,7 @@ def detailed_stats(request):
 # ====================================================================================
 
 @login_required
+@user_passes_test(is_staff)
 def agent_performance(request):
     user = request.user  # Get the logged-in user
     
@@ -657,10 +728,10 @@ def agent_performance(request):
     
    
     # If the user is an admin, get all agents; otherwise, get only the logged-in agent
-    if user.is_staff:
-        agents = Agent.objects.all()  # Admins see all agents
+    if user.role=="Admin":
+        agents = CustomUser.objects.filter(role="Agent")  # Admins see all agents
     else:
-        agents = Agent.objects.all()
+        agents = CustomUser.objects.filter(role="Agent")
         # agents = Agent.objects.filter(user=user)  # Agents see only their own data
 
     # Initialize list to store agent performance data
@@ -719,7 +790,7 @@ def agent_performance(request):
     # Define valid sorting keys
     valid_sort_keys = {
         "1": lambda x: x["agent"].name.lower(),
-        "2": lambda x: x["agent"].user.email.lower(),
+        "2": lambda x: x["agent"].email.lower(),
         "3": lambda x: x["total_leads"],
         "4": lambda x: x["leads_inquiry"],
         "5": lambda x: x["leads_to_registration"],
@@ -747,11 +818,12 @@ def agent_performance(request):
 # ====================================================================================
 
 @login_required
+@user_passes_test(is_staff)
 def export_inquiries_excel(request):
     user = request.user  # Get the logged-in user
 
     # If the user is an admin, get all inquiries; otherwise, get only the logged-in agent's inquiries
-    if user.is_staff:
+    if user.role=="Admin":
         inquiries = Lead.objects.all()
     else:
         inquiries = Lead.objects.all()
@@ -767,9 +839,9 @@ def export_inquiries_excel(request):
     headers = [
         'Student Name', 'Parent Name', 'Mobile Number', 'Email', 'Address', 'Block',
         'Location/Panchayat', 'Inquiry Source', 'Student Class', 'Status',
-        'Remarks', 'Inquiry Date', 'Follow-up Date', 'Registration Date',
-        'Admission Test Date', 'Admission Offered Date', 'Admission Confirmed Date',
-        'Rejected Date', 'Assigned Agent', 'Admin Assigned'
+        'Remarks', 'Inquiry Date', 'Registration Date',
+        'Admission Test Date', 'Admission Offered Date', 'Admission Confirmed Date', 
+        'Rejected Date', 'Follow-up Date', 'Last Follow-up Updation', 'Last Inquiry Updation', 'Assigned Agent', 'Admin Assigned'
     ]
     worksheet.append(headers)
 
@@ -787,15 +859,60 @@ def export_inquiries_excel(request):
             inquiry.student_class,
             inquiry.status,
             inquiry.remarks or "N/A",
-            inquiry.inquiry_date if inquiry.inquiry_date else "N/A",
-            inquiry.follow_up_date if inquiry.follow_up_date else "N/A",
+            inquiry.inquiry_date if inquiry.inquiry_date else "N/A",            
             inquiry.registration_date if inquiry.registration_date else "N/A",
             inquiry.admission_test_date if inquiry.admission_test_date else "N/A",
             inquiry.admission_offered_date if inquiry.admission_offered_date else "N/A",
             inquiry.admission_confirmed_date if inquiry.admission_confirmed_date else "N/A",
             inquiry.rejected_date if inquiry.rejected_date else "N/A",
-            inquiry.assigned_agent.user.email if inquiry.assigned_agent else "N/A",
+            inquiry.follow_up_date if inquiry.follow_up_date else "N/A",
+            inquiry.last_follow_up_updation if inquiry.last_follow_up_updation else "N/A",
+            inquiry.last_inquiry_updation if inquiry.last_inquiry_updation else "N/A",
+            
+            inquiry.assigned_agent.email if inquiry.assigned_agent else "N/A",
             inquiry.admin_assigned.email if inquiry.admin_assigned else "N/A"
+        ])
+
+    # Set the response content type and save the workbook to the response
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')   # This tells Django that the response contains an Excel file (.xlsx format).
+    
+    response['Content-Disposition'] = 'attachment; filename="inquiries.xlsx"'   # This forces a file download instead of displaying raw data in the browser. The file will be named inquiries.xlsx when downloaded.
+
+    workbook.save(response)     # saving the Excel file directly into the HTTP response
+    return response     # Sends the Excel file as a downloadable response to the user
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_staff)
+def export_users_excel(request): 
+    school_users = CustomUser.objects.all()
+   
+    # Create a workbook and select the active worksheet
+    workbook = Workbook()   # Create a new Excel workbook
+    worksheet = workbook.active  # Gets the default (active) sheet in the workbook.
+    worksheet.title = "Users"   # Rename the sheet to "Inquiries"
+
+    # Add the header row
+    headers = [
+        'Name', 'Email', 'Mobile Number', 'Role', 'Expiration Date'
+    ]
+    worksheet.append(headers)
+
+    # Add inquiry data to the worksheet
+    for school_user in school_users:
+        expiration_time = school_user.expiration_time
+        if expiration_time:
+            expiration_time = expiration_time.replace(tzinfo=None)
+        else:
+            expiration_time = "N/A"
+    
+        worksheet.append([
+            school_user.name,                        
+            school_user.email,
+            school_user.mobile_number, 
+            school_user.role,            
+            expiration_time
         ])
 
     # Set the response content type and save the workbook to the response
@@ -812,7 +929,7 @@ def export_inquiries_excel(request):
 @user_passes_test(is_admin)
 def assign_lead_to_agent_view(request):
     inquiries = Lead.objects.all()  # Fetch all inquiries
-    agents = Agent.objects.all()  # Fetch all agents
+    agents = CustomUser.objects.filter(role="Agent")
     
 
     if request.method == 'POST':
@@ -827,7 +944,7 @@ def assign_lead_to_agent_view(request):
         try:
             # Get the inquiry and agent objects
             inquiry = get_object_or_404(Lead, id=inquiry_id)
-            agent = get_object_or_404(Agent, id=agent_id)
+            agent = get_object_or_404(CustomUser, id=agent_id)
             
             old_inquiry_instance = Lead.objects.get(id=inquiry_id)
                     
@@ -840,7 +957,7 @@ def assign_lead_to_agent_view(request):
             Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, request.user)
 
             # Provide success feedback to the user
-            messages.success(request, f"Inquiry for '{inquiry.student_name}' has been successfully assigned to Agent '{agent.name}'.")
+            messages.success(request, f"'{inquiry.student_name}' has been successfully assigned to Agent '{agent.name}'.")
         except Exception as e:
             # Handle unexpected errors gracefully
             messages.error(request, f"An error occurred while assigning the lead: {str(e)}")
@@ -856,7 +973,7 @@ def assign_lead_to_agent_view(request):
 # ====================================================================================
 
 @login_required
-@user_passes_test(is_admin)
+@user_passes_test(is_agent_or_admin)
 def delete_inquiry(request, id):
     # Get the inquiry by ID
     inquiry = get_object_or_404(Lead, id=id)
@@ -873,72 +990,39 @@ def delete_inquiry(request, id):
 # ====================================================================================
 
 # Helper function to send the email with the default password
-def send_agent_welcome_email(agent, default_password):
+def send_staff_welcome_email(agent, default_password):
     subject = "Welcome to the Team!"
     message = f"Hello {agent.name},\n\n" \
-              f"Your agent account has been created successfully.\n\n" \
+              f"Your account has been created successfully.\n\n" \
               f"Here are your login credentials:\n" \
-              f"Email: {agent.user.email}\n" \
+              f"Phone: {agent.mobile_number}\n" \
               f"Password: {default_password}\n\n" \
               f"Please login and change your password after the first login.\n\n" \
               f"Best regards,\nThe Team"
     
+    # send_mail(
+    #     subject=subject,
+    #     message=message,
+    #     from_email=settings.DEFAULT_FROM_EMAIL,  # Default email set in settings.py
+    #     recipient_list=[agent.email],
+    #     fail_silently=False,
+    # )
+    
+
+# Helper function to send the email with the default password
+def send_custom_mail(subject, message, sender_mail): 
     send_mail(
         subject=subject,
         message=message,
         from_email=settings.DEFAULT_FROM_EMAIL,  # Default email set in settings.py
-        recipient_list=[agent.user.email],
+        recipient_list=[sender_mail],
         fail_silently=False,
     )
 
 # ====================================================================================
 
-# View to add agent
 @login_required
-@user_passes_test(is_admin)  # Make sure only admin can access this
-def add_agent(request):
-    if request.method == 'POST':
-        form = AgentForm(request.POST)
-        if form.is_valid():
-            # Get the form data
-            email = form.cleaned_data['email']
-            # agent_name = form.cleaned_data['name']  # cleaned_data strips out unnecessary whitespace and converts data to the appropriate types.            
-            # performance_score = form.cleaned_data['performance_score']
-            
-            if CustomUser.objects.filter(email=email).exists():
-                messages.error(request, "An agent with this email already exists.")
-                return render(request, 'inquiries/add_agent.html', {'form': form})
-
-
-            # Create the User for the agent with a default password
-            default_password = 'DefaultPassword123!'
-            #default_password = CustomUser.objects.make_random_password()  # Generates a secure random password
-
-            
-            user = CustomUser.objects.create_user(username=email, email=email, password=default_password)
-
-            # Create the agent object and associate with the user
-            agent = form.save(commit=False)  # Don't save yet; we need to associate it with the user. We just need to create the instance of the Agent as of now.
-            agent.user = user  # Associate the user
-            agent.save()
-
-            # Send the email with the default password
-            send_agent_welcome_email(agent, default_password)
-
-            # Show success message
-            messages.success(request, f"Agent '{agent.name}' added successfully! The default password has been sent to their email.")
-            return redirect('add_agent')  # Redirect to the same page after success
-        else:
-            messages.error(request, "Error adding agent. Please correct the errors below.")
-    else:
-        form = AgentForm()
-
-    return render(request, 'inquiries/add_agent.html', {'form': form})
-
-# ====================================================================================
-
-@login_required
-@user_passes_test(is_admin)
+@user_passes_test(is_staff)
 def agent_list(request):
     # Get filter query parameters
     name_filter = request.GET.get('name', '')
@@ -957,9 +1041,9 @@ def agent_list(request):
     
     3) output_field=FloatField() tells Django that the result of the expression will be a floating-point number (decimal).
     '''
-    agents = Agent.objects.annotate(
-        lead_count=Count('lead'),       # total leads given agent is handling
-        converted_leads=Count('lead', filter=Q(lead__status="Admission Confirmed")),    # total leads an agent converted successfully
+    agents = CustomUser.objects.filter(role="Agent").annotate(
+        lead_count=Count('assigned_agent'),       # total leads given agent is handling
+        converted_leads=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Confirmed")),    # total leads an agent converted successfully
         conversion_rate=ExpressionWrapper(
             100.0*F("converted_leads")/Coalesce(F('lead_count'), 1),
             output_field=FloatField()
@@ -992,11 +1076,8 @@ def agent_list(request):
     # Handle deletion of agents
     if request.method == 'POST':  # Handle agent deletion
         agent_id = request.POST.get('agent_id')  # Get the agent ID from the form
-        agent = get_object_or_404(Agent, id=agent_id)
-        user = agent.user  # Get the associated user
-        agent.delete()
-        if user:  
-            user.delete()  # Delete the associated user
+        agent = get_object_or_404(CustomUser, id=agent_id)        
+        agent.delete()      
         messages.success(request, f"Agent '{agent.name}' has been deleted successfully.")
         return redirect('agent_list')  # Refresh the agent list after deletion
 
@@ -1016,24 +1097,233 @@ def agent_list(request):
     })
     
 # ====================================================================================
-
+@login_required
+@user_passes_test(is_staff)
 def lead_logs_view(request, lead_id):
     lead = Lead.objects.get(id=lead_id)   
     logs = LeadLogs.objects.filter(lead_id=lead_id).order_by('-changed_at')  # Sort by changed_at (ascending)
 
     for log in logs:
-        previous_data = json.loads(log.previous_data)  # Convert JSON string to dictionary
-        new_data = json.loads(log.new_data)
+        previous_data = json.loads(log.previous_data)  # Convert JSON string to python dictionary
+        new_data = json.loads(log.new_data)  
+        
+        # print("TYPE prev:", type(previous_data))
+        # print("TYPE new:", type(new_data))    
+        # print("TYPE prevlog:", type(log.previous_data))
+        # print("TYPE newlog:", type(log.new_data))  
+        
+        # print("==================> previous data = ",previous_data)
+        # print("==================> new data = ",new_data)
+        
+        all_fields = set(previous_data.keys()).union(set(new_data.keys()))
+                
+        changes = {}
 
-        # Identify changed fields
-        changes = {
-            field: {'old': previous_data.get(field), 'new': new_data.get(field)}
-            for field in previous_data
-            if previous_data.get(field) != new_data.get(field)
-        }
+        # Identify changed fields        
+        for field in all_fields:
+            old_value = previous_data.get(field)
+            new_value = new_data.get(field)
+    
+            if old_value != new_value:
+                if(field == "assigned_agent" or field == "admin_assigned"):
+                    old_user = CustomUser.objects.get(id=old_value) if old_value else None
+                    new_user = CustomUser.objects.get(id=new_value) if new_value else None
+                    
+                    old_name_id = f"{old_user.name} (Id: {old_value})" if old_user else "N/A"
+                    new_name_id = f"{new_user.name} (Id: {new_value})" if new_user else "N/A"
+                
+                    changes[field] = {
+                        'old': old_name_id,
+                        'new': new_name_id
+                    }
+                
+                else:
+                    changes[field] = {
+                        'old': old_value,
+                        'new': new_value
+                    }
 
         log.changes = changes  # Attach changes to the log object
 
     return render(request, 'inquiries/lead_logs.html', {'lead': lead, 'logs': logs})
+
+# ====================================================================================
+def generate_random_password(length=10):
+    characters = string.ascii_letters + string.digits + '@' + '#'
+    return ''.join(random.choices(characters, k=length))
+
+
+@login_required
+@user_passes_test(is_admin)
+def add_user(request):
+    if request.method == 'POST':
+        form = CustomUserForm(request.POST)
+        # print("======================> the form is: ", form)
+        if form.is_valid():
+            # print("======================> form is valid")
+            user = form.save(commit=False)
+            random_password = generate_random_password()
+            # print("=========================> settig random password as = ",random_password)
+            user.set_password(random_password)
+            user.save()
+            
+            send_staff_welcome_email(user, random_password)
+            
+            messages.success(request, 'User added successfully!')
+            # print("===========> Messages: ", messages.get_messages(request))
+            return redirect('add_user')  # Replace with your target redirect
+        else:
+            # print("======================> form is not valid")
+            # print("================> Errors:", form.errors.as_json())
+            errors = "\n".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])
+            messages.error(request, f"There was an error in your form:\n{errors}")
+            return redirect('add_user')
+    else:        
+        form = CustomUserForm()
+        users = CustomUser.objects.all()
+        return render(request, 'inquiries/add_user.html', {'form': form, 'users': users})
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def manage_access(request):
+    users = CustomUser.objects.all()
+    
+    if request.method == "POST":
+        action = request.POST.get("action_type")
+        user_id = request.POST.get("user_id")
+
+        if action == "delete":
+            user = get_object_or_404(CustomUser, id=user_id)
+            user.delete()
+            messages.success(request, "User deleted successfully.")
+            return redirect("manage_access")
+
+        elif action == "update":
+            user = get_object_or_404(CustomUser, id=user_id)
+            form = CustomUserForm(request.POST, instance=user)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "User updated successfully.")
+                return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
+
+            else:
+                errors = "\n".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])              
+                messages.error(request, f"Error updating user:\n{errors}")
+                return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
+
+    
+    elif request.method == "GET" and "edit_user_id" in request.GET:
+        user_id = request.GET.get("edit_user_id")
+        user_to_edit = get_object_or_404(CustomUser, pk=user_id)
+        form = CustomUserForm(instance=user_to_edit)        
+        return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
+        
+    else:
+        form = CustomUserForm()        
+        return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
+# ====================================================================================
+
+# View to add agent
+@login_required
+@user_passes_test(is_admin)  # Make sure only admin can access this
+def add_agent(request):
+    if request.method == 'POST':
+        form = AgentForm(request.POST)
+        if form.is_valid():
+            # Get the form data
+            email = form.cleaned_data['email']
+            # agent_name = form.cleaned_data['name']  # cleaned_data strips out unnecessary whitespace and converts data to the appropriate types.            
+            # performance_score = form.cleaned_data['performance_score']
+            
+            if CustomUser.objects.filter(email=email).exists():
+                messages.error(request, "An agent with this email already exists.")
+                return render(request, 'inquiries/add_agent.html', {'form': form})
+
+
+            # Create the User for the agent with a default password
+            default_password = 'DefaultPassword123!'
+            #default_password = generate_random_password
+            
+            user = CustomUser.objects.create_user(username=email, email=email, password=default_password)
+
+            # Create the agent object and associate with the user
+            agent = form.save(commit=False)  # Don't save yet; we need to associate it with the user. We just need to create the instance of the Agent as of now.         
+            agent.save()
+
+            # Send the email with the default password
+            send_staff_welcome_email(agent, default_password)
+
+            # Show success message
+            messages.success(request, f"Agent '{agent.name}' added successfully! The default password has been sent to their email.")
+            return redirect('add_agent')  # Redirect to the same page after success
+        else:
+            messages.error(request, "Error adding agent. Please correct the errors below.")
+    else:
+        form = AgentForm()
+
+    return render(request, 'inquiries/add_agent.html', {'form': form})
+
+
+# ====================================================================================
+
+def password_reset_request(request):
+    if request.method == 'GET':
+        return render(request, 'inquiries/registration/password_reset_request.html')
+
+    elif request.method == 'POST':
+        email = request.POST.get('email')
+        user = CustomUser.objects.filter(email=email).first()
+
+        if user:
+            # Generate token and reset URL
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_url = request.build_absolute_uri(
+                reverse('set_new_password', kwargs={'uidb64': uid, 'token': token})
+            )
+            
+            # print("=========================> reset url = ", reset_url)
+
+            # Render and send the email
+            subject = "Reset Your Password"
+            message = f"Please find the below link to reset your password:\n{reset_url}"                   
+
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message=message)
+
+            messages.success(request, "Reset link has been sent to the mail !")
+            return render(request, 'inquiries/registration/password_reset_request.html')
+
+        else:
+            messages.error(request, "Mail not registered !")
+            return render(request, 'inquiries/registration/password_reset_request.html')
+
+# ====================================================================================
+
+def set_new_password(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = CustomUser.objects.get(pk=uid)
+    except (CustomUser.DoesNotExist, ValueError, TypeError, OverflowError):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            password1 = request.POST.get('password1')
+            password2 = request.POST.get('password2')
+
+            if password1 != password2:
+                return render(request, 'inquiries/registration/set_new_password.html', {'error': 'Passwords do not match.'})
+            elif len(password1) < 5:
+                return render(request, 'inquiries/registration/set_new_password.html', {'error': 'Password must be at least 5 characters.'})
+            else:
+                user.set_password(password1)
+                user.save()
+                return redirect('login')
+        else:
+            return render(request, 'inquiries/registration/set_new_password.html')
+    else:
+        return render(request, 'inquiries/registration/set_new_password.html', {'error': 'The reset link is invalid or has expired.'})
 
 # ====================================================================================

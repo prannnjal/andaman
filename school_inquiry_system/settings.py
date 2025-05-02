@@ -175,7 +175,7 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  # Your email account's a
 
 LOGIN_URL = '/inquiries/login/'     # The default login page URL
 LOGIN_REDIRECT_URL = '/inquiries/dashboard/'     # Where users go after logging in. But do take care that Django automatically redirects users to the URL stored in the next parameter when they log in. If next is set, it will override LOGIN_REDIRECT_URL.
-AUTHENTICATION_BACKENDS = ['inquiries.auth_backends.EmailBackend', 'django.contrib.auth.backends.ModelBackend'] 
+AUTHENTICATION_BACKENDS = ['inquiries.auth_backends.PhoneBackend', 'django.contrib.auth.backends.ModelBackend'] 
 
 ''' defines how users are authenticated. It allows you to specify one or more authentication methods.
 

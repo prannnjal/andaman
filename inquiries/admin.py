@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Lead, Agent
+from .models import Lead, CustomUser
 
 admin.site.register(Lead)
-admin.site.register(Agent)
+admin.site.register(CustomUser)

@@ -450,6 +450,18 @@
         
     </style>
 
+
+    <script>
+        // Check if there are any messages to display
+        if (document.querySelector('.messages')) {
+          setTimeout(function() {
+            // Find the message container and hide it after 5 seconds
+            var messagesContainer = document.querySelector('.messages');
+            messagesContainer.style.display = 'none';
+          }, 4000);
+        }
+      </script>
+
 </body>
 
 </html>

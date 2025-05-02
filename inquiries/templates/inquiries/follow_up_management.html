@@ -320,8 +320,16 @@
     </style>
 </head>
 
-<body>   
-    <h1>Upcoming Follow-ups</h1>
+<body>
+    
+    <h1 id="follow-up-header">
+        {% if follow_up_direction == "previous" %}
+            Recently updated Follow-ups
+        {% else %}
+            Upcoming Follow-ups
+        {% endif %}
+    </h1>
+    
 
     <!-- Buttons to open modals -->
     <div class="buttons_wrapper">
@@ -426,7 +434,7 @@
                     <select name="agent_id" class="searchable-select" data-placeholder="Select the Agent">
                         <option value="">All Agents</option>
                         {% for agent in agents %}
-                        <option value="{{ agent.id }}" {% if request.GET.agent_id == agent.id|stringformat:"s" %}selected{% endif %}>#{{ agent.id }} {{agent.name}}: {{agent.user.email}}</option>
+                        <option value="{{ agent.id }}" {% if request.GET.agent_id == agent.id|stringformat:"s" %}selected{% endif %}>#{{ agent.id }} {{agent.name}}: {{agent.email}}</option>
                         {% endfor %}
                     </select>
 
@@ -584,7 +592,7 @@
         <select id="follow-up-direction">
             <option value="next" selected>Next</option>
             <option value="previous">Previous</option>
-        </select>        
+        </select>
         <input type="number" id="follow-up-days" min="1" step="1" />        
         <span class="days-label">days</span>
         <button id="Go">Go</button>
@@ -594,7 +602,7 @@
     
     <div class="follow-up-datewise-section">
         {% for follow_up_date, leads in follow_up_data.items %}
-            {% include 'inquiries/display_leads_list.html' with follow_up_date=follow_up_date leads=leads index=forloop.counter %}
+            {% include 'inquiries/display_leads_list.html' with follow_up_date=follow_up_date leads=leads index=forloop.counter follow_up_direction=follow_up_direction %}
         {% endfor %}
     </div>
         
@@ -667,8 +675,8 @@
 
             let follow_up_direction = document.getElementById("follow-up-direction").value;
                         
-            // Construct the URL with query parameters
             let url = `/inquiries/follow_up_management/?days=${days}&follow-up-direction=${follow_up_direction}`;
+                        
                     
             fetch(url)
             .then(response => response.text())  // Assuming your Django view returns HTML or text data
@@ -680,7 +688,20 @@
                 // Get the content of the .follow-up-datewise-section from the fetched data
                 let newSection = tempDiv.querySelector(".follow-up-datewise-section");
 
+                console.log("===================> newSection = ", newSection)
+
+                console.log("========================> just before newSection in script");
+
                 if (newSection) {
+                    if(follow_up_direction == "previous"){
+                        document.querySelector("#follow-up-header").innerHTML = "Recently updated Follow-ups";                                                
+                    }
+                    else{
+                        document.querySelector("#follow-up-header").innerHTML = "Upcoming Follow-ups";
+                    }
+
+                    console.log("========================> inside script");
+
                     // Replace the content of the current .follow-up-datewise-section with the new one
                     document.querySelector(".follow-up-datewise-section").innerHTML = newSection.innerHTML;
 

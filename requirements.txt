@@ -5,3 +5,4 @@ pandas
 python-dotenv
 mysqlclient
 boto3
+pip install mysql-connector-python

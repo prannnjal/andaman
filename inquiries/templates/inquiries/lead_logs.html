@@ -246,7 +246,7 @@
             <p><strong>Follow-up Date:</strong> {{ lead.follow_up_date }}</p>
             <p><strong>Status:</strong> {{ lead.status }}</p>
             <p><strong>Agent:</strong> {{ lead.assigned_agent.name|default:"UNASSIGNED" }}</p>
-            <p><strong>Agent Email:</strong> {{ lead.assigned_agent.user.email|default:"NULL" }}</p>
+            <p><strong>Agent Email:</strong> {{ lead.assigned_agent.email|default:"NULL" }}</p>
             <p><strong>Block:</strong> {{ lead.block|default:"UNASSIGNED" }}</p>
             <p><strong>Location/Panchayat:</strong> {{ lead.location_panchayat|default:"UNASSIGNED" }}</p>                
             <p><strong>Admin Assigned Email:</strong> {{ lead.admin_assigned.email|default:"NULL" }}</p>
