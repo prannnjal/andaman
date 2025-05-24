@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remove Lead</title>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f9f9f9;
+        }
+
+        /* Close Button */
+        .close {
+            color: #000000;
+            font-size: 40px;
+            font-weight: bold;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            z-index: 6;
+            background-color: white;
+            padding: 0.05rem 0.2rem;
+        }
+
+        .close:hover, .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="modal-overlay" style="display: none; position: absolute; top: 0; width: 100%; height: 100vh; z-index: 5; box-sizing: border-box; background: rgba(0, 0, 0, 0.662);">
+        <span class="close" onclick="closeModal('modal-overlay')">&times;</span>
+
+        <div id="modal-main"></div>
+    </div>
+        
+
+    <script>
+        $(document).ready(function () {
+            $('.load-component').on('click', function () {
+                const template_url = $(this).data('template-url');
+                var table_class = $(this).data('table_class');
+                console.log("======================> table_class for modal = ", table_class)
+
+                // Get current page's query string (e.g., "?lead_id=42&status=active")
+                const currentParams = window.location.search;
+
+                // Base URL without query params (e.g., "/inquiries/list/")
+                const baseUrlName = $(this).data('base-url-name');
+
+                console.log("=======================> baseurlname = ", baseUrlName)
+
+                 // Add base-url-name as a query param: base_url_name=follow_up_management
+                const url = new URL(template_url, window.location.origin);
+                const params = new URLSearchParams(currentParams);
+
+                params.set('base_url_name', baseUrlName);  // add your new query param
+                params.set('table_class', table_class);  // add table_class
+
+                url.search = params.toString();
+
+                $.ajax({
+                    url: url.toString(),
+                    type: 'GET',
+                    success: function (data) {
+                        $('#modal-main').html(data);
+                        $('#modal-overlay').show();
+                        $('body').css('overflow', 'hidden'); // 🔒 disable background scroll
+                    },
+                    error: function () {
+                        alert('Failed to open the component');
+                    }
+                });
+            });
+        });
+    </script>
+
+
+    <script>
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = "none";
+            document.getElementById('modal-main').innerHTML = '';
+            $('body').css('overflow', 'auto'); // 🔒 enable background scroll
+        }
+
+        // Close modal when user clicks outside of it
+        window.onclick = function(event) {
+            <!-- console.log("====================> click kiya h with event.target = ",event.target) -->
+            if (event.target.id === 'modal-overlay') {
+                closeModal('modal-overlay');
+            }
+        };
+    </script>
+</body>
+</html>

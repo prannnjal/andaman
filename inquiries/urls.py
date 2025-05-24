@@ -18,6 +18,7 @@ urlpatterns = [
     path('lead_logs/<int:lead_id>/', views.lead_logs_view, name='view-lead-logs'),
     path('delete_inquiry/<int:id>/', views.delete_inquiry, name='delete_inquiry'),
     
+    
     path('agents/', views.agent_list, name='agent_list'),
     path('agents/add/', views.add_agent, name='add_agent'),
     path('manage_access/', views.manage_access, name='manage_access'),
@@ -36,4 +37,11 @@ urlpatterns = [
     # The link sent via email redirects here, where users enter a new password. uidb64:  base64-encoded version of the user's primary key.
     
     # <token>: It ensures that the password reset link is valid and hasn't been tampered with. It verifies that the person clicking the link is authorized to reset the password for that account.
+    
+    
+    # urls.py
+    path('filter_inquiries_component/', views.filter_inquiries_component, name='filter_inquiries_component'),
+    
+    path('hide_columns_component/', views.hide_columns_component, name='hide_columns_component'),
+
 ]

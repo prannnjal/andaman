@@ -241,9 +241,9 @@
 
                         {% if user.role == "Admin" or user.role == "Agent" %}
                             <a href="{% url 'add_inquiry' %}"><li>Add New Inquiry</li></a>
-                        {% endif %}
-
-                        <a href="{% url 'assign_lead' %}"><li>Assign Agent to Lead</li></a>      
+                            
+                            <a href="{% url 'assign_lead' %}"><li>Assign Agent to Lead</li></a>
+                        {% endif %}                        
                           
                     </div>                
                 </div>                
@@ -285,16 +285,16 @@
                     <div class="same_row_wrapper_child">
                         {% if user.role == "Admin" %}
 
-                        <a href="{% url 'add_user' %}"><li>Add User</li></a>
+                            <a href="{% url 'add_user' %}"><li>Add User</li></a>
 
-                        <a href="{% url 'manage_access' %}"><li>View/ Manage Users</li></a>
-                        
-                        <a href="{% url 'remove_lead' %}"><li>Remove Agent from Lead</li></a>
-                        
-                        <!-- <a href="{% url 'add_agent' %}"><li>Add Agent</li></a> -->                        
-                        
-                        <!-- <a href="{% url 'agent_list' %}"><li>View Agents</li></a> -->
-                    {% endif %}      
+                            <a href="{% url 'manage_access' %}"><li>View/ Manage Users</li></a>
+                            
+                            <a href="{% url 'remove_lead' %}"><li>Remove Agent from Lead</li></a>
+                            
+                            <!-- <a href="{% url 'add_agent' %}"><li>Add Agent</li></a> -->                        
+                            
+                            <!-- <a href="{% url 'agent_list' %}"><li>View Agents</li></a> -->
+                        {% endif %}      
                     </div>
                 </div>
     

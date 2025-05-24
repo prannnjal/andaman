@@ -22,8 +22,7 @@
         }
 
         h1,
-        h2,
-        h3 {
+        h2{
             color: #333;
             text-align: center;
             margin-bottom: 20px;
@@ -49,7 +48,7 @@
         li {
             display: inline-block;
             margin: 5px 15px;
-            border: 2px solid rgb(83, 1, 1);            
+            border: 2px solid rgb(83, 1, 1);
             padding: 7px;
             border-radius: 8px;
             background-color: #d8f3d7;
@@ -66,28 +65,50 @@
             color: #0056b3;
             color: #000000;
         }
+
+        .table_wrapper{
+            max-height: 50vh;
+            overflow: auto;            
+        }
+
+        .table_wrapper h3{
+            position: sticky;
+            top:0;
+            z-index: 3;
+            background-color: white;
+            color: #333;
+            border: 1px solid #606060;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            text-align: center;
+            padding: 10px 0;            
+        }
      
         table {
             width: 100%;
             table-layout: fixed; /* Ensures columns remain uniform */
-            border-collapse: collapse;
-            margin: 20px 0;
             background: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);            
+            overflow: auto;
+            border-top: none;
+            box-sizing: border-box;
+            border: 1px solid #606060;
+            border-top: none;
         }
 
         th, td {
             padding: 15px;
             text-align: center; /* Ensures all text is aligned */
             border-bottom: 1px solid #ddd;
-            width: 50%; /* Ensures equal spacing */
+            width: 50%; /* Ensures equal spacing */            
         }
 
         th {
             background-color: #007bff;
             color: white;
+            position: sticky;
+            top:40px;
+            z-index: 2;
         }
 
         tr:hover {
@@ -104,24 +125,13 @@
             color: #007BFF;
             font-size: 16px;
         }
-        
-        .status_table_wrapper{
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            justify-content: space-between;
-        }
-
-        .status_table_wrapper div {
-            width: 45%; /* Adjust as needed */
-            min-width: 300px; /* Ensures they fit on smaller screens */
-        }
+    
 
         /* Responsive Styling for Tables */
         @media screen and (max-width: 768px) {
             table {
                 font-size: 14px;
-                margin: 10px 0;
+              
             }
 
             th,
@@ -149,11 +159,11 @@
             }
         }
 
-        .detailed_table_wrapper, .status_table_wrapper{
+        .detailed_table_wrapper {
             display: flex;
-            gap: 20px;
+            gap: 40px;
             flex-wrap: wrap;
-            justify-content: space-between;
+            justify-content: center;
         }
 
         .detailed_table_wrapper div, .status_table_wrapper div {
@@ -171,7 +181,7 @@
         <h2 class="table-title">Detailed Statistics</h2>
 
         <div class="detailed_table_wrapper">
-            <div>                
+            <div class="table_wrapper">                
                 <!-- Inquiries by Class -->
                 <h3>Inquiries by Class:</h3>
                 <table>
@@ -192,7 +202,7 @@
                 </table>
             </div>
 
-            <div>
+            <div class="table_wrapper">
                 <!-- Inquiries by Source -->
                 <h3>Inquiries by Source:</h3>
                 <table>
@@ -213,7 +223,7 @@
                 </table>
             </div>
 
-            <div>
+            <div class="table_wrapper">
                 <!-- Inquiries by Block -->
                 <h3>Inquiries by Block:</h3>
                 <table>
@@ -234,7 +244,7 @@
                 </table>
             </div>
 
-            <div>
+            <div class="table_wrapper">
                 <!-- Inquiries by Location -->
                 <h3>Inquiries by Location:</h3>
                 <table>
@@ -255,7 +265,7 @@
                 </table>
             </div>
 
-            <div>
+            <div class="table_wrapper">
                 <!-- Recent Inquiries -->
                 <h3>Recent Inquiries:</h3>
                 <table>

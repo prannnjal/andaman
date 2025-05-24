@@ -232,56 +232,9 @@ def Filter_Inquiries(request):
 @user_passes_test(is_staff)
 def inquiry_list(request):
     inquiries = Filter_Inquiries(request)
-                              
-    '''
-    Populate options for dropdowns. "Populate" here means retrieving data from the database and making it available for dropdown options in a form.
-    The flat=True argument is used when calling .values_list() on a Django QuerySet. It flattens the results into a single list instead of returning a list of tuples.
-    '''
-    
-    agents = CustomUser.objects.filter(role="Agent")  
-    lead_ids = Lead.objects.values_list('id', flat=True)
-    students = Lead.objects.values_list('student_name', flat=True).distinct() 
-    parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
-    locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
-    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True)
-    mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
-    blocks = Lead.objects.values_list('block', flat=True).distinct()
-    inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
-    statuses = Lead.objects.values_list('status', flat=True).distinct()
-    student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
-    admins = CustomUser.objects.filter(role = "Admin")
-    
-    
-    '''
-    The below is Passing context dictionary to the template. 
-    
-    How This is Used in the Template (inquiry_list.html)? 
-    
-    {% for inquiry in inquiries %}
-        <tr>
-            <td>{{ inquiry.student_name }}</td>
-            <td>{{ inquiry.inquiry_source }}</td>
-            <td>{{ inquiry.status }}</td>
-        </tr>
-    {% endfor %}
-    '''
     
     return render(request, 'inquiries/inquiry_list.html', {
-        # 'sort_order': sort_order,
-        # 'sort_column': sort_column,
-        'lead_ids': lead_ids,
-        'students': students,
-        'parents': parents,
-        'inquiries': inquiries,
-        'agents': agents,
-        'lead_emails': lead_emails,
-        'mobile_numbers': mobile_numbers,
-        'location_panchayats': locations_panchayats,
-        'blocks': blocks,
-        'inquiry_sources': inquiry_sources,
-        'statuses': statuses,
-        'student_classes': student_classes,
-        'admins': admins,
+        'inquiries': inquiries
     })
 
 # =======================================================================================================================================================================
@@ -291,9 +244,10 @@ def follow_up_management(request):
     days = int(request.GET.get("days", "7"))
     follow_up_direction = request.GET.get("follow-up-direction", "next")
         
-    follow_up_leads = Lead.objects.all()
+    # follow_up_leads = Lead.objects.all()
+    follow_up_leads = Filter_Inquiries(request)
     
-    #print("============================> follow_up_leads = ", follow_up_leads)
+    # print("============================> inside followup management view and request = ", request)
          
     if(follow_up_direction == "previous"):
         date_to = date.today()
@@ -1325,5 +1279,45 @@ def set_new_password(request, uidb64, token):
             return render(request, 'inquiries/registration/set_new_password.html')
     else:
         return render(request, 'inquiries/registration/set_new_password.html', {'error': 'The reset link is invalid or has expired.'})
+
+# ====================================================================================
+
+def filter_inquiries_component(request):
+    agents = CustomUser.objects.filter(role="Agent")  
+    lead_ids = Lead.objects.values_list('id', flat=True)
+    students = Lead.objects.values_list('student_name', flat=True).distinct() 
+    parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
+    locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
+    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True)
+    mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
+    blocks = Lead.objects.values_list('block', flat=True).distinct()
+    inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
+    statuses = Lead.objects.values_list('status', flat=True).distinct()
+    student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
+    admins = CustomUser.objects.filter(role = "Admin")
+    
+    return render(request, 'inquiries/Filter_Inquiries_Component.html', {
+        'lead_ids': lead_ids,
+        'students': students,
+        'parents': parents,
+        'agents': agents,
+        'lead_emails': lead_emails,
+        'mobile_numbers': mobile_numbers,
+        'location_panchayats': locations_panchayats,
+        'blocks': blocks,
+        'inquiry_sources': inquiry_sources,
+        'statuses': statuses,
+        'student_classes': student_classes,
+        'admins': admins,
+    })
+# ====================================================================================
+
+def hide_columns_component(request):
+    table_class = request.GET.get('table_class')
+    context = {
+        'table_class': table_class,
+        # any other context vars...
+    } 
+    return render(request, 'inquiries/Hide_Columns_Component.html', context)
 
 # ====================================================================================

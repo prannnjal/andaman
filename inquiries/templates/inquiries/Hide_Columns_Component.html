@@ -1,0 +1,252 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inquiry List</title>
+
+    <!-- jQuery (for Sorting and Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0px;
+            background-color: #f4f7fc;
+            color: #333;
+            text-align: center;
+        }
+
+        .same_row_wrapper {
+            display: flex;
+            flex-direction: row;        
+            gap: 30px;
+            align-items: start; 
+            justify-content: start;   
+            margin: 10px 0 30px 0;    
+            flex-wrap: wrap;           
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 10px 30px;
+            border: 1px solid #ccc;
+            width: 70vw; /* Restrict width to make it more compact */
+            max-width: 900px; /* Max width to prevent stretching too much */
+            max-height: 68vh;
+            overflow: auto;
+            border-radius: 8px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); 
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); /* Centers the element */  
+        }
+
+
+        /* Title Styling */
+        h2 {
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 30px;
+            color: #ff0000;          
+        }
+
+
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }   
+
+        /* Reset Link Styles */
+        a {
+            text-decoration: none;
+        }
+
+        /* Apply No-Style to Reset Link if Specified */
+        a.no-style {
+            all: unset; /* Resets all styles */
+            cursor: pointer;
+        }
+
+        button {            
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 15px 10px 10px 10px;
+        }
+
+        .hidden-column {
+            display: none;
+        }
+        
+        .call-icon {
+            color: blue;
+            text-decoration: none;
+            font-size: 20px; /* Optional: Adjust size */
+        }      
+
+        .btn-container {           
+            display: flex;  /* Flexbox for centering */
+            justify-content: center;  /* Centers the button horizontally */
+            margin-top: 30px; 
+        }
+
+       
+        a.nav {
+            display: inline-block; /* Prevents full-width stretching */
+            padding: 12px 25px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0056b3, #155bbe);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .buttons_wrapper{
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;            
+        }            
+
+        .view_hide_wrapper{
+            font-size: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .view_hide_wrapper input {
+            width: 16px; /* Adjust checkbox size */   
+            height: 16px;      
+        }
+
+         .check_all_modal_btn{
+            background-color: rgb(4, 198, 101);
+            padding: 15px;                  
+        }
+
+        .uncheck_all_modal_btn{
+            background-color: #2a74ec;
+            padding: 15px;                  
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Display success or error message -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <!-- It loops through messages and assigns CSS classes dynamically ({{ message.tags }}) for styling. e.g: class="alert success" or class="alert error"-->
+        <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+
+        <div class="modal-content">            
+            <h2>View / Hide Columns</h2>
+            <div class="same_row_wrapper">
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="0" checked> Lead Id</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="1" checked> Actions</label>          
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="2" checked> Student Name</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="3" checked> Lead Email</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="4" checked> Parent Name</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="5" checked> Mobile Number</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="6" checked> Address</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="7" checked> Inquiry Source</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="8" checked> Student Class</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="9" checked> Follow-up Date</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="10" checked> Status</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="11" checked> Agent</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="12" checked> Agent Email</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="13" checked>Block</label>
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="14" checked> Location/Panchayat</label>               
+                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="15" checked> Admin Email</label>                     
+            </div>
+            <button class="check_all_modal_btn" id="SelectAllButton">Check All</button>
+            <button class="uncheck_all_modal_btn" id="UnSelectAllButton">Uncheck All</button>
+        </div>
+
+
+    <!-- Modal Scripts -->
+    <script>
+        function saveCheckboxStates() {
+            let states = {};
+            $('.filter-checkbox').each(function () {
+                const col = $(this).data('column');
+                states[col] = $(this).prop('checked');
+            });
+            localStorage.setItem('columnVisibility', JSON.stringify(states));
+        }
+
+
+        function applyCheckboxStates() {
+            const stored = localStorage.getItem('columnVisibility');
+            if (!stored) return;
+
+            const states = JSON.parse(stored);
+
+            $('.filter-checkbox').each(function () {
+                const col = $(this).data('column');
+                const isVisible = states[col];
+                $(this).prop('checked', isVisible).trigger('change');
+            });
+        }
+
+
+        $(document).ready(function () {
+            // Column Visibility Toggle
+            $('.filter-checkbox').change(function () {
+                var columnIndex = $(this).data('column'); // Get the column index (0-based)
+                var isVisible = $(this).prop('checked');                
+                var table_class = "{{ table_class }}";
+        
+                // Loop through each table and toggle visibility
+                $(`.${table_class}`).each(function () {
+                    var $table = $(this);
+                    $table.find('th').eq(columnIndex).toggle(isVisible);
+                    $table.find('tbody tr').each(function () {
+                        $(this).find('td').eq(columnIndex).toggle(isVisible);
+                    });
+                });
+
+                saveCheckboxStates(); // Save after change
+            });
+        
+            // Select All Button
+            $('#SelectAllButton').click(function () {
+                $('.filter-checkbox').prop('checked', true).trigger('change');
+            });
+        
+            // Unselect All Button
+            $('#UnSelectAllButton').click(function () {
+                $('.filter-checkbox').prop('checked', false).trigger('change');
+            });
+
+            // Restore previous checkbox states
+            applyCheckboxStates();
+        });
+    </script>
+</body>
+</html>

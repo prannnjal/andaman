@@ -1,0 +1,489 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inquiry List</title>
+
+    <!-- jQuery (for Sorting and Select2) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;            
+            background-color: #f4f7fc;
+            color: #333;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            margin-top: 5px;
+            color: #333;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #b3b1b1;
+        }
+
+        /* Title Styling */
+        h2 {
+            text-align: center;
+            font-size: 26px;
+            margin-bottom: 30px;
+            color: #ff0000;          
+        }
+
+
+        label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        /* Input, Select and Date Input Styling */
+        input[type="text"],
+        select,
+        input[type="date"] {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        select:focus,
+        input[type="date"]:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }        
+
+        /* Reset Link Styles */
+        a {
+            text-decoration: none;
+        }
+
+        .update{
+            all: unset; /* Resets all styles */
+            color: green;
+            cursor: pointer;
+        }
+
+        .delete{
+            all: unset; /* Resets all styles */
+            color: red;
+            cursor: pointer;
+        }
+
+        .log{
+            all: unset; /* Resets all styles */
+            color: rgb(13, 0, 255);
+            cursor: pointer;
+        }
+
+
+        /* Apply No-Style to Reset Link if Specified */
+        a.no-style {
+            all: unset; /* Resets all styles */
+            cursor: pointer;
+        }
+
+        th{
+            cursor: pointer;
+            text-align: center;
+            min-width: 100px;
+            background-color: #6dffe2;
+            position: sticky;
+            top: 0;
+            z-index: 2;            
+        }
+
+        /* ::after pseudo-element inserts content after the existing content inside the selected element.
+        */
+        th.asc .sort-icon::after {
+            content: "\25B2"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0051ffba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;    
+            display: block;
+            width: 13px;
+            margin: 10px auto;
+        }
+
+        th.desc .sort-icon::after {
+            content: "\25BC"; /* Unicode upward triangle */
+            color: white;
+            background-color: #0051ffba;
+            border: 2px solid black;
+            font-size: 12px;
+            padding: 1.5px;    
+            display: block;
+            width: 13px;
+            margin: 10px auto;        
+        }
+
+        .table_wrapper{
+            border: 2px solid red;
+            overflow: auto; 
+            max-width: 100%;     
+            max-height: 68vh;
+            margin: 0 30px 30px 30px;            
+        }
+                
+        .flex-td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center; /* Ensures vertical alignment */
+            height: 100%;
+            gap: 0.5rem;
+        }
+
+        button {            
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 15px 10px 10px 10px;
+        }
+        .filter{
+            background-color: #ff383c;
+        }
+        .manage{
+            background-color: #2f5ef9e9;
+        }
+        .add-inquiry{
+            background-color: #07a038;
+        }
+        .dashboard{
+            background-color: #ff00a6;
+        }
+        
+        .call-icon {
+            color: blue;
+            text-decoration: none;
+            font-size: 20px; /* Optional: Adjust size */
+        }      
+       
+        a.nav {
+            display: inline-block; /* Prevents full-width stretching */
+            padding: 12px 25px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #0056b3, #155bbe);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .buttons_wrapper{
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;            
+        }
+
+        .lead_id_cell{
+            position: sticky;
+            left: 0;           
+            z-index: 3;
+            border: 1px solid #b3b1b1; 
+        }
+
+        th.lead_id_cell{
+            z-index: 4;            
+        }
+
+        td.lead_id_cell{
+            background-color: rgb(219, 219, 219);
+        }
+        
+        @media(max-width: 700px){
+            .table_wrapper{
+                max-height: 60vh;
+            }
+
+            th.asc .sort-icon::after, th.desc .sort-icon::after {
+                display: inline-flex;
+                padding: 0.8px;    
+            }
+            
+            th, td{
+                padding:8px;
+                min-width: 80px;      
+                font-size: 14px;        
+            }
+
+            .header-btn{
+                padding: 10px;                
+                font-size: 14px;
+                margin-bottom: 0;
+            }
+        }      
+        
+        @media(max-width: 318px){
+            .table_wrapper{
+                max-height: 50vh;
+            }            
+        }
+    </style>
+</head>
+
+<body>
+    <div class="table_wrapper">
+    <table class="{{table_class}}">
+        <thead>
+            <tr>
+                <th class="lead_id_cell" id="lead_id" onclick="sortColumn(event,0,'number')">
+                    Lead Id
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th style="cursor: default">Actions</th>
+
+                <th id="student_name" onclick="sortColumn(event,2,'string')">
+                    Student Name
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="email" onclick="sortColumn(event,3,'string')">
+                    Lead Email
+                    <span class="sort-icon"></span>
+                </th>     
+                
+                <th id="parent_name" onclick="sortColumn(event,4,'string')">
+                    Parent Name
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="mobile_number" onclick="sortColumn(event,5,'string')">
+                    Mobile Number
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="address" onclick="sortColumn(event,6,'string')">
+                    Address
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="inquiry_source" onclick="sortColumn(event,7,'string')">
+                    Inquiry Source
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="student_class" onclick="sortColumn(event,8,'class')">
+                    Student Class 
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="follow_up_date" onclick="sortColumn(event,9,'date')">
+                    Follow-up Date 
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="status" onclick="sortColumn(event,10,'string')">
+                    Status
+                    <span class="sort-icon"></span>
+                </th>
+          
+                <th id="assigned_agent.name" onclick="sortColumn(event,11,'string')">
+                    Agent
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="assigned_agent.email" onclick="sortColumn(event,12,'string')">
+                    Agent Email
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="block" onclick="sortColumn(event,13,'string')">
+                    Block
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="location_panchayat" onclick="sortColumn(event,14,'string')">
+                    Location/Panchayat
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="admin_assigned.email" onclick="sortColumn(event,15,'string')">
+                    Admin Email
+                    <span class="sort-icon"></span>
+                </th>                                                                             
+
+            </tr>
+        </thead>
+        <tbody>
+            {% for inquiry in inquiries %}
+            <tr>
+                <td class="lead_id_cell">
+                    <div style="display: flex; justify-content: center;">
+                        {{ inquiry.id }}
+                    </div>
+                </td>
+                <td style="text-align: center;">
+                    <div style="display: flex; gap:25px; justify-content: center;">                        
+                        {% if user.role == "Agent" or user.role == "Admin" %}
+                            <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
+
+                            <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>                            
+                        {% endif %}              
+                        
+                        <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
+                    </div>
+                </td>
+                <td>{{ inquiry.student_name }}</td>
+                <td>{{ inquiry.email }}</td>
+                <td>{{ inquiry.parent_name }}</td>
+                <td>
+                    <div class="flex-td">
+                        {{ inquiry.mobile_number }}
+                        <a href="tel:{{ inquiry.mobile_number }}" style="color: blue; text-decoration: none;">
+                            <i class="fa fa-phone"></i>
+                        </a>   
+                    </div>                      
+                </td>
+                <td>{{ inquiry.address }}</td>
+                <td>{{ inquiry.inquiry_source }}</td>
+                <td>{{ inquiry.student_class }}</td>
+                <td>{{ inquiry.follow_up_date }}</td>
+                <td>{{ inquiry.status }}</td>
+                <td>{{ inquiry.assigned_agent.name|default:"UNASSIGNED" }}</td>
+                <td>{{ inquiry.assigned_agent.email|default:"NULL" }}</td>
+                <td>{{ inquiry.block|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->
+                <td>{{ inquiry.location_panchayat|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->                
+                <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>                                       
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="16">No inquiries available.</td>  <!-- ✅ FIXED -->
+            </tr>
+            {% endfor %}
+        </tbody>
+        
+    </table>
+</div>
+
+     
+    <script>
+        let curr_th_element = document.getElementById("lead_id")
+        curr_th_element.classList.add("asc")
+
+        classOrder = {
+            'Play School': 0,
+            'Nursery': 1,
+            'LKG': 2,
+            'UKG': 3,
+            'Grade 1': 4,
+            'Grade 2': 5,
+            'Grade 3': 6,
+            'Grade 4': 7,
+            'Grade 5': 8,
+            'Grade 6': 9,
+            'Grade 7': 10,
+            'Grade 8': 11,
+            'Grade 9': 12,
+            'Grade 10': 13,
+            'Grade 11': 14,
+            'Grade 12': 15,
+        }
+
+        // Sorting function
+        function sortColumn(event, columnIndex, category) {
+            let new_th_element = event.target.closest('th');
+        
+            // Handle ASC/DESC classes
+            if (new_th_element.id === curr_th_element.id && new_th_element.classList.contains("asc")) {
+                new_th_element.classList.remove('asc');
+                new_th_element.classList.add("desc");
+            } 
+            else if (new_th_element.id === curr_th_element.id && new_th_element.classList.contains("desc")) {
+                new_th_element.classList.remove('desc');
+                new_th_element.classList.add("asc");
+            } 
+            else {
+                curr_th_element.classList.remove('asc', 'desc');
+                curr_th_element = new_th_element;
+                new_th_element.classList.add("asc");
+            }
+        
+            var table = event.target.closest("table");
+
+
+            var tbody = table.querySelector("tbody");
+            var rows = Array.from(tbody.querySelectorAll("tr")); // Get all rows except header
+            var dir = new_th_element.classList.contains("asc") ? "asc" : "desc";
+        
+            // Sorting function
+            rows.sort((rowA, rowB) => {
+                let x = rowA.cells[columnIndex].innerText.trim();
+                let y = rowB.cells[columnIndex].innerText.trim();
+
+                // Handle empty/null values (send them to the end)
+                const isEmpty = (val) => {
+                    return val === "" || val === "None" || val === "null" || val === null || val === undefined || val === "NULL";
+                }
+
+                if (isEmpty(x) && isEmpty(y)) return 0; // Both are empty, keep order
+                if (isEmpty(x)) return 1; // x is empty, push it to the end
+                if (isEmpty(y)) return -1; // y is empty, push it to the end
+        
+                // Convert to numbers if numeric
+                if (category == 'number') {
+                    x = parseFloat(x);
+                    y = parseFloat(y);
+                } 
+                else if(category == 'date') {
+                    x = new Date(x).getTime(); // Convert to timestamp
+                    y = new Date(y).getTime();
+                }
+                else if(category == 'class') {
+                    x = classOrder[x]; // Convert to timestamp
+                    y = classOrder[y];
+                }
+                else{
+                    x = x.toLowerCase();
+                    y = y.toLowerCase();
+                }
+        
+                if (dir === "asc") return x > y ? 1 : -1;
+                else return x < y ? 1 : -1;
+            });
+        
+            // Append rows back to the table body
+            tbody.innerHTML = "";
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+
+</body>
+</html>

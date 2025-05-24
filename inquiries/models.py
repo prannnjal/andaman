@@ -24,7 +24,7 @@ But the database will still store "A"
 def get_block_choices():
     try:
         # Load block and location_panchayat data from Excel
-        file_path = os.path.join(os.path.dirname(__file__),"static\\Location_list.xlsx")
+        file_path = os.path.join(os.path.dirname(__file__), "static", "Location_list.xlsx")
         df = pd.read_excel(file_path)
         block_choices = [(block, block) for block in df["BLOCK"].dropna().unique()]
         block_choices.append(("Other", "Other"))
