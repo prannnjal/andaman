@@ -268,7 +268,7 @@
                     <span class="sort-icon"></span>
                 </th>
 
-                <th style="cursor: default">Actions</th>
+                <th id="actions" style="cursor: default">Actions</th>
 
                 <th id="student_name" onclick="sortColumn(event,2,'string')">
                     Student Name
@@ -352,13 +352,23 @@
                 </td>
                 <td style="text-align: center;">
                     <div style="display: flex; gap:25px; justify-content: center;">                        
-                        {% if user.role == "Agent" or user.role == "Admin" %}
-                            <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
+                        {% if user.role == "Agent" or user.role == "Admin" %}                            
+                            {% if "Update" in actions %}
+                                <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
+                            {% endif %}
 
-                            <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>                            
-                        {% endif %}              
-                        
-                        <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
+                            {% if "Delete" in actions %}
+                                <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>
+                            {% endif %}
+
+                            {% if "Assign Agent" in actions %}
+                                <button type="button" class="delete" onclick="openAgentModal({{ inquiry.id }}, {{ inquiry.assigned_agent.id }})">Assign Agent</button>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if "View Logs" in actions %}
+                            <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
+                        {% endif %}                        
                     </div>
                 </td>
                 <td>{{ inquiry.student_name }}</td>
@@ -484,6 +494,5 @@
             rows.forEach(row => tbody.appendChild(row));
         }
     </script>
-
 </body>
 </html>

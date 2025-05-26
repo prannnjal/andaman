@@ -146,9 +146,11 @@ def Filter_Inquiries(request):
         inquiries = Lead.objects.all()     # return an empty queryset if the user is neither an admin nor an agent
     
     # Handle filters from the GET request
-    lead_id = request.GET.get('lead_id')
-    if lead_id:
-        inquiries = inquiries.filter(id=int(lead_id))
+    lead_ids = request.GET.getlist('lead_ids')  # returns a list of selected lead IDs
+    print("=================> lead_id in filter view = ",lead_ids)
+    if lead_ids:
+        lead_ids = [int(i) for i in lead_ids if i.isdigit()]
+        inquiries = inquiries.filter(id__in=lead_ids)
         
     student_class = request.GET.get('student_class')
     if student_class:
@@ -232,9 +234,14 @@ def Filter_Inquiries(request):
 @user_passes_test(is_staff)
 def inquiry_list(request):
     inquiries = Filter_Inquiries(request)
+    lead_ids_selected = request.GET.getlist('lead_ids')
+    print("==================> lead_ids selected = ",lead_ids_selected)
     
     return render(request, 'inquiries/inquiry_list.html', {
-        'inquiries': inquiries
+        'heading': request.GET.get('heading', "Leads List"),
+        'inquiries': inquiries,
+        'actions': ['Update', 'Delete', 'View Logs'],        
+        # 'lead_ids_selected': lead_ids_selected,
     })
 
 # =======================================================================================================================================================================
@@ -317,7 +324,8 @@ def follow_up_management(request):
             'statuses': statuses,
             'student_classes': student_classes,
             'admins': admins,
-            'follow_up_direction': follow_up_direction
+            'follow_up_direction': follow_up_direction,
+            'actions': ['Update', 'Delete', 'View Logs'],
         })
 
 # ======================================================================================================================================================================
@@ -882,7 +890,7 @@ def export_users_excel(request):
 @login_required
 @user_passes_test(is_admin)
 def assign_lead_to_agent_view(request):
-    inquiries = Lead.objects.all()  # Fetch all inquiries
+    inquiries = Filter_Inquiries(request)
     agents = CustomUser.objects.filter(role="Agent")
     
 
@@ -918,10 +926,11 @@ def assign_lead_to_agent_view(request):
 
         return redirect('assign_lead')  # Redirect to the same page after assignment
 
-    # If request is GET    
+    # If request is GET
     return render(request, 'inquiries/assign_lead.html', {
         'inquiries': inquiries,
-        'agents': agents
+        'agents': agents,
+        'actions': ['Assign Agent'],
     })
     
 # ====================================================================================

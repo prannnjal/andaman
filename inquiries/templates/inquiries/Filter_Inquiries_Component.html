@@ -22,7 +22,7 @@
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0px;
-            background-color: #f4f7fc;
+            background-color: hsl(218, 57%, 97%);
             color: #333;
             text-align: center;
         }
@@ -258,10 +258,12 @@
             {% endwith %}
 
                 <div class="same_row_wrapper">
-                    <select name="lead_id" class="searchable-select" data-placeholder="Choose Lead Id">
-                        <option value="">All Ids</option>
+                    <select name="lead_ids" class="searchable-select" data-placeholder="Select Lead Ids">
+                        <option value="">All Lead Ids</option>
                         {% for id in lead_ids %}
-                        <option value="{{ id }}" {% if request.GET.lead_id == id|stringformat:"s" %}selected{% endif %}>{{ id }}</option>
+                            <option value="{{ id }}" {% if id|stringformat:"s" in lead_ids_selected %}selected{% endif %}>
+                                {{ id }}
+                            </option>
                         {% endfor %}
                     </select>
 
@@ -271,8 +273,8 @@
                         <option value="{{ class }}" {% if request.GET.student_class == class %}selected{% endif %}>{{ class }}</option>
                         {% endfor %}
                     </select>
+                </div>
 
-                </div>                    
                 <div class="same_row_wrapper">
                     <select name="student_name" class="searchable-select" data-placeholder="Choose Student Name">
                         <option value="">All Students</option>

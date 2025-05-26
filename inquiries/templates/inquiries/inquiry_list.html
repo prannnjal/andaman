@@ -260,7 +260,7 @@
 <body>     
     {% include "inquiries/Modal.html" %}
 
-    <h1>Inquiry List</h1>
+    <h1>{{heading}}</h1>
 
     <!-- Buttons to open modals -->
     <div class="buttons_wrapper">
@@ -283,7 +283,7 @@
         </button>
     </div>
 
-    {% include "inquiries/Fill_Leads_Table.html" with inquiries=inquiries table_class="leads_table" %}
+    {% include "inquiries/Fill_Leads_Table.html" with inquiries=inquiries table_class="leads_table" actions=actions %}
 
 </body>
 </html>
