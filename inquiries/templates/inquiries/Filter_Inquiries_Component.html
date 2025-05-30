@@ -238,274 +238,253 @@
 </head>
 
 <body>
-    <!-- Display success or error message -->
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <!-- It loops through messages and assigns CSS classes dynamically ({{ message.tags }}) for styling. e.g: class="alert success" or class="alert error"-->
-        <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
+    {% include "inquiries/Alerts.html" %}
     
+    <div class="modal-content">
+        <h2>Filter Inquiries</h2>
+        {% with request.GET.base_url_name as url_name %}
+            <form id="filter-form" method="get" action="{{ request.GET.base_url_name }}">
+        {% endwith %}
 
-        <div class="modal-content">
-            <h2>Filter Inquiries</h2>
-            {% with request.GET.base_url_name as url_name %}
-                <form id="filter-form" method="get" action="{% url url_name %}">
-            {% endwith %}
+            <div class="same_row_wrapper">
+                <select name="lead_id" class="searchable-select" data-placeholder="Select Lead Ids">
+                    <option value="">All Lead Ids</option>
+                    {% for id in lead_ids %}
+                        <option value="{{ id }}" {% if request.GET.lead_id == id|stringformat:"s" %}selected{% endif %}>
+                            {{ id }}
+                        </option>
+                    {% endfor %}
+                </select>
 
-                <div class="same_row_wrapper">
-                    <select name="lead_ids" class="searchable-select" data-placeholder="Select Lead Ids">
-                        <option value="">All Lead Ids</option>
-                        {% for id in lead_ids %}
-                            <option value="{{ id }}" {% if id|stringformat:"s" in lead_ids_selected %}selected{% endif %}>
-                                {{ id }}
-                            </option>
-                        {% endfor %}
-                    </select>
+                <select name="student_class" class="searchable-select" data-placeholder="Select the Class">
+                    <option value="">All Classes</option>
+                    {% for class in student_classes %}
+                    <option value="{{ class }}" {% if request.GET.student_class == class %}selected{% endif %}>{{ class }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                    <select name="student_class" class="searchable-select" data-placeholder="Select the Class">
-                        <option value="">All Classes</option>
-                        {% for class in student_classes %}
-                        <option value="{{ class }}" {% if request.GET.student_class == class %}selected{% endif %}>{{ class }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="same_row_wrapper">
+                <select name="student_name" class="searchable-select" data-placeholder="Choose Student Name">
+                    <option value="">All Students</option>
+                    {% for student in students %}
+                    <option value="{{ student }}" {% if request.GET.student_name == student %}selected{% endif %}>{{ student }}</option>
+                    {% endfor %}
+                </select>
 
-                <div class="same_row_wrapper">
-                    <select name="student_name" class="searchable-select" data-placeholder="Choose Student Name">
-                        <option value="">All Students</option>
-                        {% for student in students %}
-                        <option value="{{ student }}" {% if request.GET.student_name == student %}selected{% endif %}>{{ student }}</option>
-                        {% endfor %}
-                    </select>
-    
-                    <select name="parent_name" class="searchable-select" data-placeholder="Choose Parent Name">
-                        <option value="">All Parents</option>
-                        {% for parent in parents %}
-                        <option value="{{ parent }}" {% if request.GET.parent_name == parent %}selected{% endif %}>{{ parent }}</option>
-                        {% endfor %}
-                    </select>                    
-                </div>
+                <select name="parent_name" class="searchable-select" data-placeholder="Choose Parent Name">
+                    <option value="">All Parents</option>
+                    {% for parent in parents %}
+                    <option value="{{ parent }}" {% if request.GET.parent_name == parent %}selected{% endif %}>{{ parent }}</option>
+                    {% endfor %}
+                </select>                    
+            </div>
 
-                <div class="same_row_wrapper">
-                    <select name="lead_email" class="searchable-select" data-placeholder="Choose Lead Email">
-                        <option value="">All Leads Email</option>
-                        {% for lead_email in lead_emails %}
-                        <option value="{{ lead_email }}" {% if request.GET.lead_email == lead_email %}selected{% endif %}>{{ lead_email }}</option>
-                        {% endfor %}
-                    </select>
-    
-                    <select name="mobile_number" class="searchable-select" data-placeholder="Choose Mobile Number">
-                        <option value="">All Mobile Numbers</option>
-                        {% for mobile_number in mobile_numbers %}
-                        <option value="{{ mobile_number }}" {% if request.GET.mobile_number == mobile_number %}selected{% endif %}>{{ mobile_number }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+            <div class="same_row_wrapper">
+                <select name="lead_email" class="searchable-select" data-placeholder="Choose Lead Email">
+                    <option value="">All Leads Email</option>
+                    {% for lead_email in lead_emails %}
+                    <option value="{{ lead_email }}" {% if request.GET.lead_email == lead_email %}selected{% endif %}>{{ lead_email }}</option>
+                    {% endfor %}
+                </select>
 
-                <div class="same_row_wrapper">
-                    <select name="block" class="searchable-select" data-placeholder="Select the Block">
-                        <option value="">All Blocks</option>
-                        {% for block in blocks %}
-                        <option value="{{ block }}" {% if request.GET.block == block %}selected{% endif %}>{{ block }}</option>
-                        {% endfor %}
-                    </select>
-    
-                    <select name="location_panchayat" class="searchable-select" data-placeholder="Select the Location/Panchayat">
-                        <option value="">All Locations</option>
-                        {% for location in location_panchayats %}
-                        <option value="{{ location }}" {% if request.GET.location_panchayat == location %}selected{% endif %}>{{ location }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                <select name="mobile_number" class="searchable-select" data-placeholder="Choose Mobile Number">
+                    <option value="">All Mobile Numbers</option>
+                    {% for mobile_number in mobile_numbers %}
+                    <option value="{{ mobile_number }}" {% if request.GET.mobile_number == mobile_number %}selected{% endif %}>{{ mobile_number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                <div class="same_row_wrapper">                                        
-                    <select name="inquiry_source" class="searchable-select" data-placeholder="Select the Inquiry Source">
-                        <option value="">All Sources</option>
-                        {% for inquiry_source in inquiry_sources %}
-                        <option value="{{ inquiry_source }}" {% if request.GET.inquiry_source == inquiry_source %}selected{% endif %}>{{ inquiry_source }}</option>
-                        {% endfor %}
-                    </select>     
-                    
-                    <select name="status" class="searchable-select" data-placeholder="Select the Inquiry Status">
-                        <option value="">All Statuses</option>
-                        {% for status in statuses %}
-                        <option value="{{ status }}" {% if request.GET.status == status %}selected{% endif %}>{{ status }}</option>
-                        {% endfor %}
-                    </select>
-                    
-                </div>
+            <div class="same_row_wrapper">
+                <select name="block" class="searchable-select" data-placeholder="Select the Block">
+                    <option value="">All Blocks</option>
+                    {% for block in blocks %}
+                    <option value="{{ block }}" {% if request.GET.block == block %}selected{% endif %}>{{ block }}</option>
+                    {% endfor %}
+                </select>
 
-                <div class="same_row_wrapper">                                                           
-                    <select name="agent_id" class="searchable-select" data-placeholder="Select the Agent">
-                        <option value="">All Agents</option>
-                        {% for agent in agents %}
-                        <option value="{{ agent.id }}" {% if request.GET.agent_id == agent.id|stringformat:"s" %}selected{% endif %}>#{{ agent.id }} {{agent.name}}: {{agent.email}}</option>
-                        {% endfor %}
-                    </select>
+                <select name="location_panchayat" class="searchable-select" data-placeholder="Select the Location/Panchayat">
+                    <option value="">All Locations</option>
+                    {% for location in location_panchayats %}
+                    <option value="{{ location }}" {% if request.GET.location_panchayat == location %}selected{% endif %}>{{ location }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-                    <select name="admin_id" class="searchable-select" data-placeholder="Select the Admin">
-                        <option value="">All Admins</option>
-                        {% for admin in admins %}
-                        <option value="{{ admin.id }}" {% if request.GET.admin_id == admin.id|stringformat:"s" %}selected{% endif %}>#{{admin.id}} {{admin.name}}: {{admin.email}}</option>
-                        {% endfor %}
-                    </select>    
-                </div>
-
-
-                <!-- Date Filters -->
-                <div>
-                    <span id="filter_date">Select Inquiry Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="inquiry_date_from" value="{{ request.GET.inquiry_date_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="inquiry_date_to" value="{{ request.GET.inquiry_date_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <span id="filter_date">Select Registration Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="registration_date_from" value="{{ request.GET.registration_date_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="registration_date_to" value="{{ request.GET.registration_date_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <span id="filter_date">Select Admission Test Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="admission_test_date_from" value="{{ request.GET.admission_test_date_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="admission_test_date_to" value="{{ request.GET.admission_test_date_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <span id="filter_date">Select Admission Offered Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="admission_offered_date_from" value="{{ request.GET.admission_offered_date_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="admission_offered_date_to" value="{{ request.GET.admission_offered_date_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <span id="filter_date">Select Admission Confirmed Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="admission_confirmed_date_from" value="{{ request.GET.admission_confirmed_date_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="admission_confirmed_date_to" value="{{ request.GET.admission_confirmed_date_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <span id="filter_date">Select Rejected Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="rejected_date_from" value="{{ request.GET.rejected_date_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="rejected_date_to" value="{{ request.GET.rejected_date_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <span id="filter_date">Select Follow-up Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="follow_up_date_from" value="{{ request.GET.follow_up_date_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="follow_up_date_to" value="{{ request.GET.follow_up_date_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <span id="filter_date">Select Inquiry-Updation Date</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>From:</label>
-                            <input type="date" name="last_inquiry_updation_from" value="{{ request.GET.last_inquiry_updation_from }}">
-                        </div>
-    
-                        <div class="date-wrapper">
-                            <label>To:</label>
-                            <input type="date" name="last_inquiry_updation_to" value="{{ request.GET.last_inquiry_updation_to }}">
-                        </div>
-                    </div>
-                </div>
-
-                                               
-                <!-- Submit and Reset -->
-                <button type="submit" class="filter_modal_btn">Filter</button>
+            <div class="same_row_wrapper">                                        
+                <select name="inquiry_source" class="searchable-select" data-placeholder="Select the Inquiry Source">
+                    <option value="">All Sources</option>
+                    {% for inquiry_source in inquiry_sources %}
+                    <option value="{{ inquiry_source }}" {% if request.GET.inquiry_source == inquiry_source %}selected{% endif %}>{{ inquiry_source }}</option>
+                    {% endfor %}
+                </select>     
                 
-                <a class="reset_modal_a" href="{% url request.GET.base_url_name %}">
-                   Reset
-                </a>
-             
-            </form>
+                <select name="status" class="searchable-select" data-placeholder="Select the Inquiry Status">
+                    <option value="">All Statuses</option>
+                    {% for status in statuses %}
+                    <option value="{{ status }}" {% if request.GET.status == status %}selected{% endif %}>{{ status }}</option>
+                    {% endfor %}
+                </select>
+                
+            </div>
+
+            <div class="same_row_wrapper">                                                           
+                <select name="agent_id" class="searchable-select" data-placeholder="Select the Agent">
+                    <option value="">All Agents</option>
+                    {% for agent in agents %}
+                    <option value="{{ agent.id }}" {% if request.GET.agent_id == agent.id|stringformat:"s" %}selected{% endif %}>#{{ agent.id }} {{agent.name}}: {{agent.email}}</option>
+                    {% endfor %}
+                </select>
+
+                <select name="admin_id" class="searchable-select" data-placeholder="Select the Admin">
+                    <option value="">All Admins</option>
+                    {% for admin in admins %}
+                    <option value="{{ admin.id }}" {% if request.GET.admin_id == admin.id|stringformat:"s" %}selected{% endif %}>#{{admin.id}} {{admin.name}}: {{admin.email}}</option>
+                    {% endfor %}
+                </select>    
+            </div>
+
+
+            <!-- Date Filters -->
+            <div>
+                <span id="filter_date">Select Inquiry Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="inquiry_date_from" value="{{ request.GET.inquiry_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="inquiry_date_to" value="{{ request.GET.inquiry_date_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="filter_date">Select Registration Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="registration_date_from" value="{{ request.GET.registration_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="registration_date_to" value="{{ request.GET.registration_date_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="filter_date">Select Admission Test Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="admission_test_date_from" value="{{ request.GET.admission_test_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="admission_test_date_to" value="{{ request.GET.admission_test_date_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="filter_date">Select Admission Offered Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="admission_offered_date_from" value="{{ request.GET.admission_offered_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="admission_offered_date_to" value="{{ request.GET.admission_offered_date_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="filter_date">Select Admission Confirmed Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="admission_confirmed_date_from" value="{{ request.GET.admission_confirmed_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="admission_confirmed_date_to" value="{{ request.GET.admission_confirmed_date_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="filter_date">Select Rejected Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="rejected_date_from" value="{{ request.GET.rejected_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="rejected_date_to" value="{{ request.GET.rejected_date_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="filter_date">Select Follow-up Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="follow_up_date_from" value="{{ request.GET.follow_up_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="follow_up_date_to" value="{{ request.GET.follow_up_date_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span id="filter_date">Select Inquiry-Updation Date</span>
+
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label>From:</label>
+                        <input type="date" name="last_inquiry_updation_from" value="{{ request.GET.last_inquiry_updation_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label>To:</label>
+                        <input type="date" name="last_inquiry_updation_to" value="{{ request.GET.last_inquiry_updation_to }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit and Reset -->
+            <button type="submit" class="filter_modal_btn">Filter</button>
+            
+            <a class="reset_modal_a" href="{{ request.GET.base_url_name }}">
+                Reset
+            </a>
+            
+        </form>
     </div>
      
-
-    <script>
-        if (document.querySelector('.messages')) {
-          setTimeout(function() {
-            var messagesContainer = document.querySelector('.messages');
-            messagesContainer.style.display = 'none';
-          }, 4000);
-        }
-    </script>
 
     <script>
         $(document).ready(function () {
@@ -519,8 +498,5 @@
             });
         });
     </script>
-
-
-
 </body>
 </html>

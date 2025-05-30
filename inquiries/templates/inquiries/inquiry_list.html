@@ -168,7 +168,7 @@
             position: sticky;
             top: 0;
             z-index: 2;            
-        }  
+        }
 
         /* ::after pseudo-element inserts content after the existing content inside the selected element.
         */
@@ -257,30 +257,55 @@
     </style>
 </head>
 
-<body>     
+<body>
     {% include "inquiries/Modal.html" %}
+    {% include "inquiries/Alerts.html" %}
 
     <h1>{{heading}}</h1>
 
     <!-- Buttons to open modals -->
     <div class="buttons_wrapper">
-        {% if user.role == "Agent" or user.role == "Admin" %}
-            <button class="header-btn add-inquiry" onClick="window.location.href='{% url 'add_inquiry' %}'">
-                Add New Inquiry
+        {% if "Add Inquiry" in dashboard_buttons %}
+            {% if user.role == "Agent" or user.role == "Admin" %}
+                <button class="header-btn add-inquiry" onClick="window.location.href='{% url 'add_inquiry' %}'">
+                    Add New Inquiry
+                </button>
+            {% endif %}
+        {% endif %}
+
+
+        {% if "Open Filters" in dashboard_buttons %}
+            <button class="header-btn filter load-component" data-template-url="{% url 'filter_inquiries_component' %}" data-base-url-name="{{ base_url_name }}">
+                Open Filters
             </button>
         {% endif %}
 
-        <button class="header-btn filter load-component" data-template-url="{% url 'filter_inquiries_component' %}" data-base-url-name="inquiry_list">
-            Open Filters
-        </button>
 
-        <button class="header-btn manage load-component" data-template-url="{% url 'hide_columns_component' %}" data-table_class="leads_table">
-            View / Hide Columns
-        </button>
-        
-        <button class="header-btn dashboard" onClick="window.location.href='{% url 'dashboard' %}'">
-            Dashboard
-        </button>
+        {% if "View / Hide Columns" in dashboard_buttons %}
+            <button class="header-btn manage load-component" data-template-url="{% url 'hide_columns_component' %}" data-table_class="leads_table">
+                View / Hide Columns
+            </button>
+        {% endif %}
+
+
+        {% if "Dashboard" in dashboard_buttons %}
+            <button class="header-btn dashboard" onClick="window.location.href='{% url 'dashboard' %}'">
+                Dashboard
+            </button>
+        {% endif %}
+
+
+        {% if "Assign Leads" in dashboard_buttons %}
+            <form id="assign-bulk-leads-form" method="POST" action="{% url 'bulk_assign_leads' agent_id %}">
+                {% csrf_token %}
+                <input type="hidden" name="selected_bulk_leads" id="bulk-leads-field">
+                
+                <button type="submit" class="header-btn add-inquiry">
+                    Assign Leads
+                </button>
+            </form>
+
+        {% endif %}
     </div>
 
     {% include "inquiries/Fill_Leads_Table.html" with inquiries=inquiries table_class="leads_table" actions=actions %}

@@ -13,7 +13,10 @@ urlpatterns = [
     path('export/users', views.export_users_excel, name='export_users_csv'),
     path('detailed_stats/', views.detailed_stats, name='detailed_stats'),
     path('remove_lead/', views.remove_lead_from_agent_view, name='remove_lead'),
-    path('reassign_lead/', views.assign_lead_to_agent_view, name='assign_lead'),        
+    path('reassign_lead/', views.assign_lead_to_agent_view, name='assign_lead'),
+    path('inquiries_updated_today/', views.inquiries_updated_today_view, name='inquiries_updated_today'),
+    
+    
     path('update_status/<int:inquiry_id>/', views.manage_lead_status, name='update_status'),
     path('lead_logs/<int:lead_id>/', views.lead_logs_view, name='view-lead-logs'),
     path('delete_inquiry/<int:id>/', views.delete_inquiry, name='delete_inquiry'),
@@ -43,5 +46,13 @@ urlpatterns = [
     path('filter_inquiries_component/', views.filter_inquiries_component, name='filter_inquiries_component'),
     
     path('hide_columns_component/', views.hide_columns_component, name='hide_columns_component'),
+    
+    path('hide_agent_columns_component/', views.hide_agent_columns_component, name='hide_agent_columns_component'),
+    
+    path('filter_agents_component/', views.filter_agents_component, name='filter_agents_component'),
+    
+    path('assign_leads_to_agents/', views.assign_leads_to_agents_view, name='assign_leads_to_agents'),
+    
+    path('bulk_assign_leads/<int:agent_id>/', views.bulk_assign_leads_view, name='bulk_assign_leads'),
 
 ]

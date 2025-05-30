@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grant/Revoke Access</title>
+</head>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+    }
+    
+    h1, h2 {
+        text-align: center;
+        margin: 1rem 0  !important;
+    }
+
+    .buttons_wrapper{
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+</style>
+
+
+
+<body>
+    {% include "inquiries/Modal.html" %}
+    {% include "inquiries/Alerts.html" %}
+
+    <h2>Bulk Assign Leads to Agents</h2>
+
+    <!-- Buttons to open modals -->
+    <div class="buttons_wrapper">
+        {% if user.role == "Agent" or user.role == "Admin" %}
+            <button class="header-btn add-inquiry" onClick="window.location.href='{% url 'add_user' %}'">
+                Add New User
+            </button>
+        {% endif %}
+
+        <button class="header-btn filter load-component" data-template-url="{% url 'filter_agents_component' %}" data-base-url-name="{{ base_url_name }}" data-filter-component-heading="Filter Agents">
+            Open Filters
+        </button>
+
+        <button class="header-btn manage load-component" data-template-url="{% url 'hide_agent_columns_component' %}" data-table_class="agents_bulk_assign_table">
+            View / Hide Columns
+        </button>
+        
+        <button class="header-btn dashboard" onClick="window.location.href='{% url 'dashboard' %}'">
+            Dashboard
+        </button>
+    </div>
+
+    
+    {% include "inquiries/agent/Fill_Agents_Table.html" with table_class="agents_bulk_assign_table" actions=actions %}
+</body>
+</html>

@@ -76,6 +76,7 @@
 
 <body>
     {% include "inquiries/Modal.html" %}
+    {% include "inquiries/Alerts.html" %}
     
     <h1 id="follow-up-header">
         Assign/Reassign Agent to Leads
@@ -89,7 +90,7 @@
             </button>
         {% endif %}
 
-        <button class="filter load-component" data-template-url="{% url 'filter_inquiries_component' %}" data-base-url-name="assign_lead">
+        <button class="filter load-component" data-template-url="{% url 'filter_inquiries_component' %}" data-base-url-name="{{ base_url_name }}">
             Open Filters
         </button>
 

@@ -13,20 +13,10 @@
 </head>
 
 <body>
+    {% include "inquiries/Alerts.html" %}
+    
     <div class="container">
         <h1>{{title}}</h1>
-
-        <!-- Display success or error message -->
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-            <!-- It loops through messages and assigns CSS classes dynamically ({{ message.tags }}) for styling. e.g: class="alert success" or class="alert error"-->
-            <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
 
         <!-- Display Form -->
         <form method="POST" class="inquiry-form">
@@ -449,19 +439,5 @@
         }
         
     </style>
-
-
-    <script>
-        // Check if there are any messages to display
-        if (document.querySelector('.messages')) {
-          setTimeout(function() {
-            // Find the message container and hide it after 5 seconds
-            var messagesContainer = document.querySelector('.messages');
-            messagesContainer.style.display = 'none';
-          }, 4000);
-        }
-      </script>
-
 </body>
-
 </html>

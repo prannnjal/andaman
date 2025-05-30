@@ -190,6 +190,7 @@
 
 <body>
     {% include "inquiries/Modal.html" %}
+    {% include "inquiries/Alerts.html" %}
     
     <h1 id="follow-up-header">
         {% if follow_up_direction == "previous" %}
@@ -209,7 +210,7 @@
             </button>
         {% endif %}
 
-        <button class="filter load-component" data-template-url="{% url 'filter_inquiries_component' %}" data-base-url-name="follow_up_management">
+        <button class="filter load-component" data-template-url="{% url 'filter_inquiries_component' %}" data-base-url-name="{{ base_url_name }}">
             Open Filters
         </button>
 

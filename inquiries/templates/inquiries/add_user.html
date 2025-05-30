@@ -128,15 +128,7 @@
 
 <div class="container">
 
-  {% if messages %}
-  <div class="messages">
-    {% for message in messages %}
-    <div class="alert {% if message.tags %}{{ message.tags }}{% endif %}">
-      {{ message }}
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+  {% include "inquiries/Alerts.html" %}
 
   <div class="navigation">
     <a href="{% url 'dashboard' %}" class="add_new_agent">← Back to Dashboard</a>
@@ -189,13 +181,5 @@
   </div>
 
 </div>
-
-<script>
-  if (document.querySelector('.messages')) {
-    setTimeout(() => {
-      document.querySelector('.messages').style.display = 'none';
-    }, 4000);
-  }
-</script>
 
 {% endblock %}

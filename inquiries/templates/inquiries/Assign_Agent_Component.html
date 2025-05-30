@@ -495,7 +495,7 @@
 
 </head>
 
-<body>
+<body>    
     <!-- Modal Background Overlay -->
     <div id="modal-backdrop" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 999;" >
 
@@ -506,6 +506,12 @@
             <form method="POST" style="width: 98%; height: 98%;">
                 {% csrf_token %}
                 <input type="hidden" id="lead-id-input" name="inquiry_id" value="">
+
+                <!-- Add query params as hidden fields -->
+                {% for key, value in request.GET.items %}
+                    <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endfor %}
+
                 <h3>Select Agent to Assign</h3>
 
                 <div class="agent-table">

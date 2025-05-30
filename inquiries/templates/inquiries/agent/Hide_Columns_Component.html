@@ -28,7 +28,7 @@
             flex-direction: row;        
             gap: 30px;
             align-items: start; 
-            justify-content: start;   
+            justify-content: space-between;   
             margin: 10px 0 30px 0;    
             flex-wrap: wrap;           
         }
@@ -147,37 +147,103 @@
             background-color: #2a74ec;
             padding: 15px;                  
         }
+
+        .wrap-text {
+            max-width: 150px; /* Adjust to your preferred width */
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.5;
+        }
+
     </style>
 </head>
 
 <body>
-    <!-- Display success or error message -->
-     {% include "inquiries/Alerts.html" %}
+    {% include "inquiries/Alerts.html" %}
     
+    <div class="modal-content">            
+        <h2>View / Hide Columns</h2>
+        <div class="same_row_wrapper">
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="0" checked>
+                <span class="wrap-text">Agent Id</span>
+            </label>
 
-        <div class="modal-content">            
-            <h2>View / Hide Columns</h2>
-            <div class="same_row_wrapper">
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="0" checked> Lead Id</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="1" checked> Actions</label>          
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="2" checked> Student Name</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="3" checked> Lead Email</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="4" checked> Parent Name</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="5" checked> Mobile Number</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="6" checked> Address</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="7" checked> Inquiry Source</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="8" checked> Student Class</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="9" checked> Follow-up Date</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="10" checked> Status</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="11" checked> Agent</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="12" checked> Agent Email</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="13" checked>Block</label>
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="14" checked> Location/Panchayat</label>               
-                <label class="view_hide_wrapper"><input type="checkbox" class="filter-checkbox" data-column="15" checked> Admin Email</label>                     
-            </div>
-            <button class="check_all_modal_btn" id="SelectAllButton">Check All</button>
-            <button class="uncheck_all_modal_btn" id="UnSelectAllButton">Uncheck All</button>
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="1" checked>
+                <span class="wrap-text">Actions</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="2" checked>
+                <span class="wrap-text">Agent Name</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="3" checked>
+                <span class="wrap-text">Role</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="4" checked>
+                <span class="wrap-text">Email</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="5" checked>
+                <span class="wrap-text">Mobile Number</span>
+            </label>
+
+            
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="6" checked> 
+                <span class="wrap-text">Expiration Time</span>
+            </label>
+            
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="7" checked>
+                <span class="wrap-text">Total Leads Assigned</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="8" checked>
+                <span class="wrap-text">Conversion Rate</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="9" checked>
+                <span class="wrap-text">Total Leads in Inquiry Phase</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="10" checked>
+                <span class="wrap-text">Total Leads in Registration Phase</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="11" checked>
+                <span class="wrap-text">Total Leads in Admission Test Phase</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="12" checked>
+                <span class="wrap-text">Total Leads in Admission Offered Phase</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="13" checked>
+                <span class="wrap-text">Total Leads in Admission Confirmed Phase</span>
+            </label>
+
+            <label class="view_hide_wrapper">
+                <input type="checkbox" class="filter-checkbox" data-column="14" checked>
+                <span class="wrap-text">Total Leads in Rejected Phase</span>
+            </label>
+
         </div>
+        <button class="check_all_modal_btn" id="SelectAllButton">Check All</button>
+        <button class="uncheck_all_modal_btn" id="UnSelectAllButton">Uncheck All</button>
+    </div>
 
 
     <!-- Modal Scripts -->
@@ -188,12 +254,12 @@
                 const col = $(this).data('column');
                 states[col] = $(this).prop('checked');
             });
-            localStorage.setItem('columnVisibility', JSON.stringify(states));
+            localStorage.setItem('columnVisibilityAgentsTable', JSON.stringify(states));
         }
 
 
         function applyCheckboxStates() {
-            const stored = localStorage.getItem('columnVisibility');
+            const stored = localStorage.getItem('columnVisibilityAgentsTable');
             if (!stored) return;
 
             const states = JSON.parse(stored);

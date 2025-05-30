@@ -171,7 +171,7 @@ class Lead(models.Model):
         blank=True,
         default=None,
         limit_choices_to={'role': 'Agent'},
-        related_name='assigned_agent'
+        related_name='assigned_agent'       # for reverse relation
     )
     
     admin_assigned = models.ForeignKey(

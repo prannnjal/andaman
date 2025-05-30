@@ -43,7 +43,7 @@
         th,
         td {
             padding: 10px;
-            text-align: start;
+            text-align: center;
             border: 1px solid #b3b1b1;
         }
 
@@ -152,8 +152,7 @@
         .table_wrapper{
             border: 2px solid red;
             overflow: auto; 
-            max-width: 100%; 
-            height: 60%;
+            max-width: 100%;     
             max-height: 68vh;
             margin: 0 30px 30px 30px;            
         }
@@ -265,24 +264,26 @@
         <thead>
             <tr>
                 <th class="lead_id_cell" id="lead_id" onclick="sortColumn(event,0,'number')">
-                    Lead Id
+                    Agent Id
                     <span class="sort-icon"></span>
                 </th>
-
-                <th id="actions" style="cursor: default">Actions</th>
+                
+                {% if user.role == "Admin" %}
+                    <th id="actions" style="cursor: default">Actions</th>
+                {% endif %}
 
                 <th id="student_name" onclick="sortColumn(event,2,'string')">
-                    Student Name
+                    Agent Name
                     <span class="sort-icon"></span>
                 </th>
 
                 <th id="email" onclick="sortColumn(event,3,'string')">
-                    Lead Email
+                    Role
                     <span class="sort-icon"></span>
                 </th>     
                 
                 <th id="parent_name" onclick="sortColumn(event,4,'string')">
-                    Parent Name
+                    Email
                     <span class="sort-icon"></span>
                 </th>
 
@@ -292,117 +293,104 @@
                 </th>
 
                 <th id="address" onclick="sortColumn(event,6,'string')">
-                    Address
+                    Expiration Time
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="inquiry_source" onclick="sortColumn(event,7,'string')">
-                    Inquiry Source
-                    <span class="sort-icon"></span>
-                </th>
+                {% if show_performance_metrics %}
+                    <th id="total_leads_assigned" onclick="sortColumn(event,7,'number')">
+                        Total Leads Assigned
+                        <span class="sort-icon"></span>
+                    </th>
 
-                <th id="student_class" onclick="sortColumn(event,8,'class')">
-                    Student Class 
-                    <span class="sort-icon"></span>
-                </th>
+                    <th id="conversion_rate" onclick="sortColumn(event,8,'number')">
+                        Conversion Rate
+                        <span class="sort-icon"></span>
+                    </th>
 
-                <th id="follow_up_date" onclick="sortColumn(event,9,'date')">
-                    Follow-up Date 
-                    <span class="sort-icon"></span>
-                </th>
+                    <th id="total_leads_in_inquiry" onclick="sortColumn(event,9,'number')">
+                        Total Leads in Inquiry Phase
+                        <span class="sort-icon"></span>
+                    </th>
 
-                <th id="status" onclick="sortColumn(event,10,'string')">
-                    Status
-                    <span class="sort-icon"></span>
-                </th>
-          
-                <th id="assigned_agent.name" onclick="sortColumn(event,11,'string')">
-                    Agent
-                    <span class="sort-icon"></span>
-                </th>
+                    <th id="total_leads_in_registration" onclick="sortColumn(event,10,'number')">
+                        Total Leads in Registration Phase
+                        <span class="sort-icon"></span>
+                    </th>
 
-                <th id="assigned_agent.email" onclick="sortColumn(event,12,'string')">
-                    Agent Email
-                    <span class="sort-icon"></span>
-                </th>
+                    <th id="total_leads_in_admission_test" onclick="sortColumn(event,11,'number')">
+                        Total Leads in Admission Test Phase
+                        <span class="sort-icon"></span>
+                    </th>
 
-                <th id="block" onclick="sortColumn(event,13,'string')">
-                    Block
-                    <span class="sort-icon"></span>
-                </th>
+                    <th id="total_leads_in_admission_offered" onclick="sortColumn(event,12,'number')">
+                        Total Leads in Admission Offered Phase
+                        <span class="sort-icon"></span>
+                    </th>
 
-                <th id="location_panchayat" onclick="sortColumn(event,14,'string')">
-                    Location/Panchayat
-                    <span class="sort-icon"></span>
-                </th>
+                    <th id="total_leads_in_admission_confirmed" onclick="sortColumn(event,13,'number')">
+                        Total Leads in Admission Confirmed Phase
+                        <span class="sort-icon"></span>
+                    </th>
 
-                <th id="admin_assigned.email" onclick="sortColumn(event,15,'string')">
-                    Admin Email
-                    <span class="sort-icon"></span>
-                </th>                                                                             
-
+                    <th id="total_leads_in_rejected" onclick="sortColumn(event,14,'number')">
+                        Total Leads in Rejected Phase
+                        <span class="sort-icon"></span>
+                    </th>
+                {% endif %}
             </tr>
         </thead>
         <tbody>
-            {% for inquiry in inquiries %}
+            {% for agent in agents %}
             <tr>
                 <td class="lead_id_cell">
                     <div style="display: flex; justify-content: center;">
-                        {{ inquiry.id }}
+                        {{ agent.id }}
                     </div>
                 </td>
-                <td style="text-align: center;">
-                    <div style="display: flex; gap:25px; justify-content: center;">                        
-                        {% if user.role == "Agent" or user.role == "Admin" %}                            
-                            {% if "Update" in actions %}
-                                <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
-                            {% endif %}
 
-                            {% if "Delete" in actions %}
-                                <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Delete</a>
-                            {% endif %}
-
-                            {% if "Assign Agent" in actions %}
-                                <button type="button" class="delete" onclick="openAgentModal({{ inquiry.id }}, {{ inquiry.assigned_agent.id }})">Assign Agent</button>
-                            {% endif %}
-
-                            {% if "Bulk Assign Leads" in actions %}
-                                <label>Assign</label>
-                                <input
-                                type="checkbox"
-                                class="assign-lead-checkbox"
-                                data-inquiry-id="{{ inquiry.id }}"
-                                {% if inquiry.id in pre_selected_leads %}checked{% endif %}
-                                />                                
-                            {% endif %}
+                {% if user.role == "Admin" %}
+                <td>
+                    <div style="display: flex; gap:25px;justify-content: center;">
+                        {% if "Manage Leads" in actions %}
+                            <a class="delete" href="{% url 'bulk_assign_leads' agent.id %}">Manage Leads</a>
                         {% endif %}
 
-                        {% if "View Logs" in actions %}
-                            <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
-                        {% endif %}                        
-                    </div>
+
+                        {% if "Manage Role" in actions %}
+                            <a class="delete" href="{% url 'delete_inquiry' inquiry.id %}" class="delete-link" onclick="return confirm('Are you sure you want to delete this inquiry?')">Manage Role</a>
+                        {% endif %}
+                        
+                        {% if "Delete" in actions %}
+                            <a class="update" href="{% url 'delete_agent' agent.id %}">Manage Leads</a>
+                        {% endif %}
+                    </div>                    
                 </td>
-                <td>{{ inquiry.student_name }}</td>
-                <td>{{ inquiry.email }}</td>
-                <td>{{ inquiry.parent_name }}</td>
+                {% endif %}       
+
+                <td>{{ agent.name }}</td>
+                <td>{{ agent.role }}</td>
+                <td>{{ agent.email }}</td>
                 <td>
                     <div class="flex-td">
-                        {{ inquiry.mobile_number }}
-                        <a href="tel:{{ inquiry.mobile_number }}" style="color: blue; text-decoration: none;">
+                        {{ agent.mobile_number }}
+                        <a href="tel:{{ agent.mobile_number }}" style="color: blue; text-decoration: none;">
                             <i class="fa fa-phone"></i>
                         </a>   
                     </div>                      
                 </td>
-                <td>{{ inquiry.address }}</td>
-                <td>{{ inquiry.inquiry_source }}</td>
-                <td>{{ inquiry.student_class }}</td>
-                <td>{{ inquiry.follow_up_date }}</td>
-                <td>{{ inquiry.status }}</td>
-                <td>{{ inquiry.assigned_agent.name|default:"UNASSIGNED" }}</td>
-                <td>{{ inquiry.assigned_agent.email|default:"NULL" }}</td>
-                <td>{{ inquiry.block|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->
-                <td>{{ inquiry.location_panchayat|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->                
-                <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>                                       
+                <td>{{ agent.expiration_time }}</td>
+                
+                {% if show_performance_metrics %}
+                    <td>{{ agent.total_leads_handled }}</td>
+                    <td>{{ agent.conversion_rate }}</td>
+                    <td>{{ agent.total_leads_in_inquiry_phase }}</td>
+                    <td>{{ agent.total_leads_in_registration_phase }}</td>
+                    <td>{{ agent.total_leads_in_admission_test_phase }}</td>
+                    <td>{{ agent.total_leads_in_admission_offered_phase }}</td>
+                    <td>{{ agent.total_leads_in_admission_confirmed_phase }}</td>
+                    <td>{{ agent.total_leads_in_rejected_phase }}</td>
+                {% endif %}
             </tr>
             {% empty %}
             <tr>
@@ -419,25 +407,6 @@
         let curr_th_element = document.getElementById("lead_id")
         curr_th_element.classList.add("asc")
 
-        classOrder = {
-            'Play School': 0,
-            'Nursery': 1,
-            'LKG': 2,
-            'UKG': 3,
-            'Grade 1': 4,
-            'Grade 2': 5,
-            'Grade 3': 6,
-            'Grade 4': 7,
-            'Grade 5': 8,
-            'Grade 6': 9,
-            'Grade 7': 10,
-            'Grade 8': 11,
-            'Grade 9': 12,
-            'Grade 10': 13,
-            'Grade 11': 14,
-            'Grade 12': 15,
-        }
-
         // Sorting function
         function sortColumn(event, columnIndex, category) {
             let new_th_element = event.target.closest('th');
@@ -450,7 +419,7 @@
             else if (new_th_element.id === curr_th_element.id && new_th_element.classList.contains("desc")) {
                 new_th_element.classList.remove('desc');
                 new_th_element.classList.add("asc");
-            } 
+            }
             else {
                 curr_th_element.classList.remove('asc', 'desc');
                 curr_th_element = new_th_element;
@@ -486,11 +455,7 @@
                 else if(category == 'date') {
                     x = new Date(x).getTime(); // Convert to timestamp
                     y = new Date(y).getTime();
-                }
-                else if(category == 'class') {
-                    x = classOrder[x]; // Convert to timestamp
-                    y = classOrder[y];
-                }
+                }                
                 else{
                     x = x.toLowerCase();
                     y = y.toLowerCase();
@@ -505,37 +470,5 @@
             rows.forEach(row => tbody.appendChild(row));
         }
     </script>
-
-    
-    <script>
-        // For maintaining the selected leads checkboxes in a variable to pass later to view for submitting
-        //window.selectedBulkLeads = new Set();
-
-        window.selectedBulkLeads = new Set({{ pre_selected_leads|safe }});
-
-        document.querySelectorAll('.assign-lead-checkbox').forEach((checkbox) => {
-            checkbox.addEventListener('change', (e) => {
-                // Note: The attribute name in data-* is converted from kebab-case (hyphenated) to camelCase in JavaScript.
-                // console.log("==================> selectedBulkleads before =  ",selectedBulkLeads)
-                const id = parseInt(e.target.dataset.inquiryId);
-                if (e.target.checked) {
-                    selectedBulkLeads.add(id);
-                } else {
-                    selectedBulkLeads.delete(id);
-                }
-                //console.log("==================> selectedBulkleads afterwards =  ",selectedBulkLeads)
-            });
-        });        
-    </script>
-    
-
-    <script>
-        // Before the form submits, populate the hidden input with selected leads checkboxes present in Fill_Leads_Table.html
-        document.getElementById('assign-bulk-leads-form').addEventListener('submit', (e) => {
-            const field = document.getElementById('bulk-leads-field');
-            field.value = JSON.stringify([...window.selectedBulkLeads]);
-        });
-    </script>
-
 </body>
 </html>

@@ -120,13 +120,7 @@
         <h2>Staff Login</h2>
 
         <!-- Display success or error messages -->
-        {% if messages %}
-            <div class="alert">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
+        {% include "inquiries/Alerts.html" %}
 
         <!-- Login Form -->
         <form method="POST">
@@ -148,17 +142,6 @@
         <!-- Forgot Password Link -->
         <p><a href="{% url 'password_reset_request' %}">Forgot your password?</a></p>
     </div>
-
-    <script>
-        // Check if there are any messages to display
-        if (document.querySelector('.messages')) {
-          setTimeout(function() {
-            // Find the message container and hide it after 5 seconds
-            var messagesContainer = document.querySelector('.messages');
-            messagesContainer.style.display = 'none';
-          }, 4000);
-        }
-      </script>
 
 </body>
 </html>

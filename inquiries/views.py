@@ -36,6 +36,10 @@ from django.contrib.auth.hashers import make_password
 from django.contrib.auth.views import PasswordResetView
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
+from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Count, Q
+from django.db.models import Count, Q, F, FloatField, ExpressionWrapper
+from urllib.parse import urlencode
 
 # =======================================================================================================================================================================
 def is_authentic(user):
@@ -50,6 +54,8 @@ def is_agent_or_admin(user):
 def is_staff(user):
     return is_authentic(user) and user.role in ["Admin", "Agent", "Viewer"]
 
+
+# =======================================================================================================================================================================
 
 def Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, changed_by):    
     previous_data = model_to_dict(old_inquiry_instance) if old_inquiry_instance else {}
@@ -92,7 +98,7 @@ def agent_login(request):
         # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. Authenticate user based on email and password. The authenticate is our custom def authenticate() function which we have created in our auth_backends.py file. 
         
         if username.isdigit() and len(username) == 10:
-            print("=======================> username = ",username," and password = ",password)
+            # print("=======================> username = ",username," and password = ",password)
             user = authenticate(request, mobile_number=username, password=password)
         else:
             user = authenticate(request, email=username, password=password)
@@ -133,11 +139,15 @@ def Filter_By_Date(inquiries, choice, request_parameter, model_key):
     
 # ====================================================================================================================================================================== 
 def Filter_Inquiries(request):
-    user = request.user     # request.user returns the currently logged-in user, which is an instance of your CustomUser model (or User if you haven't switched to a custom model).
+    query_params = request.GET
+    # print("============================> query_params = ",query_params)
+    
+    user = request.user     # request.user returns the currently logged-in user, which is an instance of your CustomUser model (or User if you haven't switched to a custom model).    
 
     # Filter inquiries based on user type (staff or agent)
-    if user.role=="Admin":
+    if user.role=="Admin":        
         inquiries = Lead.objects.all()
+        # print("=====================> after admin len(inquiries) filtered = ", len(inquiries)) 
     elif user.role=="Agent":  # Check if the user is linked to an Agent. Since Agent has a OneToOneField to CustomUser, we check if the user has an agent attribute before accessing user.agent.
         inquiries = Lead.objects.all()
         
@@ -145,113 +155,154 @@ def Filter_Inquiries(request):
     else:
         inquiries = Lead.objects.all()     # return an empty queryset if the user is neither an admin nor an agent
     
+    
+    
+    #return inquiries    # remove later
+    
+    
     # Handle filters from the GET request
-    lead_ids = request.GET.getlist('lead_ids')  # returns a list of selected lead IDs
-    print("=================> lead_id in filter view = ",lead_ids)
-    if lead_ids:
-        lead_ids = [int(i) for i in lead_ids if i.isdigit()]
-        inquiries = inquiries.filter(id__in=lead_ids)
+    lead_id = query_params.get('lead_id')  # returns a list of selected lead IDs
+    # print("=================> lead_id in filter view = ",lead_id)
+    if lead_id:
+        lead_id = [(int(lead_id))]
+        # lead_id = [int(i) for i in lead_id if i.isdigit()]
+        inquiries = inquiries.filter(id__in=lead_id)
+        # print("=====================> lead_id = ",lead_id," and after lead_id len(inquiries) filtered = ", len(inquiries))
         
-    student_class = request.GET.get('student_class')
-    if student_class:
+    student_class = query_params.get('student_class')
+    if student_class:        
         inquiries = inquiries.filter(student_class=student_class)
+        # print("=====================> student_class = ",student_class," and after student_class len(inquiries) filtered = ", len(inquiries))         
         
-    student_name = request.GET.get('student_name')
+    student_name = query_params.get('student_name')
     if student_name:
         inquiries = inquiries.filter(student_name__icontains=student_name)  # icontains = Partial match (case insensitive)
         
-    parent_name = request.GET.get('parent_name')
+    parent_name = query_params.get('parent_name')
     if parent_name:
         inquiries = inquiries.filter(parent_name__icontains=parent_name)
         
-    lead_email = request.GET.get('lead_email')
+    lead_email = query_params.get('lead_email')
     if lead_email:
         inquiries = inquiries.filter(email__icontains=lead_email)
 
-    mobile_number = request.GET.get('mobile_number')
+    mobile_number = query_params.get('mobile_number')
     if mobile_number:
         inquiries = inquiries.filter(mobile_number__icontains=mobile_number)
     
-    block = request.GET.get('block')
+    block = query_params.get('block')
     if block:
         inquiries = inquiries.filter(block__icontains=block)
             
-    location_panchayat = request.GET.get('location_panchayat')
+    location_panchayat = query_params.get('location_panchayat')
     if location_panchayat:
         inquiries = inquiries.filter(location_panchayat__icontains=location_panchayat)
         
-    inquiry_source = request.GET.get('inquiry_source')
+    inquiry_source = query_params.get('inquiry_source')
     if inquiry_source:
         inquiries = inquiries.filter(inquiry_source__icontains=inquiry_source)
 
-    status = request.GET.get('status')
+    status = query_params.get('status')
     if status:
         inquiries = inquiries.filter(status=status)
 
-    agent_id = request.GET.get('agent_id')
+    agent_id = query_params.get('agent_id')
     if agent_id:
         inquiries = inquiries.filter(assigned_agent_id=int(agent_id))  
 
-    admin_id = request.GET.get('admin_id')
+    admin_id = query_params.get('admin_id')
     if admin_id:
         inquiries = inquiries.filter(admin_assigned__isnull=False,admin_assigned__id = admin_id)
-        
-    # ======================= Filtering via dates ========================      
-    # print("================================> inside filter inquiries and request.get.get inquiry date from =  ", request.GET.get('inquiry_date_from'))
      
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('inquiry_date_from'), 'inquiry_date')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('inquiry_date_to'), 'inquiry_date')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('inquiry_date_from'), 'inquiry_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('inquiry_date_to'), 'inquiry_date')
     
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('registration_date_from'), 'registration_date')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('registration_date_to'), 'registration_date')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('registration_date_from'), 'registration_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('registration_date_to'), 'registration_date')
     
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('admission_test_date_from'), 'admission_test_date')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('admission_test_date_to'), 'admission_test_date')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('admission_test_date_from'), 'admission_test_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('admission_test_date_to'), 'admission_test_date')
     
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('admission_offered_date_from'), 'admission_offered_date')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('admission_offered_date_to'), 'admission_offered_date')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('admission_offered_date_from'), 'admission_offered_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('admission_offered_date_to'), 'admission_offered_date')
     
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('admission_confirmed_date_from'), 'admission_confirmed_date')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('admission_confirmed_date_to'), 'admission_confirmed_date')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('admission_confirmed_date_from'), 'admission_confirmed_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('admission_confirmed_date_to'), 'admission_confirmed_date')
     
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('rejected_date_from'), 'rejected_date')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('rejected_date_to'), 'rejected_date')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('rejected_date_from'), 'rejected_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('rejected_date_to'), 'rejected_date')
     
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('follow_up_date_from'), 'follow_up_date')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('follow_up_date_to'), 'follow_up_date')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('follow_up_date_from'), 'follow_up_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('follow_up_date_to'), 'follow_up_date')
     
-    inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('last_inquiry_updation_from'), 'last_inquiry_updation')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_inquiry_updation_to'), 'last_inquiry_updation')
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('last_inquiry_updation_from'), 'last_inquiry_updation')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('last_inquiry_updation_to'), 'last_inquiry_updation')
     
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('last_follow_up_updation_from'), 'last_follow_up_updation')
-    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_follow_up_updation_to'), 'last_follow_up_updation')    
+    inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_follow_up_updation_to'), 'last_follow_up_updation')   
+    
+    # print("=====================> inquiries filtered = ", inquiries) 
+    # print("=====================> len(inquiries) filtered = ", len(inquiries)) 
     
     return inquiries
     
-    
+# =================================================================================================================================================================
     
 @login_required
 @user_passes_test(is_staff)
 def inquiry_list(request):
     inquiries = Filter_Inquiries(request)
-    lead_ids_selected = request.GET.getlist('lead_ids')
-    print("==================> lead_ids selected = ",lead_ids_selected)
+    
+    # STEP 1: Load or store query parameters
+    # if request.GET:
+    #     request.session['last_inquiry_filters'] = request.GET.dict()
+    #     query_params = request.GET
+    # else:
+    #     query_params = request.session.get('last_inquiry_filters', {})
+        
+        
+    # print("==================> lead_ids selected = ",lead_ids_selected)
     
     return render(request, 'inquiries/inquiry_list.html', {
         'heading': request.GET.get('heading', "Leads List"),
         'inquiries': inquiries,
-        'actions': ['Update', 'Delete', 'View Logs'],        
+        'actions': ['Update', 'Delete', 'View Logs'],
+        'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
+        'base_url_name': reverse('inquiry_list')
         # 'lead_ids_selected': lead_ids_selected,
     })
 
 # =======================================================================================================================================================================
+
+
+@login_required
+@user_passes_test(is_admin)
+def inquiries_updated_today_view(request):
+    todays_date = now().date()
+    
+    inquiries = Filter_Inquiries(request)
+    inquiries = inquiries.filter(last_inquiry_updation__gte=todays_date)
+    
+    # ?last_inquiry_updation_from={{todays_date}}&heading=Inquiries Updated Today"
+        
+    context = {
+        'heading': 'Inquiries Updated Today',
+        'inquiries': inquiries,
+        'actions': ['Update', 'Delete', 'View Logs'],
+        'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
+        'base_url_name': reverse('inquiries_updated_today')
+    }
+
+    return render(request, 'inquiries/inquiry_list.html', context)
+
+# ====================================================================================
+
 @login_required
 @user_passes_test(is_staff)
 def follow_up_management(request):
     days = int(request.GET.get("days", "7"))
     follow_up_direction = request.GET.get("follow-up-direction", "next")
         
-    # follow_up_leads = Lead.objects.all()
     follow_up_leads = Filter_Inquiries(request)
     
     # print("============================> inside followup management view and request = ", request)
@@ -263,7 +314,7 @@ def follow_up_management(request):
             last_follow_up_updation__gte=date_from, 
             last_follow_up_updation__lte=date_to
         )
-                 
+        
     else:
         date_from = date.today()
         date_to = date_from + timedelta(days=days)
@@ -326,6 +377,8 @@ def follow_up_management(request):
             'admins': admins,
             'follow_up_direction': follow_up_direction,
             'actions': ['Update', 'Delete', 'View Logs'],
+            'base_url_name': reverse('follow_up_management'),
+             
         })
 
 # ======================================================================================================================================================================
@@ -370,13 +423,13 @@ def add_inquiry(request):
                 # )
             
             # Add a success message
-            messages.success(request, "Lead successfully added !")
+            messages.success(request, "Lead added successfully !")
             return redirect('add_inquiry')
         
         else:
             messages.error(request, "Some error occured, please ensure that the form is valid !")
       
-    else:
+    else:       # For GET request
         form = UpdateLeadStatusForm()
         
     return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Add new Inquiry'})
@@ -422,7 +475,7 @@ def manage_lead_status(request, inquiry_id):
             # Save logs of changes
             Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, request.user)
             
-            messages.success(request, "Lead successfully updated !")
+            messages.success(request, "Lead updated successfully !")
             
             return redirect('inquiry_list')  # Redirect back to the inquiry list after saving
 
@@ -895,6 +948,7 @@ def assign_lead_to_agent_view(request):
     
 
     if request.method == 'POST':
+        # print("=======================> request = ", request)
         inquiry_id = request.POST.get('inquiry_id')  # Get selected inquiry ID
         agent_id = request.POST.get('agent_id')  # Get selected agent ID
 
@@ -917,20 +971,37 @@ def assign_lead_to_agent_view(request):
             new_inquiry_instance = inquiry
             
             Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, request.user)
-
+            
             # Provide success feedback to the user
             messages.success(request, f"'{inquiry.student_name}' has been successfully assigned to Agent '{agent.name}'.")
+            
+            
+            # Inside your POST block, before redirecting, we have to preserve the query parameters of filter component
+            query_dict = request.POST.copy()
+            query_dict.pop('inquiry_id', None)
+            query_dict.pop('agent_id', None)
+            query_dict.pop('csrfmiddlewaretoken', None)
+            query_string = urlencode(query_dict)
+            # print("=====================> query_dict = ",query_string)
+            redirect_url = reverse('assign_lead')
+            if query_string:
+                redirect_url += f"?{query_string}"
+                                                
+                        
         except Exception as e:
             # Handle unexpected errors gracefully
             messages.error(request, f"An error occurred while assigning the lead: {str(e)}")
-
-        return redirect('assign_lead')  # Redirect to the same page after assignment
+            redirect_url = reverse('assign_lead')
+                    
+                    
+        return redirect(redirect_url)
 
     # If request is GET
     return render(request, 'inquiries/assign_lead.html', {
         'inquiries': inquiries,
         'agents': agents,
         'actions': ['Assign Agent'],
+        'base_url_name': reverse('assign_lead'),
     })
     
 # ====================================================================================
@@ -1291,7 +1362,7 @@ def set_new_password(request, uidb64, token):
 
 # ====================================================================================
 
-def filter_inquiries_component(request):
+def Prepare_Context_For_Filter_Leads_Component():
     agents = CustomUser.objects.filter(role="Agent")  
     lead_ids = Lead.objects.values_list('id', flat=True)
     students = Lead.objects.values_list('student_name', flat=True).distinct() 
@@ -1305,7 +1376,7 @@ def filter_inquiries_component(request):
     student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
     admins = CustomUser.objects.filter(role = "Admin")
     
-    return render(request, 'inquiries/Filter_Inquiries_Component.html', {
+    return {
         'lead_ids': lead_ids,
         'students': students,
         'parents': parents,
@@ -1318,7 +1389,14 @@ def filter_inquiries_component(request):
         'statuses': statuses,
         'student_classes': student_classes,
         'admins': admins,
-    })
+    }
+    
+
+
+def filter_inquiries_component(request):
+    context = Prepare_Context_For_Filter_Leads_Component()
+    return render(request, 'inquiries/Filter_Inquiries_Component.html', context)
+    
 # ====================================================================================
 
 def hide_columns_component(request):
@@ -1328,5 +1406,281 @@ def hide_columns_component(request):
         # any other context vars...
     } 
     return render(request, 'inquiries/Hide_Columns_Component.html', context)
+
+
+def hide_agent_columns_component(request):
+    table_class = request.GET.get('table_class')
+    context = {
+        'table_class': table_class,
+        # any other context vars...
+    } 
+    return render(request, 'inquiries/agent/Hide_Columns_Component.html', context)
+    
+# ====================================================================================
+
+# def Filter_By_Date(inquiries, choice, request_parameter, model_key):
+#     if request_parameter:
+#         date_val = datetime.strptime(request_parameter, "%Y-%m-%d").date()
+        
+#         if(choice == "from"):
+#             inquiries = inquiries.filter(**{f"{model_key}__gte" : date_val})
+        
+#         elif(choice == "to"):
+#             inquiries = inquiries.filter(**{f"{model_key}__lte" : date_val})
+                                
+#     return inquiries
+
+
+
+def Filter_Agents_By_Numbers(agents, choice, request_parameter, status):
+    if request_parameter:
+        agents = agents.filter(role='Agent')
+        number = int(request_parameter)
+
+        # Annotate each agent with count of leads matching the status
+        if status:
+            agents = agents.annotate(
+                total_count=Count('assigned_agent', filter=Q(assigned_agent__status=status))
+            )
+        else:
+            agents = agents.annotate(
+                total_count=Count('assigned_agent')
+            )
+
+        # Filter based on min or max
+        if choice == "min":
+            agents = agents.filter(total_count__gte=number)
+        elif choice == "max":
+            agents = agents.filter(total_count__lte=number)
+
+    return agents
+
+
+
+def Filter_Agents_By_Conversion_Rate(agents, choice, request_parameter):
+    if request_parameter:
+        agents = agents.filter(role='Agent')
+        rate = float(request_parameter)
+
+        # Annotate total and converted leads per agent
+        agents = agents.annotate(
+            total_leads=Count('assigned_agent'),
+            confirmed_leads=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Confirmed")),
+        ).annotate(
+            conversion_rate=ExpressionWrapper(
+                F('confirmed_leads') * 100.0 / F('total_leads'),
+                output_field=FloatField()
+            )
+        )
+
+        # Filter by conversion rate
+        if choice == "min":
+            agents = agents.filter(conversion_rate__gte=rate)
+        elif choice == "max":
+            agents = agents.filter(conversion_rate__lte=rate)
+
+    return agents
+    
+# ====================================================================================================================================================================== 
+def Filter_School_Users(users, request):
+    # Handle filters from the GET request
+    user_id = request.GET.get('user_id')
+    # print("==============================> user_id = ", user_id)
+    if user_id:
+        users = users.filter(id=user_id)
+        
+    user_role = request.GET.get('user_role')    
+    if user_role:        
+        users = users.filter(role=user_role)
+        
+    user_name = request.GET.get('user_name')
+    if user_name:
+        users = users.filter(name__icontains=user_name)
+        
+    user_email = request.GET.get('user_email')
+    if user_email:
+        users = users.filter(email__icontains=user_email)
+
+    mobile_number = request.GET.get('mobile_number')
+    if mobile_number:
+        users = users.filter(mobile_number__icontains=mobile_number)
+        
+    expiry = request.GET.get('expiry')
+    if expiry=='Inactive':
+        users = users.filter(expiration_time__lte=timezone.now())
+    elif expiry == 'Active':
+        users = users.filter(expiration_time__gt=timezone.now())
+        
+    users = Filter_By_Date(users, 'from', request.GET.get('expiration_date_from'), 'expiration_time')
+    users = Filter_By_Date(users, 'to', request.GET.get('expiration_date_to'), 'expiration_time')
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('total_leads_assigned_min'), None)
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('total_leads_assigned_max'), None)
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_inquiry_min'), 'Inquiry')
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_inquiry_max'), 'Inquiry')
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_inquiry_min'), 'Inquiry')
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_inquiry_max'), 'Inquiry')
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_registration_min'), 'Registration')
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_registration_max'), 'Registration')
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_admission_test_min'), 'Admission Test')
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_admission_test_max'), 'Admission Test')
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_admission_offered_min'), 'Admission Offered')
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_admission_offered_max'), 'Admission Offered')    
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_admission_confirmed_min'), 'Admission Confirmed')
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_admission_confirmed_max'), 'Admission Confirmed')
+    
+    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_rejected_min'), 'Rejected')
+    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_rejected_max'), 'Rejected')
+    
+    users = Filter_Agents_By_Conversion_Rate(users, 'min', request.GET.get('conversion_rate_min'))
+    users = Filter_Agents_By_Conversion_Rate(users, 'max', request.GET.get('conversion_rate_max'))
+    
+    return users
+
+# ====================================================================================
+
+def Context_For_Filtering_School_Users(role):
+    if role == "Agent":
+        Filter_Objects = CustomUser.objects.filter(role='Agent')
+    elif role == "Admin":
+        Filter_Objects = CustomUser.objects.filter(role='Admin')
+    else:
+        Filter_Objects = CustomUser.objects
+        
+    user_ids = Filter_Objects.values_list('id', flat=True)
+    names = Filter_Objects.values_list('name', flat=True).distinct() 
+    roles = Filter_Objects.values_list('role', flat=True).distinct()        
+    emails = Filter_Objects.values_list('email', flat=True).exclude(email__isnull=True)
+    mobile_numbers = Filter_Objects.values_list('mobile_number', flat=True).distinct().exclude(mobile_number__isnull=True).exclude(mobile_number="")
+    
+    # print("==================> mobile numbers = ", mobile_numbers)
+    # print("==================> emails = ", emails)
+    # print("==================> roles = ", roles)
+        
+    return {
+        'user_ids': user_ids,
+        'names': names,
+        'roles': roles,
+        'emails': emails,        
+        'mobile_numbers': mobile_numbers,  
+        'status': ['Active', 'Inactive']      
+    }
+    
+# ====================================================================================
+
+def filter_agents_component(request):
+    context = Context_For_Filtering_School_Users("Agent")
+    return render(request, 'inquiries/agent/Filter_Agents_Component.html', context)
+
+# ====================================================================================
+
+def Annotate_Performance_Fields_for_Agents(agents):
+    agents = agents.annotate(
+        total_leads_in_inquiry_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Inquiry")),
+
+        total_leads_in_registration_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Registration")),
+        total_leads_in_admission_test_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Test")),
+        total_leads_in_admission_offered_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Offered")),
+        total_leads_in_admission_confirmed_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Confirmed")),
+        total_leads_in_rejected_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Rejected")),
+        
+        total_leads_handled=Count('assigned_agent'),
+        conversion_rate=ExpressionWrapper(
+            F('total_leads_in_admission_confirmed_phase') * 100.0 / F('total_leads_handled'),
+            output_field=FloatField()
+        )
+    )
+    
+    return agents
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def assign_leads_to_agents_view(request):
+    agents = CustomUser.objects.filter(role="Agent")
+    agents = Filter_School_Users(agents, request)
+    agents = Annotate_Performance_Fields_for_Agents(agents)
+    
+    context = {
+        'agents': agents,
+        'actions': ['Manage Leads'],
+        'show_performance_metrics': True,
+        'base_url_name': reverse('assign_leads_to_agents'),
+    }
+
+    return render(request, 'inquiries/agent/assign_leads_to_agent.html', context)
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def bulk_assign_leads_view(request, agent_id):
+    agent = get_object_or_404(CustomUser, id=agent_id)    
+    
+    if request.method == 'POST':
+        # Extract the list of selected leads IDs
+        selected_raw = request.POST.get('selected_bulk_leads', '[]')  # stringified JSON from input field
+        
+        try:
+            selected_bulk_leads = json.loads(selected_raw)  # converted to Python list
+        except json.JSONDecodeError:
+            selected_bulk_leads = []
+            
+        # print("=============================> selectedBulkLeads = ", selected_bulk_leads)        
+        # print("=============================> type(selectedBulkLeads) = ", type(selected_bulk_leads))
+        
+        # Step 1: Assign the selected leads
+        leads_to_assign = Lead.objects.filter(id__in=selected_bulk_leads)
+        for lead in leads_to_assign:
+            if lead.assigned_agent != agent:
+                old_lead_instance = Lead.objects.get(id=lead.id)  # Clone before change
+                lead.assigned_agent = agent
+                lead.save()
+                Save_Lead_Logs(old_lead_instance, lead, request.user)
+        
+        # Step 2: Unassign previously assigned leads that are now deselected
+        previously_assigned = set(
+        Lead.objects.filter(assigned_agent=agent).values_list('id', flat=True))
+        currently_selected = set(map(int, selected_bulk_leads))
+        lead_ids_to_unassign = previously_assigned - currently_selected
+        lead_objects_to_unassign = Lead.objects.filter(id__in=lead_ids_to_unassign)
+        
+        for lead in lead_objects_to_unassign:
+            old_lead_instance = Lead.objects.get(id=lead.id)
+            lead.assigned_agent = None
+            lead.save()
+            Save_Lead_Logs(old_lead_instance, lead, request.user)
+        
+        messages.success(request, f"Leads updated for {agent.name}")
+        return redirect('assign_leads_to_agents')
+
+        
+            
+    inquiries = Filter_Inquiries(request)
+    heading = f"Assign Leads to Agent: {agent.name} (Id: {agent.id})"
+    actions = ['Bulk Assign Leads']
+    pre_selected_leads = list(inquiries.filter(assigned_agent=agent).values_list('id', flat=True))
+    
+    # print("===========================> pre_selected_leads = ", pre_selected_leads)
+    
+    context = Prepare_Context_For_Filter_Leads_Component()
+    
+    context.update({
+        'agent_id': agent.id,
+        'inquiries': inquiries,
+        'heading': heading,
+        'actions': actions,
+        'dashboard_buttons': ["Open Filters", "View / Hide Columns", "Dashboard", "Assign Leads"],
+        'pre_selected_leads': pre_selected_leads,
+        'base_url_name': reverse('bulk_assign_leads', args=[agent.id]),
+    })
+    
+    return render(request, 'inquiries/inquiry_list.html', context)
 
 # ====================================================================================
