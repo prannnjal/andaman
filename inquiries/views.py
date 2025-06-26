@@ -145,7 +145,7 @@ def Filter_Inquiries(request):
     user = request.user     # request.user returns the currently logged-in user, which is an instance of your CustomUser model (or User if you haven't switched to a custom model).    
 
     # Filter inquiries based on user type (staff or agent)
-    if user.role=="Admin":        
+    if user.role=="Admin":
         inquiries = Lead.objects.all()
         # print("=====================> after admin len(inquiries) filtered = ", len(inquiries)) 
     elif user.role=="Agent":  # Check if the user is linked to an Agent. Since Agent has a OneToOneField to CustomUser, we check if the user has an agent attribute before accessing user.agent.
@@ -161,58 +161,57 @@ def Filter_Inquiries(request):
     
     
     # Handle filters from the GET request
-    lead_id = query_params.get('lead_id')  # returns a list of selected lead IDs
-    # print("=================> lead_id in filter view = ",lead_id)
-    if lead_id:
-        lead_id = [(int(lead_id))]
-        # lead_id = [int(i) for i in lead_id if i.isdigit()]
-        inquiries = inquiries.filter(id__in=lead_id)
-        # print("=====================> lead_id = ",lead_id," and after lead_id len(inquiries) filtered = ", len(inquiries))
+    lead_ids = query_params.getlist('lead_id[]')  # returns a list of selected lead IDs
+    # print("=================> lead_id in filter view = ",lead_ids)
+    if lead_ids:
+        # Convert all values to integers, ignore non-digit entries
+        lead_ids = [int(i) for i in lead_ids if str(i).isdigit()]
+        inquiries = inquiries.filter(id__in=lead_ids)
         
-    student_class = query_params.get('student_class')
-    if student_class:        
-        inquiries = inquiries.filter(student_class=student_class)
-        # print("=====================> student_class = ",student_class," and after student_class len(inquiries) filtered = ", len(inquiries))         
+    student_classes = query_params.getlist('student_class[]')
+    if student_classes:
+        inquiries = inquiries.filter(student_class__in=student_classes)
+   
         
-    student_name = query_params.get('student_name')
-    if student_name:
-        inquiries = inquiries.filter(student_name__icontains=student_name)  # icontains = Partial match (case insensitive)
+    student_names = query_params.getlist('student_name[]')
+    if student_names:
+        inquiries = inquiries.filter(student_name__in=student_names)
         
-    parent_name = query_params.get('parent_name')
-    if parent_name:
-        inquiries = inquiries.filter(parent_name__icontains=parent_name)
+    parent_names = query_params.getlist('parent_name[]')
+    if parent_names:
+        inquiries = inquiries.filter(parent_name__in=parent_names)
         
-    lead_email = query_params.get('lead_email')
-    if lead_email:
-        inquiries = inquiries.filter(email__icontains=lead_email)
-
-    mobile_number = query_params.get('mobile_number')
-    if mobile_number:
-        inquiries = inquiries.filter(mobile_number__icontains=mobile_number)
+    lead_emails = query_params.getlist('lead_email[]')
+    if lead_emails:
+        inquiries = inquiries.filter(email__in=lead_emails)
+                
+    mobile_numbers = query_params.getlist('mobile_number[]')
+    if mobile_numbers:
+        inquiries = inquiries.filter(mobile_number__in=mobile_numbers)
     
-    block = query_params.get('block')
-    if block:
-        inquiries = inquiries.filter(block__icontains=block)
+    blocks = query_params.getlist('block[]')
+    if blocks:
+        inquiries = inquiries.filter(block__in=blocks)
             
-    location_panchayat = query_params.get('location_panchayat')
-    if location_panchayat:
-        inquiries = inquiries.filter(location_panchayat__icontains=location_panchayat)
+    location_panchayats = query_params.getlist('location_panchayat[]')
+    if location_panchayats:
+        inquiries = inquiries.filter(location_panchayat__in=location_panchayats)
         
-    inquiry_source = query_params.get('inquiry_source')
-    if inquiry_source:
-        inquiries = inquiries.filter(inquiry_source__icontains=inquiry_source)
+    inquiry_sources = query_params.getlist('inquiry_source[]')
+    if inquiry_sources:
+        inquiries = inquiries.filter(inquiry_source__in=inquiry_sources)
 
-    status = query_params.get('status')
-    if status:
-        inquiries = inquiries.filter(status=status)
+    statuses = query_params.getlist('status[]')
+    if statuses:
+        inquiries = inquiries.filter(status__in=statuses)
 
-    agent_id = query_params.get('agent_id')
-    if agent_id:
-        inquiries = inquiries.filter(assigned_agent_id=int(agent_id))  
+    agent_ids = query_params.getlist('agent_id[]')
+    if agent_ids:
+        inquiries = inquiries.filter(assigned_agent__id__in=[int(id) for id in agent_ids])
 
-    admin_id = query_params.get('admin_id')
-    if admin_id:
-        inquiries = inquiries.filter(admin_assigned__isnull=False,admin_assigned__id = admin_id)
+    admin_ids = query_params.getlist('admin_id[]')
+    if admin_ids:
+        inquiries = inquiries.filter(admin_assigned__id__in = [int(id) for id in admin_ids])
      
     inquiries = Filter_By_Date(inquiries, 'from', query_params.get('inquiry_date_from'), 'inquiry_date')
     inquiries = Filter_By_Date(inquiries, 'to', query_params.get('inquiry_date_to'), 'inquiry_date')
@@ -241,17 +240,17 @@ def Filter_Inquiries(request):
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('last_follow_up_updation_from'), 'last_follow_up_updation')
     inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_follow_up_updation_to'), 'last_follow_up_updation')   
     
-    # print("=====================> inquiries filtered = ", inquiries) 
-    # print("=====================> len(inquiries) filtered = ", len(inquiries)) 
-    
-    return inquiries
+    return {
+        "inquiries": inquiries
+    }
+
     
 # =================================================================================================================================================================
     
 @login_required
 @user_passes_test(is_staff)
 def inquiry_list(request):
-    inquiries = Filter_Inquiries(request)
+    context = Filter_Inquiries(request)
     
     # STEP 1: Load or store query parameters
     # if request.GET:
@@ -260,16 +259,14 @@ def inquiry_list(request):
     # else:
     #     query_params = request.session.get('last_inquiry_filters', {})
         
-        
-    # print("==================> lead_ids selected = ",lead_ids_selected)
+
     
     return render(request, 'inquiries/inquiry_list.html', {
         'heading': request.GET.get('heading', "Leads List"),
-        'inquiries': inquiries,
+        'inquiries': context["inquiries"],        
         'actions': ['Update', 'Delete', 'View Logs'],
         'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
         'base_url_name': reverse('inquiry_list')
-        # 'lead_ids_selected': lead_ids_selected,
     })
 
 # =======================================================================================================================================================================
@@ -280,14 +277,14 @@ def inquiry_list(request):
 def inquiries_updated_today_view(request):
     todays_date = now().date()
     
-    inquiries = Filter_Inquiries(request)
+    context = Filter_Inquiries(request)
     inquiries = inquiries.filter(last_inquiry_updation__gte=todays_date)
     
     # ?last_inquiry_updation_from={{todays_date}}&heading=Inquiries Updated Today"
         
     context = {
         'heading': 'Inquiries Updated Today',
-        'inquiries': inquiries,
+        'inquiries': context["inquiries"],
         'actions': ['Update', 'Delete', 'View Logs'],
         'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
         'base_url_name': reverse('inquiries_updated_today')
@@ -302,8 +299,9 @@ def inquiries_updated_today_view(request):
 def follow_up_management(request):
     days = int(request.GET.get("days", "7"))
     follow_up_direction = request.GET.get("follow-up-direction", "next")
-        
-    follow_up_leads = Filter_Inquiries(request)
+
+    context = Filter_Inquiries(request)
+    follow_up_leads = context["inquiries"]
     
     # print("============================> inside followup management view and request = ", request)
          
@@ -352,7 +350,7 @@ def follow_up_management(request):
     students = Lead.objects.values_list('student_name', flat=True).distinct() 
     parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
     locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
-    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True)
+    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True).distinct()
     mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
     blocks = Lead.objects.values_list('block', flat=True).distinct()
     inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
@@ -943,7 +941,8 @@ def export_users_excel(request):
 @login_required
 @user_passes_test(is_admin)
 def assign_lead_to_agent_view(request):
-    inquiries = Filter_Inquiries(request)
+    context = Filter_Inquiries(request)
+    inquiries = context["inquiries"]
     agents = CustomUser.objects.filter(role="Agent")
     
 
@@ -1138,8 +1137,16 @@ def lead_logs_view(request, lead_id):
     logs = LeadLogs.objects.filter(lead_id=lead_id).order_by('-changed_at')  # Sort by changed_at (ascending)
 
     for log in logs:
-        previous_data = json.loads(log.previous_data)  # Convert JSON string to python dictionary
-        new_data = json.loads(log.new_data)  
+        if isinstance(log.previous_data, str):
+            previous_data = json.loads(log.previous_data)
+        else:
+            previous_data = log.previous_data
+            
+            
+        if isinstance(log.new_data, str):
+            new_data = json.loads(log.new_data)
+        else:
+            new_data = log.new_data
         
         # print("TYPE prev:", type(previous_data))
         # print("TYPE new:", type(new_data))    
@@ -1362,19 +1369,37 @@ def set_new_password(request, uidb64, token):
 
 # ====================================================================================
 
-def Prepare_Context_For_Filter_Leads_Component():
+def Prepare_Context_For_Filter_Leads_Component(request):
     agents = CustomUser.objects.filter(role="Agent")  
     lead_ids = Lead.objects.values_list('id', flat=True)
-    students = Lead.objects.values_list('student_name', flat=True).distinct() 
-    parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
+    students = Lead.objects.values_list('student_name', flat=True).distinct()
+    parents = Lead.objects.values_list('parent_name', flat=True).distinct()
     locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
-    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True)
+    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True).distinct()
     mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
     blocks = Lead.objects.values_list('block', flat=True).distinct()
     inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
     statuses = Lead.objects.values_list('status', flat=True).distinct()
     student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
     admins = CustomUser.objects.filter(role = "Admin")
+    
+    # Store selected options of each select into a context variable
+    query_params = request.GET
+    
+    selected_lead_ids = query_params.getlist('lead_id[]')
+    selected_classes = query_params.getlist('student_class[]')
+    selected_student_names = query_params.getlist('student_name[]')
+    selected_parent_names = query_params.getlist('parent_name[]')
+    selected_lead_emails = query_params.getlist('lead_email[]')
+    selected_mobile_numbers = query_params.getlist('mobile_number[]')
+    selected_blocks = query_params.getlist('block[]')
+    selected_location_panchayats = query_params.getlist('location_panchayat[]')
+    selected_inquiry_sources = query_params.getlist('inquiry_source[]')
+    selected_statuses = query_params.getlist('status[]')
+    selected_agent_ids = query_params.getlist('agent_id[]')
+    selected_admin_ids = query_params.getlist('admin_id[]')
+    
+    # print("====================> selected_agent_ids = ", selected_agent_ids)
     
     return {
         'lead_ids': lead_ids,
@@ -1389,12 +1414,33 @@ def Prepare_Context_For_Filter_Leads_Component():
         'statuses': statuses,
         'student_classes': student_classes,
         'admins': admins,
+            
+        # Store selected options of each select into a context variable
+        "selected_lead_ids": selected_lead_ids,
+        "selected_classes": selected_classes,
+        "selected_student_names": selected_student_names,
+        "selected_parent_names": selected_parent_names,
+        "selected_lead_emails": selected_lead_emails,
+        "selected_mobile_numbers": selected_mobile_numbers,
+        "selected_blocks": selected_blocks,
+        "selected_location_panchayats": selected_location_panchayats,
+        "selected_inquiry_sources": selected_inquiry_sources,
+        "selected_statuses": selected_statuses,
+        "selected_agent_ids": selected_agent_ids,
+        "selected_admin_ids": selected_admin_ids,
     }
     
 
 
 def filter_inquiries_component(request):
-    context = Prepare_Context_For_Filter_Leads_Component()
+    # print("🔍 =======================> Query Params:", request.GET)
+    
+    lead_ids = request.GET.getlist('lead_id[]')
+        
+
+    context = Prepare_Context_For_Filter_Leads_Component(request)
+    # print("🔍 =======================> context:", context)
+
     return render(request, 'inquiries/Filter_Inquiries_Component.html', context)
     
 # ====================================================================================
@@ -1661,8 +1707,9 @@ def bulk_assign_leads_view(request, agent_id):
         return redirect('assign_leads_to_agents')
 
         
-            
-    inquiries = Filter_Inquiries(request)
+
+    context = Filter_Inquiries(request)
+    inquiries = context["inquiries"]
     heading = f"Assign Leads to Agent: {agent.name} (Id: {agent.id})"
     actions = ['Bulk Assign Leads']
     pre_selected_leads = list(inquiries.filter(assigned_agent=agent).values_list('id', flat=True))

@@ -6,16 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inquiry List</title>
-
-    <!-- jQuery (for Sorting and Select2) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <title>Inquiry List</title>    
 
     <style>
         body {
@@ -97,24 +88,7 @@
             display: block;
         }
 
-        /* Input, Select and Date Input Styling */
-        input[type="text"],
-        select,
-        input[type="date"] {
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        input[type="text"]:focus,
-        select:focus,
-        input[type="date"]:focus {
-            border-color: #4CAF50;
-            outline: none;
-        }        
+       
 
         /* Reset Link Styles */
         a {
@@ -262,7 +236,7 @@
     {% include "inquiries/Alerts.html" %}
 
     <h1>{{heading}}</h1>
-
+    
     <!-- Buttons to open modals -->
     <div class="buttons_wrapper">
         {% if "Add Inquiry" in dashboard_buttons %}

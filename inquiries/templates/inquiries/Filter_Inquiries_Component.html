@@ -8,14 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inquiry List</title>
 
-    <!-- jQuery (for Sorting and Select2) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include Select2 CSS & JS if not already included -->
+     <!-- Add this BEFORE select2 JS -->
 
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+
 
     <style>
         body {
@@ -29,17 +28,17 @@
 
         .same_row_wrapper {
             display: flex;
-            flex-direction: row;        
+            flex-direction: row;
             gap: 20px;
-            align-items: start; 
-            justify-content: space-between;   
-            margin: 10px 0 30px 0;    
-            flex-wrap: wrap;           
+            align-items: start;
+            justify-content: space-between;
+            margin: 10px 0 30px 0;
+            flex-wrap: wrap;
         }
 
         .same_row_wrapper > * {
             flex: 1;
-        } 
+        }
 
         .modal-content {
             background-color: #fff;
@@ -51,11 +50,11 @@
             max-height: 68vh;
             overflow: auto;
             border-radius: 8px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); 
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%); /* Centers the element */  
+            transform: translate(-50%, -50%); /* Centers the element */
         }
 
         /* Title Styling */
@@ -63,7 +62,7 @@
             text-align: center;
             font-size: 26px;
             margin-bottom: 30px;
-            color: #ff0000;          
+            color: #ff0000;
         }
 
 
@@ -92,7 +91,7 @@
         input[type="date"]:focus {
             border-color: #4CAF50;
             outline: none;
-        }        
+        }
 
         /* Reset Link Styles */
         a {
@@ -110,9 +109,9 @@
             align-items: center;
             gap: 5px;
         }
-                
 
-        button {            
+
+        button {
             color: white;
             border: none;
             padding: 10px 15px;
@@ -123,25 +122,25 @@
         }
         #filter_date{
             font-size: 18px;
-            font-weight: 600;    
-            color: rgb(100, 100, 100);      
+            font-weight: 600;
+            color: rgb(100, 100, 100);
         }
-    
+
 
         .filter_modal_btn{
             background-color: #2a74ec;
-            padding: 15px;         
-            width: 70px; 
+            padding: 15px;
+            width: 70px;
         }
 
-        .reset_modal_a{          
+        .reset_modal_a{
             cursor: pointer;
             background-color: rgb(4, 198, 101);
             color: white;
             padding: 15px;
-            width: 70px; 
-            
-        } 
+            width: 70px;
+
+        }
 
 
         .reset_modal_a:hover,
@@ -153,47 +152,23 @@
             outline: none; /* Removes focus outline */
         }
 
-        .select2-selection {            
-            font-size: 16px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            background-color: #fafafa;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-
-        /* Style the Select2 search input */
-        .select2-search__field {    
-            font-size: 14px;
-            padding: 6px !important;      
-            border: 1px solid #999 !important;
-            border-radius: 4px; /* Rounded corners */
-            outline: none;
-        }
-
-        .select2-search__field::placeholder {
-            color: #d03636; /* Placeholder text color */
-            font-style: italic;
-        }
-
         .hidden-column {
             display: none;
         }
-        
+
         .call-icon {
             color: blue;
             text-decoration: none;
             font-size: 20px; /* Optional: Adjust size */
-        }      
-
-        .btn-container {           
-            display: flex;  /* Flexbox for centering */
-            justify-content: center;  /* Centers the button horizontally */
-            margin-top: 30px; 
         }
 
-       
+        .btn-container {
+            display: flex;  /* Flexbox for centering */
+            justify-content: center;  /* Centers the button horizontally */
+            margin-top: 30px;
+        }
+
+
         a.nav {
             display: inline-block; /* Prevents full-width stretching */
             padding: 12px 25px;
@@ -210,139 +185,166 @@
         .buttons_wrapper{
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;            
+            flex-wrap: wrap;
         }
-                
-        /* Messages Styling */
-        .messages .alert, .success, .error {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 4px;
+
+        .select2-selection {
             font-size: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #ccc;
         }
 
-        .messages .success {
-            background-color: #21a606;
-            color: #ffffff;
+        /* Style the Select2 search input */
+        .select2-search__field {
+            font-size: 14px;            
+            padding: 0.8rem 1rem !important;            
+            border-top: 0px solid #999 !important;
+            border-radius: 0px; /* Rounded corners */
+            outline: none;
+            width:100% !important;
             text-align: center;
         }
 
-        .messages .alert.error {
-            background-color: #f50317;
-            color: #ffffff;
-            text-align: center;
+        .select2-search__field::placeholder {
+            color: #d03636; /* Placeholder text color */
+            font-style: italic;
+            line-height: 0;
+            padding: 0.2rem;
         }
-
 
     </style>
 </head>
 
 <body>
     {% include "inquiries/Alerts.html" %}
-    
+
     <div class="modal-content">
         <h2>Filter Inquiries</h2>
+        
         {% with request.GET.base_url_name as url_name %}
             <form id="filter-form" method="get" action="{{ request.GET.base_url_name }}">
         {% endwith %}
 
             <div class="same_row_wrapper">
-                <select name="lead_id" class="searchable-select" data-placeholder="Select Lead Ids">
-                    <option value="">All Lead Ids</option>
+                
+                <select name="lead_id[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Lead Ids">
                     {% for id in lead_ids %}
-                        <option value="{{ id }}" {% if request.GET.lead_id == id|stringformat:"s" %}selected{% endif %}>
+                        <option value="{{ id }}" {% if id|stringformat:"s" in selected_lead_ids %}selected{% endif %}>
                             {{ id }}
                         </option>
                     {% endfor %}
                 </select>
 
-                <select name="student_class" class="searchable-select" data-placeholder="Select the Class">
-                    <option value="">All Classes</option>
-                    {% for class in student_classes %}
-                    <option value="{{ class }}" {% if request.GET.student_class == class %}selected{% endif %}>{{ class }}</option>
+
+                <select name="student_class[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Classes">                    
+                    {% for class in student_classes %}                    
+                        <option value="{{ class }}" {% if class in selected_classes %}selected{% endif %}>
+                            {{ class }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="same_row_wrapper">
-                <select name="student_name" class="searchable-select" data-placeholder="Choose Student Name">
-                    <option value="">All Students</option>
-                    {% for student in students %}
-                    <option value="{{ student }}" {% if request.GET.student_name == student %}selected{% endif %}>{{ student }}</option>
+                <select name="student_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Student Names">                    
+                    {% for student in students %}                    
+                        <option value="{{ student }}" {% if student in selected_student_names %}selected{% endif %}>
+                            {{ student }}
+                        </option>
                     {% endfor %}
                 </select>
 
-                <select name="parent_name" class="searchable-select" data-placeholder="Choose Parent Name">
-                    <option value="">All Parents</option>
-                    {% for parent in parents %}
-                    <option value="{{ parent }}" {% if request.GET.parent_name == parent %}selected{% endif %}>{{ parent }}</option>
+
+                <select name="parent_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Parent Names">                    
+                    {% for parent in parents %}                    
+                        <option value="{{ parent }}" {% if parent in selected_parent_names %}selected{% endif %}>
+                            {{ parent }}
+                        </option>
                     {% endfor %}
-                </select>                    
+                </select>            
             </div>
 
             <div class="same_row_wrapper">
-                <select name="lead_email" class="searchable-select" data-placeholder="Choose Lead Email">
-                    <option value="">All Leads Email</option>
-                    {% for lead_email in lead_emails %}
-                    <option value="{{ lead_email }}" {% if request.GET.lead_email == lead_email %}selected{% endif %}>{{ lead_email }}</option>
+                <select name="lead_email[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Lead Emails">
+                    {% for lead_email in lead_emails %}                    
+                        <option value="{{ lead_email }}" {% if lead_email in selected_lead_emails %}selected{% endif %}>
+                            {{ lead_email }}
+                        </option>
                     {% endfor %}
                 </select>
 
-                <select name="mobile_number" class="searchable-select" data-placeholder="Choose Mobile Number">
-                    <option value="">All Mobile Numbers</option>
-                    {% for mobile_number in mobile_numbers %}
-                    <option value="{{ mobile_number }}" {% if request.GET.mobile_number == mobile_number %}selected{% endif %}>{{ mobile_number }}</option>
+
+                <select name="mobile_number[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Mobile Numbers">
+                    {% for mobile_number in mobile_numbers %}                    
+                        <option value="{{ mobile_number }}" {% if mobile_number in selected_mobile_numbers %}selected{% endif %}>
+                            {{ mobile_number }}
+                        </option>
                     {% endfor %}
                 </select>
+
             </div>
 
             <div class="same_row_wrapper">
-                <select name="block" class="searchable-select" data-placeholder="Select the Block">
-                    <option value="">All Blocks</option>
-                    {% for block in blocks %}
-                    <option value="{{ block }}" {% if request.GET.block == block %}selected{% endif %}>{{ block }}</option>
+                <select name="block[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Blocks">
+                    {% for block in blocks %}                    
+                        <option value="{{ block }}" {% if block in selected_blocks %}selected{% endif %}>
+                            {{ block }}
+                        </option>
                     {% endfor %}
                 </select>
 
-                <select name="location_panchayat" class="searchable-select" data-placeholder="Select the Location/Panchayat">
-                    <option value="">All Locations</option>
-                    {% for location in location_panchayats %}
-                    <option value="{{ location }}" {% if request.GET.location_panchayat == location %}selected{% endif %}>{{ location }}</option>
+
+                <select name="location_panchayat[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Location/Panchayat">
+                    {% for location_panchayat in location_panchayats %}                    
+                        <option value="{{ location_panchayat }}" {% if location_panchayat in selected_location_panchayats %}selected{% endif %}>
+                            {{ location_panchayat }}
+                        </option>
                     {% endfor %}
                 </select>
+
             </div>
 
-            <div class="same_row_wrapper">                                        
-                <select name="inquiry_source" class="searchable-select" data-placeholder="Select the Inquiry Source">
-                    <option value="">All Sources</option>
-                    {% for inquiry_source in inquiry_sources %}
-                    <option value="{{ inquiry_source }}" {% if request.GET.inquiry_source == inquiry_source %}selected{% endif %}>{{ inquiry_source }}</option>
-                    {% endfor %}
-                </select>     
-                
-                <select name="status" class="searchable-select" data-placeholder="Select the Inquiry Status">
-                    <option value="">All Statuses</option>
-                    {% for status in statuses %}
-                    <option value="{{ status }}" {% if request.GET.status == status %}selected{% endif %}>{{ status }}</option>
+            <div class="same_row_wrapper">
+                <select name="inquiry_source[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Inquiry Sources">
+                    {% for inquiry_source in inquiry_sources %}                    
+                        <option value="{{ inquiry_source }}" {% if inquiry_source in selected_inquiry_sources %}selected{% endif %}>
+                            {{ inquiry_source }}
+                        </option>
                     {% endfor %}
                 </select>
-                
+
+
+                <select name="status[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Lead Status">
+                    {% for status in statuses %}                    
+                        <option value="{{ status }}" {% if status in selected_statuses %}selected{% endif %}>
+                            {{ status }}
+                        </option>
+                    {% endfor %}
+                </select>
+
             </div>
 
-            <div class="same_row_wrapper">                                                           
-                <select name="agent_id" class="searchable-select" data-placeholder="Select the Agent">
-                    <option value="">All Agents</option>
+            <div class="same_row_wrapper">
+                <select name="agent_id[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select assigned Agents">
                     {% for agent in agents %}
-                    <option value="{{ agent.id }}" {% if request.GET.agent_id == agent.id|stringformat:"s" %}selected{% endif %}>#{{ agent.id }} {{agent.name}}: {{agent.email}}</option>
+                        <option value="{{ agent.id }}" {% if agent.id|stringformat:"s" in selected_agent_ids %}selected{% endif %}>
+                            Name:{{ agent.name }}, Phone:{{ agent.mobile_number }}, Email: {{ agent.email }}
+                        </option>
                     {% endfor %}
                 </select>
 
-                <select name="admin_id" class="searchable-select" data-placeholder="Select the Admin">
-                    <option value="">All Admins</option>
+
+                <select name="admin_id[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select assigned Admins">
                     {% for admin in admins %}
-                    <option value="{{ admin.id }}" {% if request.GET.admin_id == admin.id|stringformat:"s" %}selected{% endif %}>#{{admin.id}} {{admin.name}}: {{admin.email}}</option>
+                        <option value="{{ admin.id }}" {% if admin.id|stringformat:"s" in selected_admin_ids %}selected{% endif %}>
+                            Name:{{ admin.name }}, Phone:{{ admin.mobile_number }}, Email: {{ admin.email }}
+                        </option>
                     {% endfor %}
-                </select>    
+                </select>
+
             </div>
 
 
@@ -477,26 +479,72 @@
 
             <!-- Submit and Reset -->
             <button type="submit" class="filter_modal_btn">Filter</button>
-            
+
             <a class="reset_modal_a" href="{{ request.GET.base_url_name }}">
                 Reset
             </a>
-            
+
         </form>
     </div>
-     
 
-    <script>
-        $(document).ready(function () {
-            $('.searchable-select').select2({
+
+    <!-- Initialize Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        $('.select_element_class').each(function () {
+            const $select = $(this);
+
+            function formatOptionWithCheckbox(option) {
+                if (!option.id) return option.text;
+
+                const selected = $select.val() || [];
+                const isSelected = selected.includes(option.id);
+
+                return $('<span><input type="checkbox" style="margin-right: 6px;" ' +
+                        (isSelected ? 'checked' : '') + '/>' + option.text + '</span>');
+            }
+
+            $select.select2({
+                templateResult: formatOptionWithCheckbox,
+                templateSelection: function (option) {
+                    return option.text;
+                },
+                placeholder: $select.data('placeholder') || "Select options",
                 width: 'resolve'
             });
+        });
 
-            // Wait for Select2 to initialize, then set placeholder
-            $('.searchable-select').on('select2:open', function () {
-                $('.select2-search__field').attr('placeholder', 'Search here...');
+        $(document).ready(function () {
+            $('.searchable-select').select2({                
+                width: 'resolve'
             });
         });
-    </script>
+
+        // Add placeholder to search field INSIDE dropdown
+        $(document).on('select2:open', () => {
+            // Use jQuery to safely target the open dropdown's input
+            setTimeout(() => {
+                $('.select2-container--open .select2-search__field').attr('placeholder', 'Search options here...');
+            }, 0);
+        });
+
+
+        $(document).on('select2:close', function (e) {
+            const $select = $(e.target); // The <select> element that triggered the event
+            const placeholder = $select.data('placeholder') || '';
+
+            // Find the corresponding search field inside this select2 container
+            const container = $select.data('select2').$container;
+
+            container.find('.select2-search__field').attr('placeholder', placeholder);
+        });
+
+            
+    });
+</script>
 </body>
 </html>
