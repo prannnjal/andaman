@@ -291,7 +291,7 @@
 
     <!-- Since the form uses method="get", the browser appends the form data as query parameters in the URL of the current page when the user submits the form.
      
-    f the current page is /agents/, then after submitting with filters, the URL will look like:
+    If the current page is /agents/, then after submitting with filters, the URL will look like:
 
     /agents/?name=John&email=john@example.com&min_leads_handled=10&max_leads_handled=50
 
@@ -413,16 +413,5 @@
         <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
     </div>
 
-    <script>
-        // Check if there are any messages to display
-        if (document.querySelector('.messages')) {
-          setTimeout(function() {
-            // Find the message container and hide it after 5 seconds
-            var messagesContainer = document.querySelector('.messages');
-            messagesContainer.style.display = 'none';
-          }, 4000);
-        }
-    </script>
 </body>
-
 </html>

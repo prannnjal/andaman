@@ -278,13 +278,14 @@ def inquiries_updated_today_view(request):
     todays_date = now().date()
     
     context = Filter_Inquiries(request)
+    inquiries = context["inquiries"]
     inquiries = inquiries.filter(last_inquiry_updation__gte=todays_date)
     
     # ?last_inquiry_updation_from={{todays_date}}&heading=Inquiries Updated Today"
         
     context = {
         'heading': 'Inquiries Updated Today',
-        'inquiries': context["inquiries"],
+        'inquiries': inquiries,
         'actions': ['Update', 'Delete', 'View Logs'],
         'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
         'base_url_name': reverse('inquiries_updated_today')
@@ -300,7 +301,7 @@ def follow_up_management(request):
     days = int(request.GET.get("days", "7"))
     follow_up_direction = request.GET.get("follow-up-direction", "next")
 
-    context = Filter_Inquiries(request)
+    context = Filter_Inquiries(request)    
     follow_up_leads = context["inquiries"]
     
     # print("============================> inside followup management view and request = ", request)
@@ -375,8 +376,7 @@ def follow_up_management(request):
             'admins': admins,
             'follow_up_direction': follow_up_direction,
             'actions': ['Update', 'Delete', 'View Logs'],
-            'base_url_name': reverse('follow_up_management'),
-             
+            'base_url_name': reverse('follow_up_management'),             
         })
 
 # ======================================================================================================================================================================
@@ -1370,7 +1370,7 @@ def set_new_password(request, uidb64, token):
 # ====================================================================================
 
 def Prepare_Context_For_Filter_Leads_Component(request):
-    agents = CustomUser.objects.filter(role="Agent")  
+    agents = CustomUser.objects.filter(role="Agent")
     lead_ids = Lead.objects.values_list('id', flat=True)
     students = Lead.objects.values_list('student_name', flat=True).distinct()
     parents = Lead.objects.values_list('parent_name', flat=True).distinct()
@@ -1678,7 +1678,7 @@ def bulk_assign_leads_view(request, agent_id):
         except json.JSONDecodeError:
             selected_bulk_leads = []
             
-        # print("=============================> selectedBulkLeads = ", selected_bulk_leads)        
+        # print("=============================> selectedBulkLeads = ", selected_bulk_leads)
         # print("=============================> type(selectedBulkLeads) = ", type(selected_bulk_leads))
         
         # Step 1: Assign the selected leads
@@ -1716,7 +1716,7 @@ def bulk_assign_leads_view(request, agent_id):
     
     # print("===========================> pre_selected_leads = ", pre_selected_leads)
     
-    context = Prepare_Context_For_Filter_Leads_Component()
+    context = Prepare_Context_For_Filter_Leads_Component(request)
     
     context.update({
         'agent_id': agent.id,
