@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grant/Revoke Access</title>
+
+    <!-- Add jquery JS BEFORE select2 JS -->    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js" defer></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 
 <style>
@@ -33,7 +40,7 @@
     {% include "inquiries/Modal.html" %}
     {% include "inquiries/Alerts.html" %}
 
-    <h2>Bulk Assign Leads to Agents</h2>
+    <h2>Manage School Users</h2>
 
     <!-- Buttons to open modals -->
     <div class="buttons_wrapper">
@@ -47,7 +54,7 @@
             Open Filters
         </button>
 
-        <button class="header-btn manage load-component" data-template-url="{% url 'hide_agent_columns_component' %}" data-table_class="agents_bulk_assign_table">
+        <button class="header-btn manage load-component" data-template-url="{% url 'hide_agent_columns_component' %}" data-table_class="school_users_list">
             View / Hide Columns
         </button>
         
@@ -57,6 +64,6 @@
     </div>
 
     
-    {% include "inquiries/agent/Fill_Agents_Table.html" with table_class="agents_bulk_assign_table" actions=actions %}
+    {% include "inquiries/agent/Fill_Agents_Table.html" with table_class="school_users_list" actions=actions users=users%}
 </body>
 </html>

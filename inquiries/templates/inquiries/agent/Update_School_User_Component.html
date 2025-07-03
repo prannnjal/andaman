@@ -1,0 +1,197 @@
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+    }
+    
+    h1, h2 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    
+    button {
+        padding: 6px 12px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    button:hover {
+        background-color: #0056b3;
+    }
+    
+    input[type="radio"], select {
+        margin-right: 10px;
+    }
+    
+    .message {
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
+    
+    .message.success {
+        background-color: #00d832;
+        color: #ffffff;
+    }
+    
+    .message.info {
+        background-color: #e79a00;
+        color: #ffffff;
+    }
+    
+    .message.error {
+        background-color: #fd0015;
+        color: #ffffff;
+    }    
+
+    .navigation {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+    
+      .add_new_agent {
+        background-color: #28a745;
+        color: #fff !important;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+      }
+
+      #opaque-background {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+ 
+    button:disabled {
+        cursor: not-allowed;
+        opacity: 0.5; /* Optional: To visually indicate that the button is disabled */
+    }
+
+    #manage-access-container {
+        background: #fff;
+        width: 50vw;
+        max-width: 650px;
+        max-height: 90vh; /* Allow some scroll if needed */       
+        padding: 30px;
+        border-radius: 10px;
+        position: relative;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-family: Arial, sans-serif;
+    }
+    
+    #manage-access-container h2 {
+        margin-top: 0px auto 15px auto;
+        text-align: center;
+        font-size: 24px;
+        color: #ff0000;
+    }
+        
+    #manage-access-container form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    #manage-access-container label {
+        font-weight: bold;
+        margin-bottom: 4px;
+        color: #444;
+    }
+    
+    #manage-access-container input,
+    #manage-access-container select {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    #manage-access-container button[type="submit"] {
+        margin-top: 10px;
+        background-color: #007bff;
+        color: #fff;
+        padding: 10px;
+        font-weight: bold;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    #manage-access-container button[type="submit"]:hover {
+        background-color: #0056b3;
+    }
+
+</style>
+
+
+
+
+<div id="manage-access-container">
+    <!-- Display messages -->
+    {% include "inquiries/Alerts.html" %}
+
+    <h2>Edit User Access</h2>
+
+    <form id="edit-user-form" method="post" action="{% url 'update_school_user' %}?edit_user_id={{ request.GET.edit_user_id }}">
+
+        {% csrf_token %}
+
+        <input type="hidden" name="action_type" value="update">
+        <input type="hidden" name="user_id" value="{{ request.GET.edit_user_id }}">
+
+        {{ form.name.label_tag }} {{ form.name }}
+        {{ form.mobile_number.label_tag }} {{ form.mobile_number }}
+        {{ form.email.label_tag }} {{ form.email }}
+        {{ form.role.label_tag }} {{ form.role }}
+        
+        <label for="{{ form.expiration_time.id_for_label }}">Expiration Time:</label>
+        {{ form.expiration_time }}
+        <button type="submit">Save</button>
+    </form>                
+</div>
+
+
+<script>
+    // AJAX Form submission
+    
+    $(document).ready(function () {
+        $('#edit-user-form').on('submit', function (e) {
+            e.preventDefault();
+
+            const form = $(this);
+            const url = form.attr('action');
+            const formData = form.serialize();  // 🔁 Serialize all form fields
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function (data) {
+                    // Replace modal content with new HTML from response
+                    $('#modal-main').html(data);
+                },
+                error: function (xhr) {
+                    console.error("Error:", xhr.responseText);
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+    });
+</script>

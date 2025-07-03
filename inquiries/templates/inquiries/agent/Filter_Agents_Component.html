@@ -8,15 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inquiry List</title>
 
-    <!-- jQuery (for Sorting and Select2) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -29,19 +20,29 @@
 
         .same_row_wrapper {
             display: flex;
-            flex-direction: row;        
-            gap: 20px;
-            align-items: start; 
-            justify-content: space-between;   
-            margin: 10px 0 30px 0;    
-            flex-wrap: wrap;           
+            flex-direction: row;
+            gap: 3rem;
+            align-items: stretch;
+            justify-content: space-between;
+            margin: 10px 0 30px 0;
+            flex-wrap: wrap;            
         }
 
         .same_row_wrapper > * {
             flex: 1;
-        } 
+        }
+
+        .same_column_wrapper{
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            justify-content: space-between;            
+            flex-wrap: wrap;
+        }
 
         .modal-content {
+            box-sizing: border-box;
             background-color: #fff;
             margin: auto;
             padding: 10px 30px;
@@ -51,11 +52,11 @@
             max-height: 68vh;
             overflow: auto;
             border-radius: 8px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2); 
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%); /* Centers the element */  
+            transform: translate(-50%, -50%); /* Centers the element */
         }
 
         /* Title Styling */
@@ -63,7 +64,7 @@
             text-align: center;
             font-size: 26px;
             margin-bottom: 30px;
-            color: #ff0000;          
+            color: #ff0000;
         }
 
 
@@ -92,7 +93,7 @@
         input[type="date"]:focus {
             border-color: #4CAF50;
             outline: none;
-        }        
+        }
 
         /* Reset Link Styles */
         a {
@@ -108,12 +109,11 @@
         .date-wrapper{
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
             gap: 5px;
         }
-                
 
-        button {            
+        button {
             color: white;
             border: none;
             padding: 10px 15px;
@@ -124,25 +124,34 @@
         }
         #filter_date{
             font-size: 18px;
-            font-weight: 600;    
-            color: rgb(100, 100, 100);      
+            font-weight: 600;
+            color: rgb(100, 100, 100);
+            line-height: 1.3;
         }
-    
+
+        .label_date_from{
+            color: rgb(34, 0, 255);
+        }
+
+        .label_date_to{
+            color: rgb(21, 162, 21);
+        }
+
 
         .filter_modal_btn{
             background-color: #2a74ec;
-            padding: 15px;         
-            width: 70px; 
+            padding: 15px;
+            width: 70px;
         }
 
-        .reset_modal_a{          
+        .reset_modal_a{
             cursor: pointer;
             background-color: rgb(4, 198, 101);
             color: white;
             padding: 15px;
-            width: 70px; 
-            
-        } 
+            width: 70px;
+
+        }
 
 
         .reset_modal_a:hover,
@@ -154,47 +163,23 @@
             outline: none; /* Removes focus outline */
         }
 
-        .select2-selection {            
-            font-size: 16px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            background-color: #fafafa;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-        }
-
-        /* Style the Select2 search input */
-        .select2-search__field {    
-            font-size: 14px;
-            padding: 6px !important;      
-            border: 1px solid #999 !important;
-            border-radius: 4px; /* Rounded corners */
-            outline: none;
-        }
-
-        .select2-search__field::placeholder {
-            color: #d03636; /* Placeholder text color */
-            font-style: italic;
-        }
-
         .hidden-column {
             display: none;
         }
-        
+
         .call-icon {
             color: blue;
             text-decoration: none;
             font-size: 20px; /* Optional: Adjust size */
-        }      
-
-        .btn-container {           
-            display: flex;  /* Flexbox for centering */
-            justify-content: center;  /* Centers the button horizontally */
-            margin-top: 30px; 
         }
 
-       
+        .btn-container {
+            display: flex;  /* Flexbox for centering */
+            justify-content: center;  /* Centers the button horizontally */
+            margin-top: 30px;
+        }
+
+
         a.nav {
             display: inline-block; /* Prevents full-width stretching */
             padding: 12px 25px;
@@ -211,278 +196,397 @@
         .buttons_wrapper{
             display: flex;
             justify-content: center;
-            flex-wrap: wrap;            
+            flex-wrap: wrap;
         }
-                
-        /* Messages Styling */
-        .messages .alert, .success, .error {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 4px;
+
+        .select2-results__option {  /*So that the options text-align start*/
+            text-align: left;
+        }
+
+        .select2-selection {
             font-size: 16px;
+            display: flex;
+            align-items: center;
+            background-color: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #ccc;            
         }
 
-        .messages .success {
-            background-color: #21a606;
-            color: #ffffff;
+        /* Style the Select2 search input */
+        .select2-search__field {
+            font-size: 14px;            
+            padding: 0rem 0.5rem !important;            
+            border-top: 0px solid #999 !important;
+            margin: 0.5rem 0 0 0 !important;
+            border-radius: 0px; /* Rounded corners */
+            outline: none;
             text-align: center;
+            height: auto !important;      
+            width: auto !important;     /* The element’s width will be just as wide as its content needs. */            
+            min-width: 100% !important;  /* Prevent shrinking below parent */
         }
 
-        .messages .alert.error {
-            background-color: #f50317;
-            color: #ffffff;
-            text-align: center;
+        .select2-search__field::placeholder {
+            color: #d03636;
+            font-style: italic;
+            line-height: 1.2;
         }
-
 
     </style>
 </head>
 
 <body>
     {% include "inquiries/Alerts.html" %}
-    
+
     <div class="modal-content">
-        <h2>{{ request.GET.filter_component_heading }}</h2>
+        <h2>{{heading}}</h2>
 
         {% with request.GET.base_url_name as url_name %}
-            <form id="filter-form" method="get" action="{{ url_name }}">
+            <form id="filter-form" method="get" action="{{ request.GET.base_url_name }}">
         {% endwith %}
 
             <div class="same_row_wrapper">
-                <select name="user_id" class="searchable-select" data-placeholder="Select User Id">
-                    <option value="">All User Ids</option>
+                
+                <select name="user_id[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select User Ids">
                     {% for id in user_ids %}
-                        <option value="{{ id }}" {% if request.GET.user_id == id|stringformat:"s" %}selected{% endif %}>
+                        <option value="{{ id }}" {% if id|stringformat:"s" in selected_user_ids %}selected{% endif %}>
                             {{ id }}
                         </option>
                     {% endfor %}
                 </select>
 
-                <select name="user_name" class="searchable-select" data-placeholder="Choose User Name">
-                    <option value="">All Users</option>
-                    {% for name in names %}
-                    <option value="{{ name }}" {% if request.GET.user_name == name %}selected{% endif %}>{{ name }}</option>
+
+                <select name="user_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select User Names">                    
+                    {% for user_name in user_names %}                    
+                        <option value="{{ user_name }}" {% if user_name in selected_user_names %}selected{% endif %}>
+                            {{ user_name }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="same_row_wrapper">
-                <select name="user_email" class="searchable-select" data-placeholder="Choose User Email">
-                    <option value="">All Users Email</option>
-                    {% for user_email in emails %}
-                    <option value="{{ user_email }}" {% if request.GET.user_email == user_email %}selected{% endif %}>{{ user_email }}</option>
+                <select name="user_email[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select User Emails">
+                    {% for user_email in user_emails %}                    
+                        <option value="{{ user_email }}" {% if user_email in selected_user_emails %}selected{% endif %}>
+                            {{ user_email }}
+                        </option>
                     {% endfor %}
                 </select>
 
-                <select name="mobile_number" class="searchable-select" data-placeholder="Choose Mobile Number">
-                    <option value="">All Mobile Numbers</option>
-                    {% for mobile_number in mobile_numbers %}
-                    <option value="{{ mobile_number }}" {% if request.GET.mobile_number == mobile_number %}selected{% endif %}>{{ mobile_number }}</option>
+
+                <select name="mobile_number[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Mobile Numbers">
+                    {% for mobile_number in mobile_numbers %}                    
+                        <option value="{{ mobile_number }}" {% if mobile_number in selected_mobile_numbers %}selected{% endif %}>
+                            {{ mobile_number }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="same_row_wrapper">
-                <select name="user_role" class="searchable-select" data-placeholder="Select the Role">
-                    <option value="">User Roles</option>
-                    {% for role in roles %}
-                    <option value="{{ role }}" {% if request.GET.user_role == role %}selected{% endif %}>{{ role }}</option>
+                <select name="block[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Blocks">
+                    {% for block in blocks %}                    
+                        <option value="{{ block }}" {% if block in selected_blocks %}selected{% endif %}>
+                            {{ block }}
+                        </option>
                     {% endfor %}
                 </select>
 
-                <select name="expiry" class="searchable-select" data-placeholder="Select User's status">
-                    <option value="">User Status</option>
-                    {% for user_status in status %}
-                    <option value="{{ user_status }}" {% if request.GET.expiry == user_status %}selected{% endif %}>{{ user_status }}</option>
+
+                <select name="location_panchayat[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Location/Panchayat">
+                    {% for location_panchayat in locations_panchayats %}                    
+                        <option value="{{ location_panchayat }}" {% if location_panchayat in selected_locations_panchayats %}selected{% endif %}>
+                            {{ location_panchayat }}
+                        </option>
                     {% endfor %}
-                </select>          
+                </select>
+
+            </div>
+
+            <div class="same_row_wrapper">
+                <select name="role[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Roles">
+                    {% for role in roles %}                    
+                        <option value="{{ role }}" {% if role in selected_roles %}selected{% endif %}>
+                            {{ role }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+
+                <select name="status[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select User Status">
+                    {% for status in statuses %}                    
+                        <option value="{{ status }}" {% if status in selected_statuses %}selected{% endif %}>
+                            {{ status }}
+                        </option>
+                    {% endfor %}
+                </select>
+
             </div>
 
 
             <!-- Date Filters -->
             <div>
-                <span id="filter_date">Select Expiration Date</span>
+                <span id="filter_date">Select User Creation Date</span>
 
                 <div class="same_row_wrapper">
                     <div class="date-wrapper">
-                        <label>From:</label>
-                        <input type="date" name="expiration_date_from" value="{{ request.GET.expiration_date_from }}">
+                        <label class="label_date_from">From:</label>
+                        <input type="date" name="user_created_date_from" value="{{ request.GET.user_created_date_from }}">
                     </div>
 
                     <div class="date-wrapper">
-                        <label>To:</label>
-                        <input type="date" name="expiration_date_to" value="{{ request.GET.expiration_date_to }}">
+                        <label class="label_date_to">To:</label>
+                        <input type="date" name="user_created_date_to" value="{{ request.GET.user_created_date_to }}">
                     </div>
                 </div>
             </div>
 
+            <div>
+                <span id="filter_date">Select User Expiration Date</span>
 
+                <div class="same_row_wrapper">
+                    <div class="date-wrapper">
+                        <label class="label_date_from">From:</label>
+                        <input type="date" name="expiration_date_from" value="{{ request.GET.expiration_date_from }}">
+                    </div>
+
+                    <div class="date-wrapper">
+                        <label class="label_date_to">To:</label>
+                        <input type="date" name="expiration_date_to" value="{{ request.GET.expiration_date_to }}">
+                    </div>
+                </div>
+            </div>
+            
+            
             <!-- Numbers Filters -->
             <div class="same_row_wrapper">
-                <div>
-                    <span id="filter_date">Total Leads Assigned</span>
+                <div class="same_column_wrapper">
+                    <span id="filter_date">Select Leads Handled</span>
 
-                    <div class="same_row_wrapper">
+                    <div class="same_column_wrapper">
                         <div class="date-wrapper">
-                            <label>Min:</label>
-                            <input type="number" name="total_leads_assigned_min" value="{{ request.GET.total_leads_assigned_min }}">
+                            <label class="label_date_from">Min:</label>
+                            <input type="number" name="min_leads_handled" value="{{ request.GET.min_leads_handled }}">
                         </div>
 
                         <div class="date-wrapper">
-                            <label>Max:</label>
-                            <input type="number" name="total_leads_assigned_max" value="{{ request.GET.total_leads_assigned_max }}">
+                            <label class="label_date_to">Max:</label>
+                            <input type="number" name="max_leads_handled" value="{{ request.GET.max_leads_handled }}">
                         </div>
                     </div>
                 </div>
 
 
-                <div>
+                <div class="same_column_wrapper">
+                    <span id="filter_date">Select Leads Converted</span>
+
+                    <div class="same_column_wrapper">
+                        <div class="date-wrapper">
+                            <label class="label_date_from">Min:</label>
+                            <input type="number" name="min_leads_converted" value="{{ request.GET.min_leads_converted }}">
+                        </div>
+
+                        <div class="date-wrapper">
+                            <label class="label_date_to">Max:</label>
+                            <input type="number" name="max_leads_converted" value="{{ request.GET.max_leads_converted }}">
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="same_column_wrapper">
+                    <span id="filter_date">Select Conversion Rate</span>
+
+                    <div class="same_column_wrapper">
+                        <div class="date-wrapper">
+                            <label class="label_date_from">Min:</label>
+                            <input type="number" name="min_conversion_rate" value="{{ request.GET.min_conversion_rate }}">
+                        </div>
+
+                        <div class="date-wrapper">
+                            <label class="label_date_to">Max:</label>
+                            <input type="number" name="max_conversion_rate" value="{{ request.GET.max_conversion_rate }}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="same_column_wrapper">
                     <span id="filter_date">Total Leads in Inquiry Phase</span>
 
-                    <div class="same_row_wrapper">
+                    <div class="same_column_wrapper">
                         <div class="date-wrapper">
-                            <label>Min:</label>
+                            <label class="label_date_from">Min:</label>
                             <input type="number" name="leads_in_inquiry_min" value="{{ request.GET.leads_in_inquiry_min }}">
                         </div>
 
                         <div class="date-wrapper">
-                            <label>Max:</label>
+                            <label class="label_date_to">Max:</label>
                             <input type="number" name="leads_in_inquiry_max" value="{{ request.GET.leads_in_inquiry_max }}">
                         </div>
                     </div>
                 </div>
 
 
-                <div>
+                <div class="same_column_wrapper">
                     <span id="filter_date">Total Leads in Registration Phase</span>
 
-                    <div class="same_row_wrapper">
+                    <div class="same_column_wrapper">
                         <div class="date-wrapper">
-                            <label>Min:</label>
+                            <label class="label_date_from">Min:</label>
                             <input type="number" name="leads_in_registration_min" value="{{ request.GET.leads_in_registration_min }}">
                         </div>
 
                         <div class="date-wrapper">
-                            <label>Max:</label>
+                            <label class="label_date_to">Max:</label>
                             <input type="number" name="leads_in_registration_max" value="{{ request.GET.leads_in_registration_max }}">
                         </div>
                     </div>
                 </div>
 
 
-                <div>
+                <div class="same_column_wrapper">
                     <span id="filter_date">Total Leads in Admission Test Phase</span>
 
-                    <div class="same_row_wrapper">
+                    <div class="same_column_wrapper">
                         <div class="date-wrapper">
-                            <label>Min:</label>
+                            <label class="label_date_from">Min:</label>
                             <input type="number" name="leads_in_admission_test_min" value="{{ request.GET.leads_in_admission_test_min }}">
                         </div>
 
                         <div class="date-wrapper">
-                            <label>Max:</label>
+                            <label class="label_date_to">Max:</label>
                             <input type="number" name="leads_in_admission_test_max" value="{{ request.GET.leads_in_admission_test_max }}">
                         </div>
                     </div>
                 </div>
 
 
-                <div>
+                <div class="same_column_wrapper">
                     <span id="filter_date">Total Leads in Admission Offered Phase</span>
 
-                    <div class="same_row_wrapper">
+                    <div class="same_column_wrapper">
                         <div class="date-wrapper">
-                            <label>Min:</label>
+                            <label class="label_date_from">Min:</label>
                             <input type="number" name="leads_in_admission_offered_min" value="{{ request.GET.leads_in_admission_offered_min }}">
                         </div>
 
                         <div class="date-wrapper">
-                            <label>Max:</label>
+                            <label class="label_date_to">Max:</label>
                             <input type="number" name="leads_in_admission_offered_max" value="{{ request.GET.leads_in_admission_offered_max }}">
                         </div>
                     </div>
                 </div>
 
 
-                <div>
+                <div class="same_column_wrapper">
                     <span id="filter_date">Total Leads in Admission Confirmed Phase</span>
 
-                    <div class="same_row_wrapper">
+                    <div class="same_column_wrapper">
                         <div class="date-wrapper">
-                            <label>Min:</label>
+                            <label class="label_date_from">Min:</label>
                             <input type="number" name="leads_in_admission_confirmed_min" value="{{ request.GET.leads_in_admission_confirmed_min }}">
                         </div>
 
                         <div class="date-wrapper">
-                            <label>Max:</label>
+                            <label class="label_date_to">Max:</label>
                             <input type="number" name="leads_in_admission_confirmed_max" value="{{ request.GET.leads_in_admission_confirmed_max }}">
                         </div>
                     </div>
                 </div>
 
 
-                <div>
+                <div class="same_column_wrapper">
                     <span id="filter_date">Total Leads in Rejected Phase</span>
 
-                    <div class="same_row_wrapper">
+                    <div class="same_column_wrapper">
                         <div class="date-wrapper">
-                            <label>Min:</label>
+                            <label class="label_date_from">Min:</label>
                             <input type="number" name="leads_in_rejected_min" value="{{ request.GET.leads_in_rejected_min }}">
                         </div>
 
                         <div class="date-wrapper">
-                            <label>Max:</label>
+                            <label class="label_date_to">Max:</label>
                             <input type="number" name="leads_in_rejected_max" value="{{ request.GET.leads_in_rejected_max }}">
-                        </div>
-                    </div>
-                </div>
-
-
-                <div>
-                    <span id="filter_date">Conversion Rate (%)</span>
-
-                    <div class="same_row_wrapper">
-                        <div class="date-wrapper">
-                            <label>Min:</label>
-                            <input type="number" name="conversion_rate_min" value="{{ request.GET.conversion_rate_min }}" step="any">
-                        </div>
-
-                        <div class="date-wrapper">
-                            <label>Max:</label>
-                            <input type="number" name="conversion_rate_max" value="{{ request.GET.conversion_rate_max }}" step="any">
                         </div>
                     </div>
                 </div>
             </div>
 
-
-
-                                            
+        
             <!-- Submit and Reset -->
             <button type="submit" class="filter_modal_btn">Filter</button>
-            
+
             <a class="reset_modal_a" href="{{ request.GET.base_url_name }}">
                 Reset
             </a>
-            
+
         </form>
     </div>
-     
 
+
+
+    <!-- Initialize Select2 -->
     <script>
         $(document).ready(function () {
-            $('.searchable-select').select2({
+            $('.searchable-select').select2({                
                 width: 'resolve'
             });
 
-            // Wait for Select2 to initialize, then set placeholder
-            $('.searchable-select').on('select2:open', function () {
-                $('.select2-search__field').attr('placeholder', 'Search here...');
+
+            $('.select_element_class').each(function () {
+                const $select = $(this);
+                const placeholder = $select.data('placeholder') || 'Select options';
+
+                function formatOptionWithCheckbox(option) {
+                    if (!option.id) return option.text;
+
+                    const selected = $select.val() || [];
+                    const isSelected = selected.includes(option.id);
+
+                    return $('<span><input type="checkbox" style="margin-right: 6px;" ' +
+                            (isSelected ? 'checked' : '') + '/>' + option.text + '</span>');
+                }
+
+                // Initialize select2
+                $select.select2({
+                    templateResult: formatOptionWithCheckbox,
+                    templateSelection: function (option) {
+                        return option.text;
+                    },
+                    placeholder: placeholder,
+                    width: 'resolve'
+                });
+
+                // 🔽 Apply placeholder to the internal search field on init
+                const container = $select.data('select2').$container;
+
+                setTimeout(() => {
+                    container.find('.select2-search__field').attr('placeholder', placeholder);
+                }, 0);
             });
+        
+
+            // Add placeholder to search field INSIDE dropdown
+            $(document).on('select2:open', () => {
+                // Use jQuery to safely target the open dropdown's input
+                setTimeout(() => {
+                    $('.select2-container--open .select2-search__field').attr('placeholder', 'Search options here...');
+                }, 0);
+            });
+
+
+            $(document).on('select2:close', function (e) {
+                const $select = $(e.target); // The <select> element that triggered the event
+                const placeholder = $select.data('placeholder') || '';
+
+                // Find the corresponding search field inside this select2 container
+                const container = $select.data('select2').$container;
+
+                container.find('.select2-search__field').attr('placeholder', placeholder);
+            });
+        
         });
     </script>
-
-
-
 </body>
 </html>

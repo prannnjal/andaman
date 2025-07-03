@@ -235,8 +235,6 @@
                             <a href="{% url 'add_inquiry' %}"><li>Add New Inquiry</li></a>
                             
                             <a href="{% url 'assign_lead' %}"><li>Assign Agent to Lead</li></a>
-
-                            <a href="{% url 'assign_leads_to_agents' %}"><li>Bulk Assign Leads</li></a>
                         {% endif %}                        
                           
                     </div>                
@@ -254,10 +252,25 @@
     
                         <a href="{% url 'detailed_stats' %}"><li>Detailed Stats</li>
 
-                        <a href="{% url 'agent_performance' %}"><li>Agent Performance</li></a>
-
                     </div>
                 </div>
+
+
+                
+                <div class="same_row_wrapper" style="background-color: rgb(224, 229, 253)">
+                    <p>Manage Users: </p>
+    
+                    <div class="same_row_wrapper_child">
+                        {% if user.role == "Admin" %}
+
+                            <a href="{% url 'school_users_list' %}"><li>View / Manage Users</li></a>
+
+                            <a href="{% url 'add_user' %}"><li>Add User</li></a>
+
+                        {% endif %}      
+                    </div>
+                </div>
+
 
 
                 <div class="same_row_wrapper" style="background-color: rgb(235, 249, 172)">
@@ -271,27 +284,7 @@
 
                     </div>                
                 </div>
-    
-    
-                <div class="same_row_wrapper" style="background-color: rgb(224, 229, 253)">
-                    <p>Manage Users: </p>
-    
-                    <div class="same_row_wrapper_child">
-                        {% if user.role == "Admin" %}
-
-                            <a href="{% url 'add_user' %}"><li>Add User</li></a>
-
-                            <a href="{% url 'manage_access' %}"><li>View/ Manage Users</li></a>
-                            
-                            <a href="{% url 'remove_lead' %}"><li>Remove Agent from Lead</li></a>
-                            
-                            <!-- <a href="{% url 'add_agent' %}"><li>Add Agent</li></a> -->                        
-                            
-                            <!-- <a href="{% url 'agent_list' %}"><li>View Agents</li></a> -->
-                        {% endif %}      
-                    </div>
-                </div>
-    
+                        
     
     
     
@@ -322,27 +315,27 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Inquiry">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry">
                             <td>Inquiries</td>
                             <td>{{ total_inquiries }}</td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Registration">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration">
                             <td>Registrations</td>
                             <td>{{ total_registrations }}</td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Test">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test">
                             <td>Admission Tests</td>
                             <td>{{ total_tests }}</td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Offered">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered">
                             <td>Admissions Offered</td>
                             <td>{{ total_admissions_offered }}</td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Confirmed">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed">
                             <td>Admissions Confirmed</td>
                             <td>{{ total_admissions_confirmed }}</td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Rejected">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected">
                             <td>Rejected</td>
                             <td>{{ rejected }}</td>
                         </tr>
@@ -361,38 +354,38 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Inquiry&inquiry_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry&inquiry_date_from={{todays_date}}">
                             <td>Inquiries</td>
                             <td>{{ inquiries_today }}</td>
                         </tr>
 
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Registration&registration_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration&registration_date_from={{todays_date}}">
                             <td>Registrations</td>
                             <td>{{ registrations_today }}</td>
                         </tr>
 
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Test&admission_test_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test&admission_test_date_from={{todays_date}}">
                             <td>Admission Tests</td>
                             <td>{{ tests_today }}</td>
                         </tr>
 
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Offered&admission_offered_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered&admission_offered_date_from={{todays_date}}">
                             <td>Admissions Offered</td>
                             <td>{{ admissions_offered_today }}</td>
                         </tr>
 
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Admission Confirmed&admission_confirmed_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed&admission_confirmed_date_from={{todays_date}}">
                             <td>Admissions Confirmed</td>
                             <td>{{ admissions_confirmed_today }}</td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status=Rejected&rejected_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected&rejected_date_from={{todays_date}}">
                             <td>Rejected</td>
                             <td>{{ rejected_today }}</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-        </div>        
+        </div>
     </div>
 
 

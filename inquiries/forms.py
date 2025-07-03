@@ -35,6 +35,10 @@ class InquiryForm(forms.ModelForm):
                 block_choices.insert(1, (current_block, current_block))  # After the empty option
         else:
             block_choices = list(self.fields['block'].choices)
+            
+        
+        if not self.instance or not self.instance.pk:
+            self.fields['inquiry_date'].initial = timezone.localdate()
         
         
         # Assign the 'date' widget to the date fields individually

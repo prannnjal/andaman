@@ -1,15 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.core.validators import validate_email
 from .models import CustomUser, Lead, CustomUser, LeadLogs
-from .forms import InquiryForm, AgentForm, UpdateLeadStatusForm, CustomUserForm
+from .forms import InquiryForm, UpdateLeadStatusForm, CustomUserForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
 from datetime import timedelta
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
-from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.core.mail import send_mail
 from django.utils import timezone
@@ -21,7 +19,6 @@ from django.db.models.functions import TruncDate
 from django.conf import settings
 from django.http import JsonResponse
 import pandas as pd
-from django.db.models.functions import Coalesce
 from django.db.models import ExpressionWrapper
 from django.db.models import FloatField
 from datetime import datetime
@@ -32,16 +29,15 @@ from collections import defaultdict
 import random
 import string
 from django.urls import reverse
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.views import PasswordResetView
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
-from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Case, When, Value
 from django.db.models import Count, Q
 from django.db.models import Count, Q, F, FloatField, ExpressionWrapper
 from urllib.parse import urlencode
+from django.db.models.functions import Round
 
-# =======================================================================================================================================================================
+# ======================================================================================================================================================================
 def is_authentic(user):
     return user.is_authenticated and user.expiration_time > timezone.now()
 
@@ -55,7 +51,7 @@ def is_staff(user):
     return is_authentic(user) and user.role in ["Admin", "Agent", "Viewer"]
 
 
-# =======================================================================================================================================================================
+# ======================================================================================================================================================================
 
 def Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, changed_by):    
     previous_data = model_to_dict(old_inquiry_instance) if old_inquiry_instance else {}
@@ -87,7 +83,7 @@ def Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, changed_by):
             previous_data=json.dumps(previous_data, default=str),  
             new_data=json.dumps(new_data, default=str)
         )
-# =======================================================================================================================================================================
+# ======================================================================================================================================================================
 
 def agent_login(request):
     if request.method == 'POST':
@@ -121,9 +117,9 @@ def agent_login(request):
         else:
             messages.error(request, 'Invalid credentials')
 
-    return render(request, 'inquiries/agent_login.html')
+    return render(request, 'inquiries/agent/agent_login.html')
 
-# =======================================================================================================================================================================
+# ======================================================================================================================================================================
 
 def Filter_By_Date(inquiries, choice, request_parameter, model_key):
     if request_parameter:
@@ -240,9 +236,7 @@ def Filter_Inquiries(request):
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('last_follow_up_updation_from'), 'last_follow_up_updation')
     inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_follow_up_updation_to'), 'last_follow_up_updation')   
     
-    return {
-        "inquiries": inquiries
-    }
+    return inquiries
 
     
 # =================================================================================================================================================================
@@ -250,9 +244,9 @@ def Filter_Inquiries(request):
 @login_required
 @user_passes_test(is_staff)
 def inquiry_list(request):
-    context = Filter_Inquiries(request)
+    inquiries = Filter_Inquiries(request)
     
-    # STEP 1: Load or store query parameters
+    # STEP 1: Load cached or store query parameters
     # if request.GET:
     #     request.session['last_inquiry_filters'] = request.GET.dict()
     #     query_params = request.GET
@@ -263,13 +257,13 @@ def inquiry_list(request):
     
     return render(request, 'inquiries/inquiry_list.html', {
         'heading': request.GET.get('heading', "Leads List"),
-        'inquiries': context["inquiries"],        
+        'inquiries': inquiries,
         'actions': ['Update', 'Delete', 'View Logs'],
         'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
         'base_url_name': reverse('inquiry_list')
     })
 
-# =======================================================================================================================================================================
+# ======================================================================================================================================================================
 
 
 @login_required
@@ -277,12 +271,9 @@ def inquiry_list(request):
 def inquiries_updated_today_view(request):
     todays_date = now().date()
     
-    context = Filter_Inquiries(request)
-    inquiries = context["inquiries"]
+    inquiries = Filter_Inquiries(request)    
     inquiries = inquiries.filter(last_inquiry_updation__gte=todays_date)
-    
-    # ?last_inquiry_updation_from={{todays_date}}&heading=Inquiries Updated Today"
-        
+            
     context = {
         'heading': 'Inquiries Updated Today',
         'inquiries': inquiries,
@@ -293,7 +284,7 @@ def inquiries_updated_today_view(request):
 
     return render(request, 'inquiries/inquiry_list.html', context)
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 @login_required
 @user_passes_test(is_staff)
@@ -301,8 +292,7 @@ def follow_up_management(request):
     days = int(request.GET.get("days", "7"))
     follow_up_direction = request.GET.get("follow-up-direction", "next")
 
-    context = Filter_Inquiries(request)    
-    follow_up_leads = context["inquiries"]
+    follow_up_leads = Filter_Inquiries(request)
     
     # print("============================> inside followup management view and request = ", request)
          
@@ -430,9 +420,9 @@ def add_inquiry(request):
     else:       # For GET request
         form = UpdateLeadStatusForm()
         
-    return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Add new Inquiry'})
+    return render(request, 'inquiries/add_update_lead.html', {'form': form, 'title': 'Add new Inquiry'})
 
-# ====================================================================================
+# ================================================================================================================================================================
             
 @login_required
 @user_passes_test(is_agent_or_admin)
@@ -483,9 +473,9 @@ def manage_lead_status(request, inquiry_id):
         # Prefill form with the inquiry's current details
         form = InquiryForm(instance=inquiry)  # Ensure form is tied to the existing instance
 
-    return render(request, 'inquiries/update_status.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
+    return render(request, 'inquiries/add_update_lead.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
 
-# ====================================================================================
+# ================================================================================================================================================================
 @login_required
 @user_passes_test(is_staff)
 def get_panchayats(request):
@@ -509,43 +499,8 @@ def get_panchayats(request):
 
     return JsonResponse({'panchayats': []})
 
-# ====================================================================================
 
-
-@login_required
-@user_passes_test(is_admin)
-def remove_lead_from_agent_view(request):
-    if request.method == 'POST':
-        lead_id = request.POST.get('lead_id')  # Get the lead ID
-        
-        if not lead_id:
-            messages.error(request, "Please select a lead to remove.")
-            return redirect('remove_lead')
-        
-        lead = get_object_or_404(Lead, id=lead_id)
-        lead.assigned_agent = None  # Remove the assigned agent
-        
-        lead.save()  # Save the updated object to the database
-        
-        # Add a success message
-        messages.success(request, "Lead successfully removed from the agent.")
-        
-        return redirect('remove_lead')  # Redirect to the same page after removal
-    
-    else:
-        agents = CustomUser.objects.filter(role='Agent').prefetch_related('assigned_agent')
-
-        # agents = CustomUser.objects.prefetch_related('assigned_agent').filter(role='Agent').all()
-        # print("=======================> agents prefetched in remove_lead_from_agent view = ", agents)
-        '''
-        This query retrieves all agents and their respective leads. Below is way to access it: 
-        
-        for agent in agents:
-            print(agent.lead_set.all())
-        '''
-        return render(request, 'inquiries/remove_lead.html', {'agents': agents})
-
-# ====================================================================================
+# ================================================================================================================================================================
 
 @login_required
 @user_passes_test(is_staff)
@@ -624,7 +579,7 @@ def dashboard(request):
 
     return render(request, 'inquiries/dashboard.html', context)
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 @login_required
 @user_passes_test(is_staff)
@@ -727,108 +682,8 @@ def detailed_stats(request):
 
     return render(request, 'inquiries/detailed_stats.html', context)
 
-# ====================================================================================
 
-@login_required
-@user_passes_test(is_staff)
-def agent_performance(request):
-    user = request.user  # Get the logged-in user
-    
-    # Get sorting parameters from request
-    sort_column = request.GET.get("sort_column", "1")  # Default to sorting by agent name
-    sort_order = request.GET.get("sort_order", "asc")  # Default to ascending order
-    reverse_sort = True if sort_order == "desc" else False
-    
-   
-    # If the user is an admin, get all agents; otherwise, get only the logged-in agent
-    if user.role=="Admin":
-        agents = CustomUser.objects.filter(role="Agent")  # Admins see all agents
-    else:
-        agents = CustomUser.objects.filter(role="Agent")
-        # agents = Agent.objects.filter(user=user)  # Agents see only their own data
-
-    # Initialize list to store agent performance data
-    agent_data = []
-
-    for agent in agents:
-        # Total Leads Assigned
-        total_leads = Lead.objects.filter(assigned_agent=agent).count()
-        
-        # Leads in Inquiry Status
-        leads_inquiry = Lead.objects.filter(assigned_agent=agent, status='Inquiry').count()
-        
-        # Leads Converted to Admission Confirmed
-        leads_to_admission_confirmed = Lead.objects.filter(assigned_agent=agent, status='Admission Confirmed').count()
-        
-        # Leads Converted to Admission Offered
-        leads_to_admission_offered = leads_to_admission_confirmed + Lead.objects.filter(assigned_agent=agent, status='Admission Offered').count()  
-        
-        # Leads Converted to Admission Test
-        leads_to_admission_test = leads_to_admission_offered + Lead.objects.filter(assigned_agent=agent, status='Admission Test').count()  
-        
-        # Leads Converted to Registration Phase
-        leads_to_registration = leads_to_admission_test + Lead.objects.filter(assigned_agent=agent, status='Registration').count()
-              
-        # Leads Lost
-        leads_lost = Lead.objects.filter(assigned_agent=agent, status='Rejected').count()
-
-        # Conversion Rates (Admission Offered and Confirmed)
-        conversion_rate = leads_to_admission_confirmed / total_leads * 100 if total_leads > 0 else 0
-       
-
-        # Average Time to Conversion (from Inquiry to Admission Confirmed)
-        total_days_to_conversion = sum(
-            (lead.admission_confirmed_date - lead.inquiry_date).days
-            for lead in Lead.objects.filter(assigned_agent=agent, status='Admission Confirmed')
-            if lead.inquiry_date and lead.admission_confirmed_date
-        )
-        conversions_count = Lead.objects.filter(assigned_agent=agent, status='Admission Confirmed').count()
-        average_days_to_conversion = round(total_days_to_conversion / conversions_count, 2) if conversions_count else 'N/A'
-      
-
-        # Collect data for each agent
-        agent_data.append({
-            'agent': agent,
-            'total_leads': total_leads,
-            'leads_inquiry': leads_inquiry,
-            'leads_to_registration': leads_to_registration,
-            'leads_to_admission_test':leads_to_admission_test,
-            'leads_to_admission_offered': leads_to_admission_offered,
-            'leads_to_admission_confirmed': leads_to_admission_confirmed,
-            'leads_lost': leads_lost,
-            'conversion_rate': conversion_rate,        
-            'average_days_to_conversion': average_days_to_conversion,       
-        })
-
-    # Define valid sorting keys
-    valid_sort_keys = {
-        "1": lambda x: x["agent"].name.lower(),
-        "2": lambda x: x["agent"].email.lower(),
-        "3": lambda x: x["total_leads"],
-        "4": lambda x: x["leads_inquiry"],
-        "5": lambda x: x["leads_to_registration"],
-        "6": lambda x: x["leads_to_admission_test"],
-        "7": lambda x: x["leads_to_admission_offered"],
-        "8": lambda x: x["leads_to_admission_confirmed"],
-        "9": lambda x: x["leads_lost"],
-        "10": lambda x: x["conversion_rate"],
-        "11": lambda x: x["average_days_to_conversion"] if isinstance(x["average_days_to_conversion"], (int, float)) else float("inf"),
-    }
-        
-    # Sort dynamically based on user selection
-    if sort_column in valid_sort_keys:
-        agent_data = sorted(agent_data, key=valid_sort_keys[sort_column], reverse=reverse_sort)
-
-    # Render the performance template
-    return render(request, 'inquiries/agent_performance.html', {
-        'agent_data': agent_data,
-        'sort_column': sort_column,
-        'sort_order': sort_order
-        }
-    )
-
-
-# ====================================================================================
+# ================================================================================================================================================================
 
 @login_required
 @user_passes_test(is_staff)
@@ -894,7 +749,7 @@ def export_inquiries_excel(request):
     workbook.save(response)     # saving the Excel file directly into the HTTP response
     return response     # Sends the Excel file as a downloadable response to the user
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 @login_required
 @user_passes_test(is_staff)
@@ -936,13 +791,12 @@ def export_users_excel(request):
     workbook.save(response)     # saving the Excel file directly into the HTTP response
     return response     # Sends the Excel file as a downloadable response to the user
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 @login_required
 @user_passes_test(is_admin)
 def assign_lead_to_agent_view(request):
-    context = Filter_Inquiries(request)
-    inquiries = context["inquiries"]
+    inquiries = Filter_Inquiries(request)
     agents = CustomUser.objects.filter(role="Agent")
     
 
@@ -1003,7 +857,7 @@ def assign_lead_to_agent_view(request):
         'base_url_name': reverse('assign_lead'),
     })
     
-# ====================================================================================
+# ================================================================================================================================================================
 
 @login_required
 @user_passes_test(is_agent_or_admin)
@@ -1020,7 +874,7 @@ def delete_inquiry(request, id):
     # Redirect to the inquiry list
     return redirect('inquiry_list')
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 # Helper function to send the email with the default password
 def send_staff_welcome_email(agent, default_password):
@@ -1052,84 +906,10 @@ def send_custom_mail(subject, message, sender_mail):
         fail_silently=False,
     )
 
-# ====================================================================================
-
-@login_required
-@user_passes_test(is_staff)
-def agent_list(request):
-    # Get filter query parameters
-    name_filter = request.GET.get('name', '')
-    email_filter = request.GET.get('email', '')
-    min_conversion_rate_filter = request.GET.get('min_conversion_rate', '')
-    max_conversion_rate_filter = request.GET.get('max_conversion_rate', '')
-    min_leads_converted_filter = request.GET.get('min_leads_converted', '')
-    max_leads_converted_filter = request.GET.get('max_leads_converted', '')
-    min_leads_handled_filter = request.GET.get('min_leads_handled', '')
-    max_leads_handled_filter = request.GET.get('max_leads_handled', '')
-        
-    '''
-    1) Coalesce() prevents division by zero by replacing lead_count = 0 with 1
-    
-    2) lead_count and converted_leads are not python variable but database generated values. So to use it in python, you have to access it using F(lead_count).
-    
-    3) output_field=FloatField() tells Django that the result of the expression will be a floating-point number (decimal).
-    '''
-    agents = CustomUser.objects.filter(role="Agent").annotate(
-        lead_count=Count('assigned_agent'),       # total leads given agent is handling
-        converted_leads=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Confirmed")),    # total leads an agent converted successfully
-        conversion_rate=ExpressionWrapper(
-            100.0*F("converted_leads")/Coalesce(F('lead_count'), 1),
-            output_field=FloatField()
-        )        
-    )
-    
-    # Filter agents based on the query parameters
-    if name_filter:
-        agents = agents.filter(name__icontains=name_filter)
-    if email_filter:
-        agents = agents.filter(user__email__icontains=email_filter)            
-            
-    
-    # Apply remaining filters    
-    if min_leads_handled_filter:
-        agents = agents.filter(lead_count__gte=int(min_leads_handled_filter))
-    if max_leads_handled_filter:
-        agents = agents.filter(lead_count__lte=int(max_leads_handled_filter))
-    if min_leads_converted_filter:
-        agents = agents.filter(converted_leads__gte=int(min_leads_converted_filter))
-    if max_leads_converted_filter:
-        agents = agents.filter(converted_leads__lte=int(max_leads_converted_filter))
-    if min_conversion_rate_filter:
-        agents = agents.filter(conversion_rate__gte=float(min_conversion_rate_filter))
-    if max_conversion_rate_filter:
-        agents = agents.filter(conversion_rate__lte=float(max_conversion_rate_filter))
-        
+# ================================================================================================================================================================
 
 
-    # Handle deletion of agents
-    if request.method == 'POST':  # Handle agent deletion
-        agent_id = request.POST.get('agent_id')  # Get the agent ID from the form
-        agent = get_object_or_404(CustomUser, id=agent_id)        
-        agent.delete()      
-        messages.success(request, f"Agent '{agent.name}' has been deleted successfully.")
-        return redirect('agent_list')  # Refresh the agent list after deletion
-
-    
-    
-    # For GET request
-    return render(request, 'inquiries/agent_list.html', {
-        'agents': agents,
-        'name_filter': name_filter,
-        'email_filter': email_filter,
-        'min_conversion_rate_filter' : min_conversion_rate_filter,
-        "max_conversion_rate_filter" : max_conversion_rate_filter,
-        "min_leads_converted_filter" : min_leads_converted_filter,
-        "max_leads_converted_filter" : max_leads_converted_filter,
-        "min_leads_handled_filter" : min_leads_handled_filter,
-        "max_leads_handled_filter" : max_leads_handled_filter,
-    })
-    
-# ====================================================================================
+# ================================================================================================================================================================
 @login_required
 @user_passes_test(is_staff)
 def lead_logs_view(request, lead_id):
@@ -1160,15 +940,15 @@ def lead_logs_view(request, lead_id):
                 
         changes = {}
 
-        # Identify changed fields        
+        # Identify changed fields
         for field in all_fields:
             old_value = previous_data.get(field)
             new_value = new_data.get(field)
     
             if old_value != new_value:
                 if(field == "assigned_agent" or field == "admin_assigned"):
-                    old_user = CustomUser.objects.get(id=old_value) if old_value else None
-                    new_user = CustomUser.objects.get(id=new_value) if new_value else None
+                    old_user = CustomUser.objects.filter(id=old_value).first() if old_value else None
+                    new_user = CustomUser.objects.filter(id=new_value).first() if new_value else None
                     
                     old_name_id = f"{old_user.name} (Id: {old_value})" if old_user else "N/A"
                     new_name_id = f"{new_user.name} (Id: {new_value})" if new_user else "N/A"
@@ -1188,7 +968,7 @@ def lead_logs_view(request, lead_id):
 
     return render(request, 'inquiries/lead_logs.html', {'lead': lead, 'logs': logs})
 
-# ====================================================================================
+# ================================================================================================================================================================
 def generate_random_password(length=10):
     characters = string.ascii_letters + string.digits + '@' + '#'
     return ''.join(random.choices(characters, k=length))
@@ -1219,95 +999,12 @@ def add_user(request):
             errors = "\n".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])
             messages.error(request, f"There was an error in your form:\n{errors}")
             return redirect('add_user')
-    else:        
+    else:
         form = CustomUserForm()
         users = CustomUser.objects.all()
-        return render(request, 'inquiries/add_user.html', {'form': form, 'users': users})
+        return render(request, 'inquiries/agent/add_school_user.html', {'form': form, 'users': users})
 
-# ====================================================================================
-
-@login_required
-@user_passes_test(is_admin)
-def manage_access(request):
-    users = CustomUser.objects.all()
-    
-    if request.method == "POST":
-        action = request.POST.get("action_type")
-        user_id = request.POST.get("user_id")
-
-        if action == "delete":
-            user = get_object_or_404(CustomUser, id=user_id)
-            user.delete()
-            messages.success(request, "User deleted successfully.")
-            return redirect("manage_access")
-
-        elif action == "update":
-            user = get_object_or_404(CustomUser, id=user_id)
-            form = CustomUserForm(request.POST, instance=user)
-            if form.is_valid():
-                form.save()
-                messages.success(request, "User updated successfully.")
-                return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
-
-            else:
-                errors = "\n".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])              
-                messages.error(request, f"Error updating user:\n{errors}")
-                return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
-
-    
-    elif request.method == "GET" and "edit_user_id" in request.GET:
-        user_id = request.GET.get("edit_user_id")
-        user_to_edit = get_object_or_404(CustomUser, pk=user_id)
-        form = CustomUserForm(instance=user_to_edit)        
-        return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
-        
-    else:
-        form = CustomUserForm()        
-        return render(request, 'inquiries/manage_access.html', {'form': form,'users': users})
-# ====================================================================================
-
-# View to add agent
-@login_required
-@user_passes_test(is_admin)  # Make sure only admin can access this
-def add_agent(request):
-    if request.method == 'POST':
-        form = AgentForm(request.POST)
-        if form.is_valid():
-            # Get the form data
-            email = form.cleaned_data['email']
-            # agent_name = form.cleaned_data['name']  # cleaned_data strips out unnecessary whitespace and converts data to the appropriate types.            
-            # performance_score = form.cleaned_data['performance_score']
-            
-            if CustomUser.objects.filter(email=email).exists():
-                messages.error(request, "An agent with this email already exists.")
-                return render(request, 'inquiries/add_agent.html', {'form': form})
-
-
-            # Create the User for the agent with a default password
-            default_password = 'DefaultPassword123!'
-            #default_password = generate_random_password
-            
-            user = CustomUser.objects.create_user(username=email, email=email, password=default_password)
-
-            # Create the agent object and associate with the user
-            agent = form.save(commit=False)  # Don't save yet; we need to associate it with the user. We just need to create the instance of the Agent as of now.         
-            agent.save()
-
-            # Send the email with the default password
-            send_staff_welcome_email(agent, default_password)
-
-            # Show success message
-            messages.success(request, f"Agent '{agent.name}' added successfully! The default password has been sent to their email.")
-            return redirect('add_agent')  # Redirect to the same page after success
-        else:
-            messages.error(request, "Error adding agent. Please correct the errors below.")
-    else:
-        form = AgentForm()
-
-    return render(request, 'inquiries/add_agent.html', {'form': form})
-
-
-# ====================================================================================
+# ================================================================================================================================================================
 
 def password_reset_request(request):
     if request.method == 'GET':
@@ -1340,7 +1037,7 @@ def password_reset_request(request):
             messages.error(request, "Mail not registered !")
             return render(request, 'inquiries/registration/password_reset_request.html')
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 def set_new_password(request, uidb64, token):
     try:
@@ -1367,7 +1064,7 @@ def set_new_password(request, uidb64, token):
     else:
         return render(request, 'inquiries/registration/set_new_password.html', {'error': 'The reset link is invalid or has expired.'})
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 def Prepare_Context_For_Filter_Leads_Component(request):
     agents = CustomUser.objects.filter(role="Agent")
@@ -1435,7 +1132,7 @@ def Prepare_Context_For_Filter_Leads_Component(request):
 def filter_inquiries_component(request):
     # print("🔍 =======================> Query Params:", request.GET)
     
-    lead_ids = request.GET.getlist('lead_id[]')
+    # lead_ids = request.GET.getlist('lead_id[]')
         
 
     context = Prepare_Context_For_Filter_Leads_Component(request)
@@ -1443,7 +1140,7 @@ def filter_inquiries_component(request):
 
     return render(request, 'inquiries/Filter_Inquiries_Component.html', context)
     
-# ====================================================================================
+# ================================================================================================================================================================
 
 def hide_columns_component(request):
     table_class = request.GET.get('table_class')
@@ -1461,213 +1158,218 @@ def hide_agent_columns_component(request):
         # any other context vars...
     } 
     return render(request, 'inquiries/agent/Hide_Columns_Component.html', context)
-    
-# ====================================================================================
 
-# def Filter_By_Date(inquiries, choice, request_parameter, model_key):
-#     if request_parameter:
-#         date_val = datetime.strptime(request_parameter, "%Y-%m-%d").date()
-        
-#         if(choice == "from"):
-#             inquiries = inquiries.filter(**{f"{model_key}__gte" : date_val})
-        
-#         elif(choice == "to"):
-#             inquiries = inquiries.filter(**{f"{model_key}__lte" : date_val})
-                                
-#     return inquiries
+# ================================================================================================================================================================
 
-
-
-def Filter_Agents_By_Numbers(agents, choice, request_parameter, status):
-    if request_parameter:
-        agents = agents.filter(role='Agent')
-        number = int(request_parameter)
-
-        # Annotate each agent with count of leads matching the status
-        if status:
-            agents = agents.annotate(
-                total_count=Count('assigned_agent', filter=Q(assigned_agent__status=status))
-            )
-        else:
-            agents = agents.annotate(
-                total_count=Count('assigned_agent')
-            )
-
-        # Filter based on min or max
-        if choice == "min":
-            agents = agents.filter(total_count__gte=number)
-        elif choice == "max":
-            agents = agents.filter(total_count__lte=number)
-
-    return agents
-
-
-
-def Filter_Agents_By_Conversion_Rate(agents, choice, request_parameter):
-    if request_parameter:
-        agents = agents.filter(role='Agent')
-        rate = float(request_parameter)
-
-        # Annotate total and converted leads per agent
-        agents = agents.annotate(
-            total_leads=Count('assigned_agent'),
-            confirmed_leads=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Confirmed")),
-        ).annotate(
-            conversion_rate=ExpressionWrapper(
-                F('confirmed_leads') * 100.0 / F('total_leads'),
-                output_field=FloatField()
-            )
-        )
-
-        # Filter by conversion rate
-        if choice == "min":
-            agents = agents.filter(conversion_rate__gte=rate)
-        elif choice == "max":
-            agents = agents.filter(conversion_rate__lte=rate)
-
-    return agents
-    
-# ====================================================================================================================================================================== 
-def Filter_School_Users(users, request):
-    # Handle filters from the GET request
-    user_id = request.GET.get('user_id')
-    # print("==============================> user_id = ", user_id)
-    if user_id:
-        users = users.filter(id=user_id)
-        
-    user_role = request.GET.get('user_role')    
-    if user_role:        
-        users = users.filter(role=user_role)
-        
-    user_name = request.GET.get('user_name')
-    if user_name:
-        users = users.filter(name__icontains=user_name)
-        
-    user_email = request.GET.get('user_email')
-    if user_email:
-        users = users.filter(email__icontains=user_email)
-
-    mobile_number = request.GET.get('mobile_number')
-    if mobile_number:
-        users = users.filter(mobile_number__icontains=mobile_number)
-        
-    expiry = request.GET.get('expiry')
-    if expiry=='Inactive':
-        users = users.filter(expiration_time__lte=timezone.now())
-    elif expiry == 'Active':
-        users = users.filter(expiration_time__gt=timezone.now())
-        
-    users = Filter_By_Date(users, 'from', request.GET.get('expiration_date_from'), 'expiration_time')
-    users = Filter_By_Date(users, 'to', request.GET.get('expiration_date_to'), 'expiration_time')
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('total_leads_assigned_min'), None)
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('total_leads_assigned_max'), None)
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_inquiry_min'), 'Inquiry')
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_inquiry_max'), 'Inquiry')
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_inquiry_min'), 'Inquiry')
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_inquiry_max'), 'Inquiry')
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_registration_min'), 'Registration')
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_registration_max'), 'Registration')
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_admission_test_min'), 'Admission Test')
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_admission_test_max'), 'Admission Test')
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_admission_offered_min'), 'Admission Offered')
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_admission_offered_max'), 'Admission Offered')    
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_admission_confirmed_min'), 'Admission Confirmed')
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_admission_confirmed_max'), 'Admission Confirmed')
-    
-    users = Filter_Agents_By_Numbers(users, 'min', request.GET.get('leads_in_rejected_min'), 'Rejected')
-    users = Filter_Agents_By_Numbers(users, 'max', request.GET.get('leads_in_rejected_max'), 'Rejected')
-    
-    users = Filter_Agents_By_Conversion_Rate(users, 'min', request.GET.get('conversion_rate_min'))
-    users = Filter_Agents_By_Conversion_Rate(users, 'max', request.GET.get('conversion_rate_max'))
-    
-    return users
-
-# ====================================================================================
-
-def Context_For_Filtering_School_Users(role):
+def Prepare_Context_For_Filtering_School_Users(role, request):
     if role == "Agent":
         Filter_Objects = CustomUser.objects.filter(role='Agent')
+        heading = "Filter Agents"
     elif role == "Admin":
         Filter_Objects = CustomUser.objects.filter(role='Admin')
+        heading = "Filter Admins"
     else:
         Filter_Objects = CustomUser.objects
+        heading = "Filter Users"
         
     user_ids = Filter_Objects.values_list('id', flat=True)
-    names = Filter_Objects.values_list('name', flat=True).distinct() 
-    roles = Filter_Objects.values_list('role', flat=True).distinct()        
-    emails = Filter_Objects.values_list('email', flat=True).exclude(email__isnull=True)
+    user_names = Filter_Objects.values_list('name', flat=True).distinct()
+    user_emails = Filter_Objects.values_list('email', flat=True).exclude(email__isnull=True)
     mobile_numbers = Filter_Objects.values_list('mobile_number', flat=True).distinct().exclude(mobile_number__isnull=True).exclude(mobile_number="")
+    # locations_panchayats = Filter_Objects.values_list('location_panchayat', flat=True).distinct()
+    # blocks = Filter_Objects.values_list('block', flat=True).distinct()
+    locations_panchayats = Filter_Objects.values_list('location_panchayat', flat=True).distinct()
+    blocks = Filter_Objects.values_list('block', flat=True).distinct()
     
-    # print("==================> mobile numbers = ", mobile_numbers)
-    # print("==================> emails = ", emails)
-    # print("==================> roles = ", roles)
+    roles = Filter_Objects.values_list('role', flat=True).distinct()
+    
+        
+    # Store selected options of each select into a context variable
+    query_params = request.GET
+    
+    selected_user_ids = query_params.getlist('user_id[]')
+    selected_user_names = query_params.getlist('user_name[]')
+    selected_user_emails = query_params.getlist('user_email[]')
+    selected_mobile_numbers = query_params.getlist('mobile_number[]')
+    selected_blocks = query_params.getlist('block[]')
+    selected_locations_panchayats = query_params.getlist('location_panchayat[]')
+    selected_roles = query_params.getlist('role[]')
+    selected_statuses = query_params.getlist('status[]')
+    
         
     return {
+        'heading': heading,
         'user_ids': user_ids,
-        'names': names,
+        'user_names': user_names,        
+        'user_emails': user_emails,        
+        'mobile_numbers': mobile_numbers,
+        'locations_panchayats': locations_panchayats,
+        'blocks': blocks,
         'roles': roles,
-        'emails': emails,        
-        'mobile_numbers': mobile_numbers,  
-        'status': ['Active', 'Inactive']      
+        'statuses': ['Active', 'Inactive'] ,
+        
+        # Store selected options of each select into a context variable
+        'selected_user_ids': selected_user_ids,
+        'selected_user_names': selected_user_names,
+        'selected_user_emails': selected_user_emails,
+        'selected_mobile_numbers': selected_mobile_numbers,
+        'selected_blocks': selected_blocks,
+        'selected_locations_panchayats': selected_locations_panchayats,
+        'selected_roles': selected_roles,
+        'selected_statuses': selected_statuses
     }
     
-# ====================================================================================
+# ================================================================================================================================================================
 
 def filter_agents_component(request):
-    context = Context_For_Filtering_School_Users("Agent")
+    context = Prepare_Context_For_Filtering_School_Users("Agent", request)
     return render(request, 'inquiries/agent/Filter_Agents_Component.html', context)
 
-# ====================================================================================
+# ================================================================================================================================================================
 
 def Annotate_Performance_Fields_for_Agents(agents):
     agents = agents.annotate(
+        total_leads_handled=Count('assigned_agent'),
+
         total_leads_in_inquiry_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Inquiry")),
 
         total_leads_in_registration_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Registration")),
-        total_leads_in_admission_test_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Test")),
-        total_leads_in_admission_offered_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Offered")),
-        total_leads_in_admission_confirmed_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Confirmed")),
-        total_leads_in_rejected_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Rejected")),
         
-        total_leads_handled=Count('assigned_agent'),
-        conversion_rate=ExpressionWrapper(
-            F('total_leads_in_admission_confirmed_phase') * 100.0 / F('total_leads_handled'),
+        total_leads_in_admission_test_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Test")),
+        
+        total_leads_in_admission_offered_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Offered")),
+        
+        total_leads_in_admission_confirmed_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Admission Confirmed")),
+        
+        total_leads_in_rejected_phase=Count('assigned_agent', filter=Q(assigned_agent__status="Rejected")),
+                
+        conversion_rate = Case(
+            When(total_leads_handled=0, then=Value(0.0)),
+            default=Round(
+                ExpressionWrapper(
+                    F('total_leads_in_admission_confirmed_phase') * 100.0 / F('total_leads_handled'),
+                    output_field=FloatField()
+                ),
+                precision=2
+            ),
             output_field=FloatField()
         )
     )
     
     return agents
+
+# ================================================================================================================================================================
+def Filter_School_Users_By_Number(school_users, field, min_value, max_value):    
+    if min_value:
+        school_users = school_users.filter(**{f"{field}__gte": int(min_value)})
+    
+    if max_value:
+        school_users = school_users.filter(**{f"{field}__lte": int(max_value)})
+        
+    return school_users
+    
+# ================================================================================================================================================================
+def Filter_School_Users(school_users, request): # Make sure to run annotate function for Custom_User model first before calling this
+    query_params = request.GET
+    
+    # Handle filters from the GET request
+    user_ids = query_params.getlist('user_id[]')
+    if user_ids:
+        user_ids = [int(i) for i in user_ids if str(i).isdigit()]
+        school_users = school_users.filter(id__in=user_ids)
+            
+    user_names = query_params.getlist('user_name[]')
+    if user_names:
+        school_users = school_users.filter(name__in=user_names)
+          
+    user_emails = query_params.getlist('user_email[]')
+    if user_emails:
+        school_users = school_users.filter(email__in=user_emails)
+                
+    mobile_numbers = query_params.getlist('mobile_number[]')
+    if mobile_numbers:
+        school_users = school_users.filter(mobile_number__in=mobile_numbers)
+    
+    blocks = query_params.getlist('block[]')
+    if blocks:
+        school_users = school_users.filter(block__in=blocks)
+            
+    location_panchayats = query_params.getlist('location_panchayat[]')
+    if location_panchayats:
+        school_users = school_users.filter(location_panchayat__in=location_panchayats)
+        
+    roles = query_params.getlist('role[]')
+    if roles:
+        school_users = school_users.filter(role__in=roles)
+        
+  
+    statuses = query_params.getlist('status[]')
+    if statuses:
+        school_users = school_users.filter(status__in=statuses)
+
+    # Filter dates
+    school_users = Filter_By_Date(school_users, 'from', query_params.get('user_created_date_from'), 'date_joined')
+    school_users = Filter_By_Date(school_users, 'to', query_params.get('user_created_date_to'), 'date_joined')
+    
+    school_users = Filter_By_Date(school_users, 'from', request.GET.get('expiration_date_from'), 'expiration_time')
+    school_users = Filter_By_Date(school_users, 'to', request.GET.get('expiration_date_to'), 'expiration_time')
+            
+    
+    # Filter numbers
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_handled', query_params.get('min_leads_handled'), query_params.get('max_leads_handled'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_in_admission_offered_phase', query_params.get('min_leads_converted'), query_params.get('max_leads_converted'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'conversion_rate', query_params.get('min_conversion_rate'), query_params.get('max_conversion_rate'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_in_inquiry_phase', query_params.get('min_leads_in_inquiry'), query_params.get('max_leads_in_inquiry'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_in_registration_phase', query_params.get('min_leads_in_registration'), query_params.get('max_leads_in_registration'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_in_admission_test_phase', query_params.get('min_leads_in_admission_test'), query_params.get('max_leads_in_admission_test'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_in_admission_offered_phase', query_params.get('min_leads_in_admission_offered'), query_params.get('max_leads_in_admission_offered'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_in_admission_confirmed_phase', query_params.get('min_leads_in_admission_confirmed'), query_params.get('max_leads_in_admission_confirmed'))
+    
+    school_users = Filter_School_Users_By_Number(school_users, 'total_leads_in_rejected_phase', query_params.get('min_leads_in_rejected'), query_params.get('max_leads_in_rejected'))
+        
+    return school_users
+# ================================================================================================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def school_users_list_view(request):
+    users = CustomUser.objects.all()
+    users = Annotate_Performance_Fields_for_Agents(users)
+    users = Filter_School_Users(users, request)   # Run annotate part before calling it
+    
+    context = {
+        'users': users,
+        'actions': ['Manage Leads', 'Delete User', 'Update User'],
+        'show_performance_metrics': True,
+        'base_url_name': reverse('school_users_list'),
+    }
+    
+    return render(request, 'inquiries/agent/school_users_list.html', context)
+
 # ====================================================================================
 
 @login_required
 @user_passes_test(is_admin)
-def assign_leads_to_agents_view(request):
-    agents = CustomUser.objects.filter(role="Agent")
-    agents = Filter_School_Users(agents, request)
-    agents = Annotate_Performance_Fields_for_Agents(agents)
+def delete_school_user_view(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(CustomUser, id=user_id)
+        user.delete()
     
-    context = {
-        'agents': agents,
-        'actions': ['Manage Leads'],
-        'show_performance_metrics': True,
-        'base_url_name': reverse('assign_leads_to_agents'),
-    }
-
-    return render(request, 'inquiries/agent/assign_leads_to_agent.html', context)
+    return redirect('school_users_list')
 
 # ====================================================================================
 
 @login_required
 @user_passes_test(is_admin)
 def bulk_assign_leads_view(request, agent_id):
-    agent = get_object_or_404(CustomUser, id=agent_id)    
+    agent = get_object_or_404(CustomUser, id=agent_id)
     
     if request.method == 'POST':
         # Extract the list of selected leads IDs
@@ -1704,12 +1406,11 @@ def bulk_assign_leads_view(request, agent_id):
             Save_Lead_Logs(old_lead_instance, lead, request.user)
         
         messages.success(request, f"Leads updated for {agent.name}")
-        return redirect('assign_leads_to_agents')
+        return redirect('school_users_list')
 
         
 
-    context = Filter_Inquiries(request)
-    inquiries = context["inquiries"]
+    inquiries = Filter_Inquiries(request)
     heading = f"Assign Leads to Agent: {agent.name} (Id: {agent.id})"
     actions = ['Bulk Assign Leads']
     pre_selected_leads = list(inquiries.filter(assigned_agent=agent).values_list('id', flat=True))
@@ -1729,5 +1430,39 @@ def bulk_assign_leads_view(request, agent_id):
     })
     
     return render(request, 'inquiries/inquiry_list.html', context)
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def update_school_user_view(request):
+    print("=======================> inside update school user view")
+    if request.method == "POST":
+        user_id = request.POST.get("user_id")
+        print("==========================> user_id = ", user_id)
+        user = get_object_or_404(CustomUser, id=user_id)
+        form = CustomUserForm(request.POST, instance=user)
+        # print("==========================> form = ", form)
+        
+        if form.is_valid():
+            form.save()
+            messages.success(request, "User updated successfully.")
+            return render(request, 'inquiries/agent/Update_School_User_Component.html', {'form': form})
+
+        else:
+            errors = "\n".join([f"{field}: {', '.join(errors)}" for field, errors in form.errors.items()])
+            messages.error(request, f"Error updating user:\n{errors}")
+            return render(request, 'inquiries/agent/Update_School_User_Component.html', {'form': form})
+
+    
+    else:
+        user_id = request.GET.get("edit_user_id")
+        user_to_edit = get_object_or_404(CustomUser, pk=user_id)
+        form = CustomUserForm(instance=user_to_edit)
+        return render(request, 'inquiries/agent/Update_School_User_Component.html', {'form': form})
+
+# ====================================================================================
+
+
 
 # ====================================================================================

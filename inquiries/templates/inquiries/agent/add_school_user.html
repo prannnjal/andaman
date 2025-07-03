@@ -1,0 +1,140 @@
+{% block content %}
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f8;
+    padding: 20px;
+    margin: 0;
+  }
+
+  h2, h3 {
+    color: #222;
+    margin-bottom: 20px;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .card {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    margin-bottom: 40px;
+    width: 50vw;
+    margin: 1rem auto;
+  }
+
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+
+  button {
+    margin: 25px auto 0;
+    background-color: #007bff;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: block;
+    font-size: 16px;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  .navigation {
+    text-align: center;
+    margin: 1.5rem auto 0.5rem auto;
+  }
+
+  .add_new_agent {
+    background-color: #28a745;
+    color: #fff !important;
+    padding: 15px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .add_new_agent:hover {
+    background-color: #218838;
+  }
+
+.same_row_wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: start;
+}
+
+.form-group {
+  flex: 1 1 calc(50% - 20px); /* Two per row with gap */
+  display: flex;
+  flex-direction: column;
+}
+
+</style>
+
+<div class="container">
+
+  {% include "inquiries/Alerts.html" %}
+
+  <div class="card">
+    <h2>Add New User</h2>
+
+    <form method="post">
+      {% csrf_token %}
+      
+      <div class="same_row_wrapper">
+        <div class="form-group">
+          {{ form.name.label_tag }} {{ form.name }}
+        </div>
+        <div class="form-group">
+          {{ form.mobile_number.label_tag }} {{ form.mobile_number }}
+        </div>
+        <div class="form-group">
+          {{ form.email.label_tag }} {{ form.email }}
+        </div>
+        <div class="form-group">
+          {{ form.role.label_tag }} {{ form.role }}
+        </div>
+
+        <div class="form-group">
+          <label for="{{ form.expiration_time.id_for_label }}">Expiration Time:</label>
+          {{ form.expiration_time }}
+        </div>
+
+        <!-- 🔧 Add this dummy block to maintain column structure -->
+        <div class="form-group" style="visibility: hidden;">&nbsp;</div>
+      </div>
+
+      <!-- ✅ Submit button outside flex row -->
+      <button type="submit">Add User</button>
+    </form>
+
+  </div>
+
+  <div class="navigation">
+    <a href="{% url 'dashboard' %}" class="add_new_agent">Back to Dashboard</a>
+  </div>
+</div>
+
+{% endblock %}

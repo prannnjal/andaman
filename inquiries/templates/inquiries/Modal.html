@@ -34,6 +34,27 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        #modal-overlay {
+            display: none;
+            position: fixed; /* Use fixed for full-screen overlay */
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 6;
+            background: rgba(0, 0, 0, 0.662);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+
+        #modal-main {
+            max-width: 90vw;
+            max-height: 90vh;
+
+        }
     </style>
 </head>
 
@@ -48,30 +69,54 @@
     <script>
         $(document).ready(function () {
             $('.load-component').on('click', function () {
-                const template_url = $(this).data('template-url');
-                var table_class = $(this).data('table_class');
-                //console.log("======================> table_class for modal = ", table_class)
+                const purpose = $(this).data('purpose');
 
-                // Get current page's query string (e.g., "?lead_id=42&status=active")
-                const currentParams = window.location.search;
-                //console.log("=======================> currentParams = ", currentParams)
+                let url = null;
 
-                // Base URL without query params (e.g., "/inquiries/list/")
-                const baseUrlName = $(this).data('base-url-name');
+                if(purpose === "Update School User"){
+                    const templateUrl = $(this).data('template-url');  // e.g., /update_school_user/
+                    const userId = $(this).data('edit-user-id');
 
-                //console.log("=======================> baseurlname = ", baseUrlName)
+                    url = new URL(templateUrl, window.location.origin);
+                    url.searchParams.set('edit_user_id', userId);      // Must match view: request.GET.get("edit_user_id")
+                }
 
-                const filter_component_heading = $(this).data('filter-component-heading');
+                /*
+                else if(purpose === "Assign Agent to Lead"){
+                    const templateUrl = $(this).data('template-url');
+                    const leadId = $(this).data('lead-id');
 
-                 // Add base-url-name as a query param: base_url_name=follow_up_management
-                const url = new URL(template_url, window.location.origin);
-                const params = new URLSearchParams(currentParams);
+                    url = new URL(templateUrl, window.location.origin);
+                    url.searchParams.set('lead_id', leadId);
+                }
+                */
 
-                params.set('base_url_name', baseUrlName);  // add your new query param
-                params.set('table_class', table_class);  // add table_class
-                params.set('filter_component_heading', filter_component_heading);
+                else{
+                    const template_url = $(this).data('template-url');
+                    var table_class = $(this).data('table_class');
+                    //console.log("======================> table_class for modal = ", table_class)
 
-                url.search = params.toString();
+                    // Get current page's query string (e.g., "?lead_id=42&status=active")
+                    const currentParams = window.location.search;
+                    //console.log("=======================> currentParams = ", currentParams)
+
+                    // Base URL without query params (e.g., "/inquiries/list/")
+                    const baseUrlName = $(this).data('base-url-name');
+
+                    //console.log("=======================> baseurlname = ", baseUrlName)
+
+                    const filter_component_heading = $(this).data('filter-component-heading');
+
+                    // Add base-url-name as a query param: base_url_name=follow_up_management
+                    url = new URL(template_url, window.location.origin);
+                    const params = new URLSearchParams(currentParams);
+
+                    params.set('base_url_name', baseUrlName);  // add your new query param
+                    params.set('table_class', table_class);  // add table_class
+                    params.set('filter_component_heading', filter_component_heading);
+
+                    url.search = params.toString();
+                }
 
                 $.ajax({
                     url: url.toString(),
@@ -100,7 +145,10 @@
 
         // Close modal when user clicks outside of it
         window.onclick = function(event) {
-            if (event.target.id === 'modal-overlay') {
+            //console.log("==============================> event.target.id = ", event.target.id)
+            //console.log("==============================> event = ", event)
+            
+            if (event.target.id === 'modal-overlay') {                
                 closeModal('modal-overlay');
             }
         };

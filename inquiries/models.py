@@ -78,6 +78,9 @@ ROLE_CHOICES = [
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     mobile_number = models.CharField(max_length=14, unique=True, null=True, blank=True)
+    block = models.CharField(max_length=100, blank=True, null=True)
+    location_panchayat = models.CharField(max_length=100, blank=True, null=True)
+    date_joined = models.DateTimeField(default=now)
     
     # To let admin grant permission to a user:
     expiration_time = models.DateTimeField(default=timezone.make_aware(datetime(9999, 12, 31, 23, 59, 59)))  # Make it timezone-aware    

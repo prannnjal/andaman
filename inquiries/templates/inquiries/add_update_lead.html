@@ -12,6 +12,165 @@
 
 </head>
 
+<style>
+    /* General Styling */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f4f4f4;
+    }
+
+    .container {
+        max-width: 750px;
+        margin: auto;
+        padding: 20px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #218838;
+        margin-bottom: 4rem;
+        font-size: 26px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 25px;
+        align-items: stretch;
+    }
+
+    .form-group label {
+        margin-bottom: 9px;
+        font-size: 17px;
+        color: #274bd9;
+        font-weight: 700;
+        text-align: start;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 10px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-group {       /* Some elements (like <input>) won't shrink past a certain width unless explicitly told to. Without min-width: 0, .form-group might resist shrinking and cause overflow.
+    
+    min-width: 0; forces the .form-group elements to shrink if needed. */
+        min-width: 0;
+    }
+
+    .btn-submit {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 0.8rem 3rem;
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        margin: 3rem auto;        
+        display: block;
+    }
+
+    .btn-submit:hover {
+        background-color: #218838;
+    }
+
+    
+    .add_new_agent {
+        background-color: #1500ff;
+        color: #fff !important;
+        padding: 15px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .add_new_agent:hover {
+        background-color: #1809c0;
+    }
+
+    .navigation {
+        text-align: center;
+        margin: 1.5rem auto 0.5rem auto;
+    }
+
+    .btn-back {
+        text-decoration: none;
+        color: #007BFF;
+        font-size: 16px;
+    }
+
+    .btn-back:hover {
+        text-decoration: underline;
+    }
+
+    #id_location_panchayat option[value="Other"] {
+        color: red;
+    }
+
+    #id_block option[value="Other"] {
+        color: red;
+    }
+    
+    .same_row_wrapper {
+        display: flex;
+        flex-direction: row;          
+        gap: 20px;
+        align-items: center; 
+        justify-content: space-between;         
+    }
+
+    
+
+    /* Applies to all direct children (*) of .same_row_wrapper
+    Makes each child element take up an equal share of the available space inside the flex container. 
+    */
+    .same_row_wrapper > * {       
+        flex: 1;
+    }
+    
+
+    @media screen and (max-width: 768px) {
+       
+        .messages .alert, .success, .error {
+            margin-bottom: 12px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+    }
+
+    @media screen and (max-width: 480px) {
+       
+        .messages .alert, .success, .error {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }            
+
+        .same_row_wrapper {
+            display: block;
+        }
+    }
+</style>
+
 <body>
     {% include "inquiries/Alerts.html" %}
     
@@ -156,12 +315,12 @@
             </div>
 
             <!-- Submit Button -->
-            <button type="submit" class="btn-submit">Submit Inquiry</button>
+            <button type="submit" class="btn-submit">Submit</button>
         </form>
 
         <!-- Navigation Link -->
         <div class="navigation">
-            <a href="{% url 'dashboard' %}" class="btn-back">Back to Dashboard</a>
+            <a href="{% url 'dashboard' %}" class="add_new_agent">Back to Dashboard</a>
         </div>
     </div>
 
@@ -328,177 +487,5 @@
             }
         });
     </script>
-    
-
-    <style>
-        /* General Styling */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            max-width: 750px;
-            margin: auto;
-            padding: 40px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 40px;
-            font-size: 26px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 25px;
-        }
-
-        .form-group label {
-            margin-bottom: 9px;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 10px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .form-group {       /* Some elements (like <input>) won't shrink past a certain width unless explicitly told to. Without min-width: 0, .form-group might resist shrinking and cause overflow.
-        
-        min-width: 0; forces the .form-group elements to shrink if needed. */
-            min-width: 0;
-        }
-
-        .btn-submit {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin: auto;
-            width: 50%;           
-            margin-top: 20px;
-            display: block;
-        }
-
-        .btn-submit:hover {
-            background-color: #318135;
-        }
-
-        .navigation {
-            margin-top: 30px;
-            text-align: center;
-        }
-
-        .btn-back {
-            text-decoration: none;
-            color: #007BFF;
-            font-size: 16px;
-        }
-
-        .btn-back:hover {
-            text-decoration: underline;
-        }
-
-        #id_location_panchayat option[value="Other"] {
-            color: red;
-        }
-
-        #id_block option[value="Other"] {
-            color: red;
-        }
-
-        /* Messages Styling */
-        .messages .alert, .success, .error {
-            margin-bottom: 15px;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-
-        .messages .success {
-            background-color: #21a606;
-            color: #ffffff;
-            text-align: center;
-        }
-
-        .messages .alert.error {
-            background-color: #f50317;
-            color: #ffffff;
-            text-align: center;
-        }
-                
-        
-       
-        .same_row_wrapper {
-            display: flex;
-            flex-direction: row;          
-            gap: 20px;
-            align-items: center; 
-            justify-content: space-between;         
-        }
-
-       /* Applies to all direct children (*) of .same_row_wrapper
-       Makes each child element take up an equal share of the available space inside the flex container. 
-       */
-        .same_row_wrapper > * {       
-            flex: 1;
-        }
-        
-
-        @media screen and (max-width: 768px) {
-            .btn-submit {
-                padding: 12px 20px;
-                font-size: 16px;
-            }
-
-            .messages .alert, .success, .error {
-                margin-bottom: 12px;
-                padding: 10px;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-        }
-
-        @media screen and (max-width: 480px) {
-            .btn-submit {
-                padding: 10px 16px;
-                font-size: 14px;
-            }
-
-            .messages .alert, .success, .error {
-                margin-bottom: 10px;
-                padding: 8px;
-                border-radius: 4px;
-                font-size: 12px;
-            }            
-
-            .same_row_wrapper {
-                display: block;
-            }
-        }
-        
-    </style>
 </body>
 </html>

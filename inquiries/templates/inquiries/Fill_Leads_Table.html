@@ -344,7 +344,7 @@
                 </td>
                 <td style="text-align: center;">
                     <div style="display: flex; gap:25px; justify-content: center;">                        
-                        {% if user.role == "Agent" or user.role == "Admin" %}                            
+                        {% if user.role == "Agent" or user.role == "Admin" %}
                             {% if "Update" in actions %}
                                 <a class="update" href="{% url 'update_status' inquiry.id %}">Update</a>
                             {% endif %}
@@ -356,6 +356,13 @@
                             {% if "Assign Agent" in actions %}
                                 <button type="button" class="delete" onclick="openAgentModal({{ inquiry.id }}, {{ inquiry.assigned_agent.id }})">Assign Agent</button>
                             {% endif %}
+
+                            <!-- {% if "Assign Agent" in actions %}
+                                <button class="delete load-component" data-template-url="{% url 'school_users_list' %}" data-purpose="Assign Agent to Lead" data-lead-id={{inquiry.id}}>
+                                    Assign Agent
+                                </button>
+                            {% endif %} -->
+                            
 
                             {% if "Bulk Assign Leads" in actions %}
                                 <label>Assign</label>
