@@ -187,9 +187,66 @@ class Lead(models.Model):
         related_name='admin_assigned'
     )
     
+    # Transfer tracking fields
+    transferred_from = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'role': 'Agent'},
+        related_name='transferred_leads',
+        help_text='Agent who transferred this lead'
+    )
+    
+    transferred_to = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        limit_choices_to={'role': 'Agent'},
+        related_name='received_leads',
+        help_text='Agent who received this transferred lead'
+    )
+    
+    transfer_date = models.DateTimeField(null=True, blank=True, help_text='When the lead was transferred')
+    
+    transfer_reason = models.TextField(blank=True, null=True, help_text='Reason for transferring the lead')
+    
    
     def __str__(self):
         return f"Name: {self.student_name},\nParent Name: {self.parent_name},Email:{self.email},Student Class:{self.student_class},\nmobile_number:{self.mobile_number},\nAddress:{self.address},\nBlock:{self.block},\nLocation:{self.location_panchayat},\nInquiry Source:{self.inquiry_source},\nStatus:{self.status}"
+    
+    @classmethod
+    def get_agent_with_least_leads(cls):
+        """
+        Returns the agent with the least number of assigned leads.
+        Returns None if no agents are available.
+        """
+        from django.db.models import Count
+        
+        agents = CustomUser.objects.filter(role='Agent')
+        if not agents.exists():
+            return None
+        
+        agents_with_counts = agents.annotate(
+            lead_count=Count('assigned_agent')
+        ).order_by('lead_count')
+        
+        return agents_with_counts.first()
+    
+    def auto_assign_agent(self):
+        """
+        Automatically assigns this lead to the agent with the least workload.
+        Returns True if assignment was successful, False otherwise.
+        """
+        if self.assigned_agent:
+            return False  # Already assigned
+        
+        agent = self.get_agent_with_least_leads()
+        if agent:
+            self.assigned_agent = agent
+            return True
+        return False
     
 
 class LeadLogs(models.Model):

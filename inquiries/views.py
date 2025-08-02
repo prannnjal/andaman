@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from .models import CustomUser, Lead, CustomUser, LeadLogs
-from .forms import InquiryForm, UpdateLeadStatusForm, CustomUserForm
+from .forms import InquiryForm, UpdateLeadStatusForm, EditLeadForm, AgentUpdateLeadForm, CustomUserForm, UpdateUserForm, TransferLeadForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
 from datetime import timedelta
@@ -144,10 +144,9 @@ def Filter_Inquiries(request):
     if user.role=="Admin":
         inquiries = Lead.objects.all()
         # print("=====================> after admin len(inquiries) filtered = ", len(inquiries)) 
-    elif user.role=="Agent":  # Check if the user is linked to an Agent. Since Agent has a OneToOneField to CustomUser, we check if the user has an agent attribute before accessing user.agent.
-        inquiries = Lead.objects.all()
-        
-        # inquiries = Lead.objects.filter(assigned_agent=user.agent)  # Agent has a OneToOneField linked to CustomUser. So you can simply access agent model instance of a user via user.agent.
+    elif user.role=="Agent":  # Agents can only see leads assigned to them
+        inquiries = Lead.objects.filter(assigned_agent=user)
+        # print("=====================> after agent len(inquiries) filtered = ", len(inquiries)) 
     else:
         inquiries = Lead.objects.all()     # return an empty queryset if the user is neither an admin nor an agent
     
@@ -389,7 +388,16 @@ def add_inquiry(request):
             if inquiry.follow_up_date:
                 inquiry.last_follow_up_updation = inquiry.follow_up_date
                 
-            inquiry.last_inquiry_updation = now().date()              
+            inquiry.last_inquiry_updation = now().date()
+            
+            # Auto-assign agent if no agent is assigned
+            if not inquiry.assigned_agent:
+                auto_assigned_agent = auto_assign_agent_with_least_leads()
+                if auto_assigned_agent:
+                    inquiry.assigned_agent = auto_assigned_agent
+                    messages.info(request, f"Lead automatically assigned to agent: {auto_assigned_agent.name}")
+                else:
+                    messages.warning(request, "No agents available for assignment.")
         
             inquiry.save()
             
@@ -430,32 +438,40 @@ def manage_lead_status(request, inquiry_id):
     # Fetch the Lead instance for the given inquiry_id
     inquiry = get_object_or_404(Lead, id=inquiry_id)    # fetches that instance from Lead model whose id is=inquiry_id
     
-    
+    # Check if the current user can edit this lead
+    if request.user.role == 'Agent' and inquiry.assigned_agent != request.user:
+        messages.error(request, "You can only edit leads assigned to you.")
+        return redirect('inquiry_list')
 
     if request.method == 'POST':
-        # print("=====================> request  = ",request.POST)
-        # Bind the form with POST data and the current inquiry instance. This ensures that the form updates the correct Lead object instead of creating a new one.
-        form = InquiryForm(request.POST, instance=inquiry)
+        # Use different forms based on user role
+        if request.user.role == 'Admin':
+            form = EditLeadForm(request.POST, instance=inquiry)
+        else:
+            form = AgentUpdateLeadForm(request.POST, instance=inquiry)
         
         if form.is_valid(): # Ensures all required fields are correctly filled.
             old_inquiry_instance = Lead.objects.get(id=inquiry.id)  # Fetch a fresh copy of the old data
     
-            
             inquiry = form.save(commit=False)
+            
+            # For agents, preserve the read-only fields from the original instance
+            if request.user.role == 'Agent':
+                inquiry.inquiry_source = old_inquiry_instance.inquiry_source
+                inquiry.admin_assigned = old_inquiry_instance.admin_assigned
+                inquiry.assigned_agent = old_inquiry_instance.assigned_agent
             
             if inquiry.follow_up_date and inquiry.follow_up_date != old_inquiry_instance.follow_up_date:
                 inquiry.last_follow_up_updation = now().date()
                 
             inquiry.last_inquiry_updation = now().date()
             
-                        
             if request.POST.get('block') == "Other":
                 inquiry.block = request.POST.get('manual_block')
 
             if request.POST.get('location_panchayat') == "Other":
                 inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
                 
-            
             inquiry.save() 
             
             new_inquiry_instance = inquiry  # Store the new data after changes
@@ -470,8 +486,11 @@ def manage_lead_status(request, inquiry_id):
         else:
             messages.error(request, "Error updating lead !")
     else:
-        # Prefill form with the inquiry's current details
-        form = InquiryForm(instance=inquiry)  # Ensure form is tied to the existing instance
+        # Use different forms based on user role
+        if request.user.role == 'Admin':
+            form = EditLeadForm(instance=inquiry)
+        else:
+            form = AgentUpdateLeadForm(instance=inquiry)
 
     return render(request, 'inquiries/add_update_lead.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
 
@@ -512,8 +531,7 @@ def dashboard(request):
     if user.role == "Admin": 
         inquiries = Lead.objects.all()  # Admin sees all
     else:
-        inquiries = Lead.objects.all()
-        # inquiries = Lead.objects.filter(assigned_agent__user=user)  # Agent sees only their assigned inquiries
+        inquiries = Lead.objects.filter(assigned_agent=user)  # Agent sees only their assigned inquiries
 
     # Overall Counts
     total_inquiries = inquiries.filter(status='Inquiry').count()
@@ -590,8 +608,7 @@ def detailed_stats(request):
     if user.role=="Admin":
         inquiries = Lead.objects.all()  # Admin sees all
     else:
-        inquiries = Lead.objects.all()
-        # inquiries = Lead.objects.filter(assigned_agent__user=user)  # Agent sees only their assigned inquiries
+        inquiries = Lead.objects.filter(assigned_agent=user)  # Agent sees only their assigned inquiries
 
     # Overall Counts
     total_inquiries = inquiries.filter(status='Inquiry').count()
@@ -694,9 +711,7 @@ def export_inquiries_excel(request):
     if user.role=="Admin":
         inquiries = Lead.objects.all()
     else:
-        inquiries = Lead.objects.all()
-        
-        # inquiries = Lead.objects.filter(assigned_agent__user=user)  # Filter only assigned inquiries for the agent
+        inquiries = Lead.objects.filter(assigned_agent=user)  # Filter only assigned inquiries for the agent
 
     # Create a workbook and select the active worksheet
     workbook = Workbook()   # Create a new Excel workbook
@@ -877,14 +892,16 @@ def delete_inquiry(request, id):
 # ================================================================================================================================================================
 
 # Helper function to send the email with the default password
-def send_staff_welcome_email(agent, default_password):
+def send_staff_welcome_email(agent, custom_password):
     subject = "Welcome to the Team!"
     message = f"Hello {agent.name},\n\n" \
-              f"Your account has been created successfully.\n\n" \
+              f"Your account has been created successfully by the administrator.\n\n" \
               f"Here are your login credentials:\n" \
+              f"Email: {agent.email}\n" \
               f"Phone: {agent.mobile_number}\n" \
-              f"Password: {default_password}\n\n" \
-              f"Please login and change your password after the first login.\n\n" \
+              f"Password: {custom_password}\n\n" \
+              f"Please login using either your email or phone number.\n" \
+              f"You can change your password anytime using the 'Forgot Password' feature.\n\n" \
               f"Best regards,\nThe Team"
     
     # send_mail(
@@ -983,14 +1000,16 @@ def add_user(request):
         if form.is_valid():
             # print("======================> form is valid")
             user = form.save(commit=False)
-            random_password = generate_random_password()
-            # print("=========================> settig random password as = ",random_password)
-            user.set_password(random_password)
+            
+            # Use the custom password set by admin
+            custom_password = form.cleaned_data['password1']
+            user.set_password(custom_password)
             user.save()
             
-            send_staff_welcome_email(user, random_password)
+            # Send welcome email with the custom password
+            send_staff_welcome_email(user, custom_password)
             
-            messages.success(request, 'User added successfully!')
+            messages.success(request, f'User "{user.name}" added successfully with custom password!')
             # print("===========> Messages: ", messages.get_messages(request))
             return redirect('add_user')  # Replace with your target redirect
         else:
@@ -1067,17 +1086,27 @@ def set_new_password(request, uidb64, token):
 # ================================================================================================================================================================
 
 def Prepare_Context_For_Filter_Leads_Component(request):
+    user = request.user
+    
+    # Filter data based on user role
+    if user.role == "Admin":
+        # Admin sees all data
+        base_queryset = Lead.objects.all()
+    else:
+        # Agent sees only their assigned leads
+        base_queryset = Lead.objects.filter(assigned_agent=user)
+    
     agents = CustomUser.objects.filter(role="Agent")
-    lead_ids = Lead.objects.values_list('id', flat=True)
-    students = Lead.objects.values_list('student_name', flat=True).distinct()
-    parents = Lead.objects.values_list('parent_name', flat=True).distinct()
-    locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
-    lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True).distinct()
-    mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
-    blocks = Lead.objects.values_list('block', flat=True).distinct()
-    inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
-    statuses = Lead.objects.values_list('status', flat=True).distinct()
-    student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
+    lead_ids = base_queryset.values_list('id', flat=True)
+    students = base_queryset.values_list('student_name', flat=True).distinct()
+    parents = base_queryset.values_list('parent_name', flat=True).distinct()
+    locations_panchayats = base_queryset.values_list('location_panchayat', flat=True).distinct()
+    lead_emails = base_queryset.values_list('email', flat=True).exclude(email__isnull=True).distinct()
+    mobile_numbers = base_queryset.values_list('mobile_number', flat=True).distinct()
+    blocks = base_queryset.values_list('block', flat=True).distinct()
+    inquiry_sources = base_queryset.values_list('inquiry_source', flat=True).distinct()
+    statuses = base_queryset.values_list('status', flat=True).distinct()
+    student_classes = base_queryset.values_list('student_class', flat=True).distinct()
     admins = CustomUser.objects.filter(role = "Admin")
     
     # Store selected options of each select into a context variable
@@ -1435,18 +1464,65 @@ def bulk_assign_leads_view(request, agent_id):
 
 @login_required
 @user_passes_test(is_admin)
+def auto_assign_unassigned_leads_view(request):
+    """
+    Bulk auto-assign all unassigned leads to agents with least workload
+    """
+    if request.method == 'POST':
+        # Get all unassigned leads
+        unassigned_leads = Lead.objects.filter(assigned_agent__isnull=True)
+        
+        if not unassigned_leads.exists():
+            messages.info(request, "No unassigned leads found.")
+            return redirect('inquiry_list')
+        
+        assigned_count = 0
+        
+        for lead in unassigned_leads:
+            # Get agent with least leads for each lead
+            auto_assigned_agent = auto_assign_agent_with_least_leads()
+            if auto_assigned_agent:
+                old_lead_instance = Lead.objects.get(id=lead.id)
+                lead.assigned_agent = auto_assigned_agent
+                lead.save()
+                Save_Lead_Logs(old_lead_instance, lead, request.user)
+                assigned_count += 1
+        
+        if assigned_count > 0:
+            messages.success(request, f"Successfully auto-assigned {assigned_count} leads to agents.")
+        else:
+            messages.warning(request, "No agents available for assignment.")
+        
+        return redirect('inquiry_list')
+    
+    return redirect('inquiry_list')
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_admin)
 def update_school_user_view(request):
     print("=======================> inside update school user view")
     if request.method == "POST":
         user_id = request.POST.get("user_id")
         print("==========================> user_id = ", user_id)
         user = get_object_or_404(CustomUser, id=user_id)
-        form = CustomUserForm(request.POST, instance=user)
+        form = UpdateUserForm(request.POST, instance=user)
         # print("==========================> form = ", form)
         
         if form.is_valid():
-            form.save()
-            messages.success(request, "User updated successfully.")
+            # Save the user data
+            updated_user = form.save(commit=False)
+            
+            # Handle password change if provided
+            password1 = form.cleaned_data.get('password1')
+            if password1:
+                updated_user.set_password(password1)
+                messages.success(request, f"User '{updated_user.name}' updated successfully with new password.")
+            else:
+                messages.success(request, f"User '{updated_user.name}' updated successfully.")
+            
+            updated_user.save()
             return render(request, 'inquiries/agent/Update_School_User_Component.html', {'form': form})
 
         else:
@@ -1458,7 +1534,7 @@ def update_school_user_view(request):
     else:
         user_id = request.GET.get("edit_user_id")
         user_to_edit = get_object_or_404(CustomUser, pk=user_id)
-        form = CustomUserForm(instance=user_to_edit)
+        form = UpdateUserForm(instance=user_to_edit)
         return render(request, 'inquiries/agent/Update_School_User_Component.html', {'form': form})
 
 # ====================================================================================
@@ -1466,3 +1542,106 @@ def update_school_user_view(request):
 
 
 # ====================================================================================
+
+def auto_assign_agent_with_least_leads():
+    """
+    Automatically assigns the agent with the least number of leads.
+    Returns the agent object or None if no agents are available.
+    """
+    return Lead.get_agent_with_least_leads()
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_staff)
+def log_call_view(request):
+    """
+    Log phone calls made by agents
+    """
+    if request.method == 'POST':
+        import json
+        from django.http import JsonResponse
+        
+        try:
+            data = json.loads(request.body)
+            student_name = data.get('student_name')
+            phone_number = data.get('phone_number')
+            agent_name = data.get('agent')
+            timestamp = data.get('timestamp')
+            
+            # Log the call (you can save this to a database if needed)
+            print(f"Call logged: Agent {agent_name} called {student_name} at {phone_number} on {timestamp}")
+            
+            # You can create a CallLog model to store this information
+            # CallLog.objects.create(
+            #     agent=request.user,
+            #     student_name=student_name,
+            #     phone_number=phone_number,
+            #     call_time=timestamp
+            # )
+            
+            return JsonResponse({'status': 'success', 'message': 'Call logged successfully'})
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    return JsonResponse({'status': 'error', 'message': 'Only POST requests allowed'}, status=405)
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def transfer_lead_view(request, lead_id):
+    """
+    Transfer a lead to another agent
+    """
+    lead = get_object_or_404(Lead, id=lead_id)
+    
+    # Check if the current user can transfer this lead
+    if request.user.role == 'Agent' and lead.assigned_agent != request.user:
+        messages.error(request, "You can only transfer leads assigned to you.")
+        return redirect('inquiry_list')
+    
+    if request.method == 'POST':
+        form = TransferLeadForm(request.POST, current_agent=request.user)
+        if form.is_valid():
+            target_agent = form.cleaned_data['target_agent']
+            transfer_reason = form.cleaned_data['transfer_reason']
+            
+            # Store the old agent for logging
+            old_agent = lead.assigned_agent
+            
+            # Update the lead
+            lead.transferred_from = old_agent
+            lead.transferred_to = target_agent
+            lead.assigned_agent = target_agent
+            lead.transfer_date = timezone.now()
+            lead.transfer_reason = transfer_reason
+            lead.save()
+            
+            # Log the transfer
+            Save_Lead_Logs(
+                old_inquiry_instance=Lead.objects.get(id=lead.id),  # Get fresh instance
+                new_inquiry_instance=lead,
+                changed_by=request.user
+            )
+            
+            messages.success(
+                request, 
+                f"Lead '{lead.student_name}' successfully transferred from {old_agent.name if old_agent else 'Unassigned'} to {target_agent.name}"
+            )
+            return redirect('inquiry_list')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = TransferLeadForm(current_agent=request.user)
+    
+    context = {
+        'form': form,
+        'lead': lead,
+        'current_agent': request.user
+    }
+    
+    return render(request, 'inquiries/transfer_lead.html', context)

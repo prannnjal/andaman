@@ -122,8 +122,19 @@
           {{ form.expiration_time }}
         </div>
 
-        <!-- 🔧 Add this dummy block to maintain column structure -->
-        <div class="form-group" style="visibility: hidden;">&nbsp;</div>
+        <div class="form-group">
+          {{ form.password1.label_tag }} {{ form.password1 }}
+          {% if form.password1.help_text %}
+            <small style="color: #666; font-size: 12px;">{{ form.password1.help_text }}</small>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          {{ form.password2.label_tag }} {{ form.password2 }}
+          {% if form.password2.help_text %}
+            <small style="color: #666; font-size: 12px;">{{ form.password2.help_text }}</small>
+          {% endif %}
+        </div>
       </div>
 
       <!-- ✅ Submit button outside flex row -->

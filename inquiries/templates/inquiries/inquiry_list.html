@@ -287,6 +287,15 @@
             </form>
 
         {% endif %}
+
+        {% if user.role == "Admin" %}
+            <form method="POST" action="{% url 'auto_assign_unassigned_leads' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="header-btn manage" style="background-color: #28a745;">
+                    Auto-Assign Unassigned Leads
+                </button>
+            </form>
+        {% endif %}
     </div>
 
     {% include "inquiries/Fill_Leads_Table.html" with inquiries=inquiries table_class="leads_table" actions=actions %}

@@ -53,5 +53,11 @@ urlpatterns = [
     path('filter_agents_component/', views.filter_agents_component, name='filter_agents_component'),
     
     path('bulk_assign_leads/<int:agent_id>/', views.bulk_assign_leads_view, name='bulk_assign_leads'),
+    
+    path('auto_assign_unassigned_leads/', views.auto_assign_unassigned_leads_view, name='auto_assign_unassigned_leads'),
+    
+    path('log-call/', views.log_call_view, name='log_call'),
+    
+    path('transfer-lead/<int:lead_id>/', views.transfer_lead_view, name='transfer_lead'),
 
 ]

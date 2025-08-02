@@ -8,6 +8,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inquiry List</title>
     
+    <!-- Font Awesome for phone icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -330,6 +333,11 @@
                 <th id="admin_assigned.email" onclick="sortColumn(event,15,'string')">
                     Admin Email
                     <span class="sort-icon"></span>
+                </th>
+                
+                <th id="transfer_info" onclick="sortColumn(event,16,'string')">
+                    Transfer History
+                    <span class="sort-icon"></span>
                 </th>                                                                             
 
             </tr>
@@ -375,19 +383,32 @@
                             {% endif %}
                         {% endif %}
 
-                        {% if "View Logs" in actions %}
-                            <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
-                        {% endif %}                        
-                    </div>
+                                                    {% if "View Logs" in actions %}
+                                <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
+                            {% endif %}
+                            
+                            {% if user.role == "Agent" or user.role == "Admin" %}
+                                {% if inquiry.assigned_agent == user or user.role == "Admin" %}
+                                    <a class="transfer" href="{% url 'transfer_lead' inquiry.id %}" 
+                                       style="color: #ffc107; text-decoration: none; font-weight: 500;"
+                                       title="Transfer this lead to another agent">
+                                        <i class="fas fa-exchange-alt"></i> Transfer
+                                    </a>
+                                {% endif %}
+                            {% endif %}                        
+                        </div>
                 </td>
                 <td>{{ inquiry.student_name }}</td>
                 <td>{{ inquiry.email }}</td>
                 <td>{{ inquiry.parent_name }}</td>
                 <td>
                     <div class="flex-td">
-                        {{ inquiry.mobile_number }}
-                        <a href="tel:{{ inquiry.mobile_number }}" style="color: blue; text-decoration: none;">
-                            <i class="fa fa-phone"></i>
+                        <a href="tel:{{ inquiry.mobile_number }}" 
+                           style="color: #007bff; text-decoration: none; font-weight: 500;"
+                           title="Click to call {{ inquiry.mobile_number }}"
+                           onclick="logCall('{{ inquiry.student_name }}', '{{ inquiry.mobile_number }}')">
+                            {{ inquiry.mobile_number }}
+                            <i class="fas fa-phone" style="margin-left: 5px; color: #28a745;"></i>
                         </a>   
                     </div>                      
                 </td>
@@ -400,11 +421,25 @@
                 <td>{{ inquiry.assigned_agent.email|default:"NULL" }}</td>
                 <td>{{ inquiry.block|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->
                 <td>{{ inquiry.location_panchayat|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->                
-                <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>                                       
+                <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>
+                <td>
+                    {% if inquiry.transferred_from %}
+                        <div style="font-size: 12px; color: #666;">
+                            <strong>From:</strong> {{ inquiry.transferred_from.name }}<br>
+                            <strong>To:</strong> {{ inquiry.assigned_agent.name }}<br>
+                            <strong>Date:</strong> {{ inquiry.transfer_date|date:"M d, Y" }}<br>
+                            {% if inquiry.transfer_reason %}
+                                <strong>Reason:</strong> {{ inquiry.transfer_reason|truncatechars:30 }}
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <span style="color: #999;">No transfers</span>
+                    {% endif %}
+                </td>                                       
             </tr>
             {% empty %}
             <tr>
-                <td colspan="16">No inquiries available.</td>  <!-- ✅ FIXED -->
+                <td colspan="17">No inquiries available.</td>  <!-- ✅ FIXED -->
             </tr>
             {% endfor %}
         </tbody>
@@ -532,6 +567,87 @@
         document.getElementById('assign-bulk-leads-form').addEventListener('submit', (e) => {
             const field = document.getElementById('bulk-leads-field');
             field.value = JSON.stringify([...window.selectedBulkLeads]);
+        });
+    </script>
+
+    <script>
+        // Call logging functionality
+        function logCall(studentName, phoneNumber) {
+            // Log the call attempt
+            console.log(`Call initiated to ${studentName} at ${phoneNumber}`);
+            
+            // Show a notification to the user
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #28a745;
+                color: white;
+                padding: 15px 20px;
+                border-radius: 5px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1000;
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+                max-width: 300px;
+            `;
+            notification.innerHTML = `
+                <i class="fas fa-phone" style="margin-right: 8px;"></i>
+                Calling ${studentName}<br>
+                <small>${phoneNumber}</small>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+            
+            // Send call data to backend for logging
+            fetch('{% url "log_call" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    student_name: studentName,
+                    phone_number: phoneNumber,
+                    agent: '{{ user.name }}',
+                    timestamp: new Date().toISOString()
+                })
+            }).then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Call logged successfully');
+                } else {
+                    console.error('Failed to log call:', data.message);
+                }
+            }).catch(error => {
+                console.error('Error logging call:', error);
+            });
+        }
+        
+        // Add hover effects for phone numbers
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneLinks = document.querySelectorAll('a[href^="tel:"]');
+            phoneLinks.forEach(link => {
+                link.addEventListener('mouseenter', function() {
+                    this.style.backgroundColor = '#f8f9fa';
+                    this.style.borderRadius = '3px';
+                    this.style.padding = '2px 5px';
+                });
+                
+                link.addEventListener('mouseleave', function() {
+                    this.style.backgroundColor = '';
+                    this.style.borderRadius = '';
+                    this.style.padding = '';
+                });
+            });
         });
     </script>
 
