@@ -60,4 +60,8 @@ urlpatterns = [
     
     path('transfer-lead/<int:lead_id>/', views.transfer_lead_view, name='transfer_lead'),
 
+    # Call Recording API endpoints
+    path('api/lead/<int:lead_id>/recordings/', views.lead_recordings_api, name='lead_recordings_api'),
+    path('api/recording/<int:recording_id>/delete/', views.delete_recording_api, name='delete_recording_api'),
+
 ]

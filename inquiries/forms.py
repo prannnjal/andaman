@@ -1,7 +1,7 @@
 # All these forms would be interated into their respective views in views.py file !!!
 
 from django import forms
-from .models import Lead, CustomUser     # what model a form would be integrated with so that when you submit that form, the changes are made to that model.
+from .models import Lead, CustomUser, CallRecording     # what model a form would be integrated with so that when you submit that form, the changes are made to that model.
 from django.contrib.auth.models import User
 from datetime import date
 from django.forms.widgets import DateTimeInput
@@ -9,6 +9,7 @@ from django.utils import timezone
 from datetime import datetime
 
 import pandas as pd
+import os
 
 # Load Excel file again for filtering location_panchayat dynamically
 file_path = "inquiries/static/Location_list.xlsx"
@@ -140,13 +141,12 @@ class AgentUpdateLeadForm(forms.ModelForm):
         for field in date_fields:
             self.fields[field].widget = forms.DateInput(attrs={'type': 'date'})
         
-        # Make certain fields read-only for agents
+        # Make certain fields read-only for agents (but not disabled to allow form submission)
         readonly_fields = ['inquiry_source', 'admin_assigned', 'assigned_agent']
         for field_name in readonly_fields:
             if field_name in self.fields:
-                # Make the field read-only
+                # Make the field read-only but not disabled
                 self.fields[field_name].widget.attrs['readonly'] = True
-                self.fields[field_name].widget.attrs['disabled'] = True
                 self.fields[field_name].widget.attrs['style'] = 'background-color: #f8f9fa; color: #6c757d;'
                 self.fields[field_name].help_text = "This field cannot be modified by agents"
                 
@@ -343,3 +343,40 @@ class TransferLeadForm(forms.Form):
             self.fields['target_agent'].queryset = CustomUser.objects.filter(
                 role='Agent'
             ).exclude(id=current_agent.id)
+
+# ====================================================================================
+
+class CallRecordingForm(forms.ModelForm):
+    """
+    Form for uploading call recordings
+    """
+    class Meta:
+        model = CallRecording
+        fields = ['recording_file', 'notes']
+        widgets = {
+            'recording_file': forms.FileInput(attrs={
+                'accept': 'audio/*,video/*',
+                'class': 'form-control',
+                'id': 'call-recording-input'
+            }),
+            'notes': forms.Textarea(attrs={
+                'rows': 3,
+                'placeholder': 'Add notes about the call...',
+                'class': 'form-control'
+            })
+        }
+    
+    def clean_recording_file(self):
+        file = self.cleaned_data.get('recording_file')
+        if file:
+            # Check file size (limit to 50MB)
+            if file.size > 50 * 1024 * 1024:
+                raise forms.ValidationError("File size must be under 50MB.")
+            
+            # Check file extension
+            allowed_extensions = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.mp4', '.avi', '.mov']
+            file_extension = os.path.splitext(file.name)[1].lower()
+            if file_extension not in allowed_extensions:
+                raise forms.ValidationError(f"Only the following file types are allowed: {', '.join(allowed_extensions)}")
+        
+        return file

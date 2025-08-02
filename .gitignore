@@ -21,3 +21,6 @@ Documentations/
 myenv/
 
 MySQL_Backups/backups
+
+# Ignore uploaded media files
+media/

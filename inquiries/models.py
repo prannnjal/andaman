@@ -212,7 +212,6 @@ class Lead(models.Model):
     
     transfer_reason = models.TextField(blank=True, null=True, help_text='Reason for transferring the lead')
     
-   
     def __str__(self):
         return f"Name: {self.student_name},\nParent Name: {self.parent_name},Email:{self.email},Student Class:{self.student_class},\nmobile_number:{self.mobile_number},\nAddress:{self.address},\nBlock:{self.block},\nLocation:{self.location_panchayat},\nInquiry Source:{self.inquiry_source},\nStatus:{self.status}"
     
@@ -257,4 +256,37 @@ class LeadLogs(models.Model):
     new_data = models.JSONField(default=dict)   # Stores updated values
     
     def __str__(self):
-        return f"The Lead with ID = {self.lead.id} was changed by {self.changed_by} at {self.changed_at}"
+        return f"Lead: {self.lead.student_name} - Changed by: {self.changed_by.name if self.changed_by else 'Unknown'} at {self.changed_at}"
+
+# ====================================================================================
+
+class CallRecording(models.Model):
+    """
+    Model to store call recordings and their metadata
+    """
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='call_recordings')
+    recording_file = models.FileField(upload_to='call_recordings/', help_text='Upload call recording file')
+    duration = models.DurationField(blank=True, null=True, help_text='Duration of the call (automatically extracted)')
+    call_date = models.DateTimeField(auto_now_add=True, help_text='Date and time when recording was uploaded')
+    uploaded_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    notes = models.TextField(blank=True, null=True, help_text='Additional notes about the call')
+    
+    class Meta:
+        ordering = ['-call_date']
+    
+    def __str__(self):
+        return f"Call Recording for {self.lead.student_name} - {self.call_date}"
+    
+    def get_duration_display(self):
+        """Return duration in a readable format"""
+        if self.duration:
+            total_seconds = int(self.duration.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            
+            if hours > 0:
+                return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            else:
+                return f"{minutes:02d}:{seconds:02d}"
+        return "Unknown"

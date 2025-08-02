@@ -36,6 +36,7 @@ from django.db.models import Count, Q
 from django.db.models import Count, Q, F, FloatField, ExpressionWrapper
 from urllib.parse import urlencode
 from django.db.models.functions import Round
+import os
 
 # ======================================================================================================================================================================
 def is_authentic(user):
@@ -254,6 +255,36 @@ def inquiry_list(request):
         
 
     
+    # Add call recording information for each lead
+    for inquiry in inquiries:
+        # Get call recordings for this lead
+        call_recordings = inquiry.call_recordings.all()
+        inquiry.call_recordings_count = call_recordings.count()
+        
+        # Get all call recordings with details for display
+        inquiry.all_call_recordings = []
+        for recording in call_recordings:
+            inquiry.all_call_recordings.append({
+                'id': recording.id,
+                'duration': recording.get_duration_display(),
+                'notes': recording.notes,
+                'call_date': recording.call_date,
+                'file_url': recording.recording_file.url,
+                'filename': recording.recording_file.name.split('/')[-1],
+                'uploaded_by': recording.uploaded_by.name if recording.uploaded_by else 'Unknown'
+            })
+        
+        # Get the latest call recording for summary
+        latest_recording = call_recordings.first()
+        if latest_recording:
+            inquiry.latest_call_duration = latest_recording.get_duration_display()
+            inquiry.latest_call_notes = latest_recording.notes
+            inquiry.latest_call_date = latest_recording.call_date
+        else:
+            inquiry.latest_call_duration = None
+            inquiry.latest_call_notes = None
+            inquiry.latest_call_date = None
+    
     return render(request, 'inquiries/inquiry_list.html', {
         'heading': request.GET.get('heading', "Leads List"),
         'inquiries': inquiries,
@@ -272,6 +303,36 @@ def inquiries_updated_today_view(request):
     
     inquiries = Filter_Inquiries(request)    
     inquiries = inquiries.filter(last_inquiry_updation__gte=todays_date)
+    
+    # Add call recording information for each lead
+    for inquiry in inquiries:
+        # Get call recordings for this lead
+        call_recordings = inquiry.call_recordings.all()
+        inquiry.call_recordings_count = call_recordings.count()
+        
+        # Get all call recordings with details for display
+        inquiry.all_call_recordings = []
+        for recording in call_recordings:
+            inquiry.all_call_recordings.append({
+                'id': recording.id,
+                'duration': recording.get_duration_display(),
+                'notes': recording.notes,
+                'call_date': recording.call_date,
+                'file_url': recording.recording_file.url,
+                'filename': recording.recording_file.name.split('/')[-1],
+                'uploaded_by': recording.uploaded_by.name if recording.uploaded_by else 'Unknown'
+            })
+        
+        # Get the latest call recording for summary
+        latest_recording = call_recordings.first()
+        if latest_recording:
+            inquiry.latest_call_duration = latest_recording.get_duration_display()
+            inquiry.latest_call_notes = latest_recording.notes
+            inquiry.latest_call_date = latest_recording.call_date
+        else:
+            inquiry.latest_call_duration = None
+            inquiry.latest_call_notes = None
+            inquiry.latest_call_date = None
             
     context = {
         'heading': 'Inquiries Updated Today',
@@ -474,6 +535,38 @@ def manage_lead_status(request, inquiry_id):
                 
             inquiry.save() 
             
+            # Handle call recording upload (separate from lead form)
+            call_recording_file = request.FILES.get('call_recording')
+            call_notes = request.POST.get('call_notes')
+            
+            if call_recording_file:
+                try:
+                    from .models import CallRecording
+                    from .utils import extract_audio_duration, format_duration
+                    
+                    # Create call recording instance
+                    call_recording = CallRecording.objects.create(
+                        lead=inquiry,
+                        recording_file=call_recording_file,
+                        notes=call_notes,
+                        uploaded_by=request.user
+                    )
+                    
+                    # Extract duration from the uploaded file
+                    try:
+                        file_path = call_recording.recording_file.path
+                        duration_seconds = extract_audio_duration(file_path)
+                        if duration_seconds:
+                            call_recording.duration = format_duration(duration_seconds)
+                            call_recording.save()
+                    except Exception as e:
+                        print(f"Error extracting duration: {str(e)}")
+                        # Continue without duration if extraction fails
+                        
+                except Exception as e:
+                    print(f"Error creating call recording: {str(e)}")
+                    # Continue without call recording if creation fails
+            
             new_inquiry_instance = inquiry  # Store the new data after changes
             
             # Save logs of changes
@@ -484,7 +577,15 @@ def manage_lead_status(request, inquiry_id):
             return redirect('inquiry_list')  # Redirect back to the inquiry list after saving
 
         else:
-            messages.error(request, "Error updating lead !")
+            # Print form errors for debugging
+            print("Form errors:", form.errors)
+            print("Form data:", request.POST)
+            error_message = "Error updating lead! "
+            if form.errors:
+                error_message += "Please check the following fields: " + ", ".join(form.errors.keys())
+            else:
+                error_message += "Please check the form and try again."
+            messages.error(request, error_message)
     else:
         # Use different forms based on user role
         if request.user.role == 'Admin':
@@ -551,6 +652,24 @@ def dashboard(request):
     admissions_offered_today = inquiries.filter(status='Admission Offered', admission_offered_date=today).count()
     admissions_confirmed_today = inquiries.filter(status='Admission Confirmed', admission_confirmed_date=today).count()
     rejected_today = inquiries.filter(status='Rejected', rejected_date=today).count()
+    
+    # Call Recording Statistics (for admins only)
+    call_recording_stats = {}
+    if user.role == "Admin":
+        from .models import CallRecording
+        total_recordings = CallRecording.objects.count()
+        recordings_today = CallRecording.objects.filter(call_date__date=today).count()
+        leads_with_recordings = Lead.objects.filter(call_recordings__isnull=False).distinct().count()
+        total_leads = Lead.objects.count()
+        recording_coverage = round((leads_with_recordings / total_leads * 100) if total_leads > 0 else 0, 1)
+        
+        call_recording_stats = {
+            'total_recordings': total_recordings,
+            'recordings_today': recordings_today,
+            'leads_with_recordings': leads_with_recordings,
+            'total_leads': total_leads,
+            'recording_coverage': recording_coverage,
+        }
 
     # Counts by Student Class
     '''
@@ -592,7 +711,10 @@ def dashboard(request):
         'tests_today': tests_today,
         'admissions_offered_today': admissions_offered_today,
         'admissions_confirmed_today': admissions_confirmed_today,
-        'rejected_today': rejected_today,        
+        'rejected_today': rejected_today,
+        
+        # Call Recording Stats (for admins)
+        'call_recording_stats': call_recording_stats,
     }
 
     return render(request, 'inquiries/dashboard.html', context)
@@ -1645,3 +1767,72 @@ def transfer_lead_view(request, lead_id):
     }
     
     return render(request, 'inquiries/transfer_lead.html', context)
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def lead_recordings_api(request, lead_id):
+    """
+    API endpoint to get call recordings for a lead
+    """
+    from django.http import JsonResponse
+    from .models import CallRecording
+    
+    try:
+        lead = get_object_or_404(Lead, id=lead_id)
+        
+        # Check if user has permission to view this lead
+        if request.user.role == 'Agent' and lead.assigned_agent != request.user:
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+        
+        recordings = CallRecording.objects.filter(lead=lead)
+        recordings_data = []
+        
+        for recording in recordings:
+            recordings_data.append({
+                'id': recording.id,
+                'filename': os.path.basename(recording.recording_file.name),
+                'file_url': recording.recording_file.url,
+                'duration_display': recording.get_duration_display(),
+                'call_date': recording.call_date.strftime('%Y-%m-%d %H:%M'),
+                'uploaded_by_name': recording.uploaded_by.name if recording.uploaded_by else 'Unknown',
+                'notes': recording.notes
+            })
+        
+        return JsonResponse({'recordings': recordings_data})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# ====================================================================================
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def delete_recording_api(request, recording_id):
+    """
+    API endpoint to delete a call recording
+    """
+    from django.http import JsonResponse
+    from .models import CallRecording
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        recording = get_object_or_404(CallRecording, id=recording_id)
+        
+        # Check if user has permission to delete this recording
+        if request.user.role == 'Agent' and recording.lead.assigned_agent != request.user:
+            return JsonResponse({'error': 'Permission denied'}, status=403)
+        
+        # Delete the file from storage
+        if recording.recording_file:
+            if os.path.exists(recording.recording_file.path):
+                os.remove(recording.recording_file.path)
+        
+        recording.delete()
+        return JsonResponse({'success': True})
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

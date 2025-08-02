@@ -165,6 +165,10 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",  # Optional, tells Django where to look for additional static files in development. Django will search these directories when resolving {% static %} tags.
 ]
 
+# Media files (User uploaded files)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587        # TLS

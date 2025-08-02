@@ -90,6 +90,100 @@
         background-color: #218838;
     }
 
+    /* Call Recording Styles */
+    .call-recording-section {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        border: 1px solid #dee2e6;
+    }
+
+    .call-recording-section h3 {
+        margin-top: 0;
+        color: #274bd9;
+        font-size: 18px;
+    }
+
+    .form-text {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+
+    .existing-recordings {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+    }
+
+    .recording-item {
+        background: white;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .recording-info {
+        flex: 1;
+    }
+
+    .recording-title {
+        font-weight: bold;
+        color: #274bd9;
+        margin-bottom: 5px;
+    }
+
+    .recording-meta {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .recording-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-play {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .btn-download {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    .audio-player {
+        width: 100%;
+        margin: 10px 0;
+    }
+
     
     .add_new_agent {
         background-color: #1500ff;
@@ -178,7 +272,7 @@
         <h1>{{title}}</h1>
 
         <!-- Display Form -->
-        <form method="POST" class="inquiry-form">
+        <form method="POST" class="inquiry-form" enctype="multipart/form-data">
             {% csrf_token %}
             
             <div class="same_row_wrapper">
@@ -314,6 +408,35 @@
                 {{ form.follow_up_date }}
             </div>
 
+            <!-- Call Recording Section -->
+            <div class="call-recording-section">
+                <h3 style="color: #274bd9; margin-bottom: 15px;">Call Recording</h3>
+                
+                <div class="form-group">
+                    <label for="call-recording-input">Upload Call Recording</label>
+                    <input type="file" id="call-recording-input" name="call_recording" accept="audio/*,video/*" class="form-control">
+                    <small class="form-text text-muted">Supported formats: MP3, WAV, M4A, AAC, OGG, MP4, AVI, MOV (Max 50MB)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="call-notes">Call Notes</label>
+                    <textarea id="call-notes" name="call_notes" rows="3" placeholder="Add notes about the call..." class="form-control"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="call-duration-display">Call Duration</label>
+                    <input type="text" id="call-duration-display" readonly class="form-control" placeholder="Duration will be extracted automatically">
+                </div>
+                
+                <!-- Existing Call Recordings -->
+                <div id="existing-recordings" class="existing-recordings">
+                    <h4 style="color: #666; margin-bottom: 10px;">Previous Call Recordings</h4>
+                    <div id="recordings-list">
+                        <!-- Call recordings will be loaded here via AJAX -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Submit Button -->
             <button type="submit" class="btn-submit">Submit</button>
         </form>
@@ -351,11 +474,179 @@
             }
         }
 
-        updateDateFields(); // Calls updateDateFields() immediately when the script runs. This ensures that the correct date field is shown (or hidden) on page load, based on the current value of statusField.
-
+        // Add event listener for status field changes
         statusField.addEventListener('change', updateDateFields);
+        
+        // Initial call to show/hide date fields based on current status
+        updateDateFields();
     </script>
 
+    <!-- Call Recording JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const recordingInput = document.getElementById('call-recording-input');
+            const durationDisplay = document.getElementById('call-duration-display');
+            const leadId = '{{ form.instance.id }}' || null;
+            
+            // Load existing recordings if editing a lead
+            if (leadId) {
+                loadExistingRecordings(leadId);
+            }
+            
+            // Handle file selection and extract duration
+            recordingInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Show file info
+                    console.log('Selected file:', file.name, 'Size:', file.size);
+                    
+                    // Create audio element to get duration
+                    const audio = document.createElement('audio');
+                    audio.preload = 'metadata';
+                    
+                    audio.onloadedmetadata = function() {
+                        const duration = audio.duration;
+                        if (duration && !isNaN(duration)) {
+                            const minutes = Math.floor(duration / 60);
+                            const seconds = Math.floor(duration % 60);
+                            const formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                            durationDisplay.value = formattedDuration;
+                        } else {
+                            durationDisplay.value = 'Duration could not be extracted';
+                        }
+                    };
+                    
+                    audio.onerror = function() {
+                        durationDisplay.value = 'Error reading file';
+                    };
+                    
+                    // Set source and load metadata
+                    audio.src = URL.createObjectURL(file);
+                } else {
+                    durationDisplay.value = '';
+                }
+            });
+        });
+        
+        function loadExistingRecordings(leadId) {
+            fetch(`/inquiries/api/lead/${leadId}/recordings/`)
+                .then(response => response.json())
+                .then(data => {
+                    const recordingsList = document.getElementById('recordings-list');
+                    if (data.recordings && data.recordings.length > 0) {
+                        recordingsList.innerHTML = data.recordings.map(recording => `
+                            <div class="recording-item">
+                                <div class="recording-info">
+                                    <div class="recording-title">${recording.uploaded_by_name} - ${recording.call_date}</div>
+                                    <div class="recording-meta">
+                                        Duration: ${recording.duration_display} | 
+                                        File: ${recording.filename}
+                                        ${recording.notes ? `| Notes: ${recording.notes}` : ''}
+                                    </div>
+                                </div>
+                                <div class="recording-actions">
+                                    <audio controls class="audio-player">
+                                        <source src="${recording.file_url}" type="audio/mpeg">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                    <a href="${recording.file_url}" class="btn-download" download>Download</a>
+                                    <button class="btn-delete" onclick="deleteRecording(${recording.id})">Delete</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        recordingsList.innerHTML = '<p style="color: #666; font-style: italic;">No previous call recordings found.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading recordings:', error);
+                    document.getElementById('recordings-list').innerHTML = '<p style="color: #dc3545;">Error loading recordings.</p>';
+                });
+        }
+        
+        function deleteRecording(recordingId) {
+            if (confirm('Are you sure you want to delete this recording?')) {
+                fetch(`/inquiries/api/recording/${recordingId}/delete/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload recordings
+                        const leadId = '{{ form.instance.id }}';
+                        if (leadId) {
+                            loadExistingRecordings(leadId);
+                        }
+                    } else {
+                        alert('Error deleting recording: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error deleting recording');
+                });
+            }
+        }
+    </script>
+
+
+    <script>
+        /* Ensure context variables are safely passed as JavaScript variables */
+        var block_context = "{{ block_context|escapejs }}";
+        var location_panchayat_context = "{{ location_panchayat_context|escapejs }}";
+    
+        $(document).ready(function() {
+            var blockDropdown = $('#id_block'); 
+            var manualBlockField = $('#manual-block-field');    
+            var manualBlockInput = $('#manual_block');
+    
+            var panchayatDropdown = $('#id_location_panchayat');
+            var manualPanchayatField = $('#manual-panchayat-field');
+            var manualPanchayatInput = $('#manual_location_panchayat');
+    
+            function loadPanchayats(block_context, location_panchayat_context) {
+                if (block_context !== "Other") {
+                    $.ajax({
+                        url: "{% url 'get_panchayats' %}",
+                        data: { 'block': block_context },
+                        dataType: 'json',
+                        success: function(response) {   
+                            panchayatDropdown.empty();
+                            var found = false;
+                        
+                            $.each(response.panchayats, function(index, panchayat) {
+                                var isSelected = (panchayat.name === location_panchayat_context) ? "selected" : "";
+                                if (isSelected) {
+                                    found = true;
+                                }
+                                panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
+                            });
+                        
+                            if (location_panchayat_context && !found) {
+                                panchayatDropdown.append(`<option value="${location_panchayat_context}" selected>${location_panchayat_context}</option>`);
+                            }
+
+                            panchayatDropdown.append('<option value="Other">Other</option>');
+                        }
+                        
+                    });
+                }
+                else if (block_context === "Other") {
+                    panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
+
+                    panchayatDropdown.append('<option value="Other">Other</option>'); 
+                }
+            }
+    
+            // **If block_context exists, preload panchayats & select location_panchayat_context**
+            if (block_context && location_panchayat_context) {                
+                loadPanchayats(block_context, location_panchayat_context);
+            }
+        });
+    </script>
 
     <!-- Script to detect whether the user selected 'Others' in 'Block' or 'Location/Panchayat' dropdown field -->
     <script>
@@ -428,63 +719,6 @@
                     manualPanchayatInput.prop('required', false);
                 }
             });
-        });
-           
-    </script>
-
-
-    <script>
-        /* Ensure context variables are safely passed as JavaScript variables */
-        var block_context = "{{ block_context|escapejs }}";
-        var location_panchayat_context = "{{ location_panchayat_context|escapejs }}";
-    
-        $(document).ready(function() {
-            var blockDropdown = $('#id_block'); 
-            var manualBlockField = $('#manual-block-field');    
-            var manualBlockInput = $('#manual_block');
-    
-            var panchayatDropdown = $('#id_location_panchayat');
-            var manualPanchayatField = $('#manual-panchayat-field');
-            var manualPanchayatInput = $('#manual_location_panchayat');
-    
-            function loadPanchayats(block_context, location_panchayat_context) {
-                if (block_context !== "Other") {
-                    $.ajax({
-                        url: "{% url 'get_panchayats' %}",
-                        data: { 'block': block_context },
-                        dataType: 'json',
-                        success: function(response) {   
-                            panchayatDropdown.empty();
-                            var found = false;
-                        
-                            $.each(response.panchayats, function(index, panchayat) {
-                                var isSelected = (panchayat.name === location_panchayat_context) ? "selected" : "";
-                                if (isSelected) {
-                                    found = true;
-                                }
-                                panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
-                            });
-                        
-                            if (location_panchayat_context && !found) {
-                                panchayatDropdown.append(`<option value="${location_panchayat_context}" selected>${location_panchayat_context}</option>`);
-                            }
-
-                            panchayatDropdown.append('<option value="Other">Other</option>');
-                        }
-                        
-                    });
-                }
-                else if (block_context === "Other") {
-                    panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
-
-                    panchayatDropdown.append('<option value="Other">Other</option>'); 
-                }
-            }
-    
-            // **If block_context exists, preload panchayats & select location_panchayat_context**
-            if (block_context && location_panchayat_context) {                
-                loadPanchayats(block_context, location_panchayat_context);
-            }
         });
     </script>
 </body>

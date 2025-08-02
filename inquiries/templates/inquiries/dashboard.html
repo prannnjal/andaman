@@ -386,6 +386,41 @@
                 </table>
             </div>
         </div>
+        
+        {% if user.role == "Admin" and call_recording_stats %}
+        <div class="status_table_wrapper">
+            <div>
+                <!-- Call Recording Statistics -->
+                <h2 class="table-title">Call Recording Statistics:</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total Call Recordings</td>
+                            <td>{{ call_recording_stats.total_recordings }}</td>
+                        </tr>
+                        <tr>
+                            <td>Recordings Today</td>
+                            <td>{{ call_recording_stats.recordings_today }}</td>
+                        </tr>
+                        <tr>
+                            <td>Leads with Recordings</td>
+                            <td>{{ call_recording_stats.leads_with_recordings }} / {{ call_recording_stats.total_leads }}</td>
+                        </tr>
+                        <tr>
+                            <td>Recording Coverage</td>
+                            <td>{{ call_recording_stats.recording_coverage }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
 
