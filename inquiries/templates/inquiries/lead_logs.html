@@ -233,9 +233,9 @@
         <h3>Lead Details</h3>
         <div class="grid-container">
             <p><strong>Lead Id: </strong> {{ lead.id }}</p>
-            <p><strong>Student Name:</strong> {{ lead.student_name }}</p>
+            <p><strong>School Name:</strong> {{ lead.student_name }}</p>
             <p><strong>Lead Email:</strong> {{ lead.email }}</p>
-            <p><strong>Parent Name:</strong> {{ lead.parent_name }}</p>
+            <p><strong>Concerned Person:</strong> {{ lead.parent_name }}</p>
             <p>
                 <strong>Mobile Number:</strong> 
                 <span class="flex-td">
@@ -252,8 +252,8 @@
             <p><strong>Status:</strong> {{ lead.status }}</p>
             <p><strong>Agent:</strong> {{ lead.assigned_agent.name|default:"UNASSIGNED" }}</p>
             <p><strong>Agent Email:</strong> {{ lead.assigned_agent.email|default:"NULL" }}</p>
-            <p><strong>Block:</strong> {{ lead.block|default:"UNASSIGNED" }}</p>
-            <p><strong>Location/Panchayat:</strong> {{ lead.location_panchayat|default:"UNASSIGNED" }}</p>                
+
+                            
             <p><strong>Admin Assigned Email:</strong> {{ lead.admin_assigned.email|default:"NULL" }}</p>
         </div>
     </div>

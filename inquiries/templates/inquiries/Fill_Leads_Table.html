@@ -337,7 +337,7 @@
                 <th id="actions" style="cursor: default">Actions</th>
 
                 <th id="student_name" onclick="sortColumn(event,2,'string')">
-                    Student Name
+                                            School Name
                     <span class="sort-icon"></span>
                 </th>
 
@@ -347,7 +347,7 @@
                 </th>     
                 
                 <th id="parent_name" onclick="sortColumn(event,4,'string')">
-                    Parent Name
+                                            Concerned Person
                     <span class="sort-icon"></span>
                 </th>
 
@@ -391,15 +391,9 @@
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="block" onclick="sortColumn(event,13,'string')">
-                    Block
-                    <span class="sort-icon"></span>
-                </th>
 
-                <th id="location_panchayat" onclick="sortColumn(event,14,'string')">
-                    Location/Panchayat
-                    <span class="sort-icon"></span>
-                </th>
+
+                
 
                 <th id="admin_assigned.email" onclick="sortColumn(event,15,'string')">
                     Admin Email
@@ -497,11 +491,27 @@
                 <td>{{ inquiry.inquiry_source }}</td>
                 <td>{{ inquiry.student_class }}</td>
                 <td>{{ inquiry.follow_up_date }}</td>
-                <td>{{ inquiry.status }}</td>
-                <td>{{ inquiry.assigned_agent.name|default:"UNASSIGNED" }}</td>
+                <td>
+                    {% if inquiry.status == 'Viewer' %}
+                        <span style="background-color: #ffc107; color: #000; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px;">
+                            <i class="fas fa-eye"></i> {{ inquiry.status }}
+                        </span>
+                    {% else %}
+                        {{ inquiry.status }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if inquiry.status == 'Viewer' %}
+                        <span style="color: #ffc107; font-weight: bold;">
+                            <i class="fas fa-hand-paper"></i> AVAILABLE TO CLAIM
+                        </span>
+                    {% else %}
+                        {{ inquiry.assigned_agent.name|default:"UNASSIGNED" }}
+                    {% endif %}
+                </td>
                 <td>{{ inquiry.assigned_agent.email|default:"NULL" }}</td>
-                <td>{{ inquiry.block|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->
-                <td>{{ inquiry.location_panchayat|default:"UNASSIGNED" }}</td>  <!-- ✅ FIXED -->                
+                
+
                 <td>{{ inquiry.admin_assigned.email|default:"NULL" }}</td>
                 <td>
                     {% if inquiry.transferred_from %}

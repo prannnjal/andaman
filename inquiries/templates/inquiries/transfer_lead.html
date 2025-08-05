@@ -188,6 +188,26 @@
             color: #0c5460;
             border: 1px solid #bee5eb;
         }
+
+        /* Radio button styling */
+        .form-check-input {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .form-check-input:checked {
+            accent-color: #007bff;
+        }
+
+        /* Viewer status indicator */
+        .viewer-status {
+            background-color: #ffc107;
+            color: #000;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -198,12 +218,12 @@
 
         <div class="lead-info">
             <h3><i class="fas fa-user transfer-icon"></i>Lead Information</h3>
-            <div class="lead-detail">
-                <strong>Student Name:</strong> {{ lead.student_name }}
-            </div>
-            <div class="lead-detail">
-                <strong>Parent Name:</strong> {{ lead.parent_name }}
-            </div>
+                               <div class="lead-detail">
+                       <strong>School Name:</strong> {{ lead.student_name }}
+                   </div>
+                   <div class="lead-detail">
+                       <strong>Concerned Person:</strong> {{ lead.parent_name }}
+                   </div>
             <div class="lead-detail">
                 <strong>Phone Number:</strong> {{ lead.mobile_number }}
             </div>
@@ -216,7 +236,14 @@
                 {% endif %}
             </div>
             <div class="lead-detail">
-                <strong>Status:</strong> {{ lead.status }}
+                <strong>Status:</strong> 
+                {% if lead.status == 'Viewer' %}
+                    <span class="viewer-status">
+                        <i class="fas fa-eye"></i> {{ lead.status }}
+                    </span>
+                {% else %}
+                    {{ lead.status }}
+                {% endif %}
             </div>
         </div>
 
@@ -234,6 +261,32 @@
             {% csrf_token %}
             
             <div class="form-group">
+                <label>
+                    <i class="fas fa-exchange-alt transfer-icon"></i>Transfer Type:
+                </label>
+                <div style="margin-top: 10px;">
+                    {% for choice in form.transfer_type %}
+                        <div style="margin-bottom: 10px;">
+                            <label style="display: flex; align-items: center; font-weight: normal; cursor: pointer;">
+                                {{ choice.tag }}
+                                <span style="margin-left: 8px;">{{ choice.choice_label }}</span>
+                            </label>
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if form.transfer_type.help_text %}
+                    <div class="help-text">{{ form.transfer_type.help_text }}</div>
+                {% endif %}
+                {% if form.transfer_type.errors %}
+                    <div class="message error">
+                        {% for error in form.transfer_type.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group" id="target-agent-group">
                 <label for="{{ form.target_agent.id_for_label }}">
                     <i class="fas fa-user-plus transfer-icon"></i>Transfer To Agent:
                 </label>
@@ -279,12 +332,40 @@
     </div>
 
     <script>
+        // Function to toggle target agent field visibility
+        function toggleTargetAgent() {
+            const transferType = document.querySelector('input[name="transfer_type"]:checked').value;
+            const targetAgentGroup = document.getElementById('target-agent-group');
+            const targetAgentSelect = document.getElementById('target-agent-select');
+            
+            if (transferType === 'viewer') {
+                targetAgentGroup.style.display = 'none';
+                targetAgentSelect.required = false;
+            } else {
+                targetAgentGroup.style.display = 'block';
+                targetAgentSelect.required = true;
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleTargetAgent();
+        });
+        
         // Add confirmation before transfer
         document.querySelector('form').addEventListener('submit', function(e) {
-            const targetAgent = document.querySelector('#id_target_agent option:checked').text;
+            const transferType = document.querySelector('input[name="transfer_type"]:checked').value;
             const studentName = '{{ lead.student_name }}';
+            let confirmMessage = '';
             
-            if (!confirm(`Are you sure you want to transfer "${studentName}" to ${targetAgent}?`)) {
+            if (transferType === 'agent') {
+                const targetAgent = document.querySelector('#id_target_agent option:checked').text;
+                confirmMessage = `Are you sure you want to transfer "${studentName}" to ${targetAgent}?`;
+            } else {
+                confirmMessage = `Are you sure you want to make "${studentName}" available to all agents (Viewer status)?`;
+            }
+            
+            if (!confirm(confirmMessage)) {
                 e.preventDefault();
             }
         });

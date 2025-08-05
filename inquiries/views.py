@@ -146,8 +146,13 @@ def Filter_Inquiries(request):
     if user.role=="Admin":
         inquiries = Lead.objects.all()
         # print("=====================> after admin len(inquiries) filtered = ", len(inquiries)) 
-    elif user.role=="Agent":  # Agents can only see leads assigned to them
-        inquiries = Lead.objects.filter(assigned_agent=user)
+    elif user.role=="Agent":  # Agents can see their assigned leads + viewer leads
+        # Get leads assigned to this agent
+        assigned_leads = Lead.objects.filter(assigned_agent=user)
+        # Get viewer leads (visible to all agents)
+        viewer_leads = Lead.objects.filter(status='Viewer')
+        # Combine both querysets
+        inquiries = assigned_leads.union(viewer_leads)
         # print("=====================> after agent len(inquiries) filtered = ", len(inquiries)) 
     else:
         inquiries = Lead.objects.all()     # return an empty queryset if the user is neither an admin nor an agent
@@ -186,13 +191,9 @@ def Filter_Inquiries(request):
     if mobile_numbers:
         inquiries = inquiries.filter(mobile_number__in=mobile_numbers)
     
-    blocks = query_params.getlist('block[]')
-    if blocks:
-        inquiries = inquiries.filter(block__in=blocks)
+
             
-    location_panchayats = query_params.getlist('location_panchayat[]')
-    if location_panchayats:
-        inquiries = inquiries.filter(location_panchayat__in=location_panchayats)
+
         
     inquiry_sources = query_params.getlist('inquiry_source[]')
     if inquiry_sources:
@@ -413,7 +414,7 @@ def follow_up_management(request):
     lead_ids = Lead.objects.values_list('id', flat=True)
     students = Lead.objects.values_list('student_name', flat=True).distinct() 
     parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
-    locations_panchayats = Lead.objects.values_list('location_panchayat', flat=True).distinct()
+
     lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True).distinct()
     mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
     blocks = Lead.objects.values_list('block', flat=True).distinct()
@@ -431,7 +432,6 @@ def follow_up_management(request):
             'agents': agents,
             'lead_emails': lead_emails,
             'mobile_numbers': mobile_numbers,
-            'location_panchayats': locations_panchayats,
             'blocks': blocks,
             'inquiry_sources': inquiry_sources,
             'statuses': statuses,
@@ -453,25 +453,25 @@ def add_inquiry(request):
         if form.is_valid():
             inquiry = form.save(commit=False)
                         
-            if request.POST.get('block') == "Other":
-                inquiry.block = request.POST.get('manual_block')
-
-            if request.POST.get('location_panchayat') == "Other":
-                inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
-                
             if inquiry.follow_up_date:
                 inquiry.last_follow_up_updation = inquiry.follow_up_date
                 
             inquiry.last_inquiry_updation = now().date()
             
-            # Auto-assign agent if no agent is assigned
+            # Auto-assign agent logic
             if not inquiry.assigned_agent:
-                auto_assigned_agent = auto_assign_agent_with_least_leads()
-                if auto_assigned_agent:
-                    inquiry.assigned_agent = auto_assigned_agent
-                    messages.info(request, f"Lead automatically assigned to agent: {auto_assigned_agent.name}")
+                if request.user.role == 'Agent':
+                    # If agent is creating the inquiry, assign it to themselves
+                    inquiry.assigned_agent = request.user
+                    messages.success(request, f"Lead automatically assigned to you ({request.user.name})")
                 else:
-                    messages.warning(request, "No agents available for assignment.")
+                    # If admin is creating, use the existing auto-assignment logic
+                    auto_assigned_agent = auto_assign_agent_with_least_leads()
+                    if auto_assigned_agent:
+                        inquiry.assigned_agent = auto_assigned_agent
+                        messages.info(request, f"Lead automatically assigned to agent: {auto_assigned_agent.name}")
+                    else:
+                        messages.warning(request, "No agents available for assignment.")
         
             inquiry.save()
             
@@ -493,7 +493,10 @@ def add_inquiry(request):
                 # )
             
             # Add a success message
-            messages.success(request, "Lead added successfully !")
+            if request.user.role == 'Agent':
+                messages.success(request, f"Lead added successfully and assigned to you ({request.user.name})!")
+            else:
+                messages.success(request, "Lead added successfully!")
             return redirect('add_inquiry')
         
         else:
@@ -540,12 +543,6 @@ def manage_lead_status(request, inquiry_id):
                 
             inquiry.last_inquiry_updation = now().date()
             
-            if request.POST.get('block') == "Other":
-                inquiry.block = request.POST.get('manual_block')
-
-            if request.POST.get('location_panchayat') == "Other":
-                inquiry.location_panchayat = request.POST.get('manual_location_panchayat')
-                
             inquiry.save() 
             
             # Handle call recording upload (separate from lead form)
@@ -629,31 +626,22 @@ def manage_lead_status(request, inquiry_id):
         else:
             form = AgentUpdateLeadForm(instance=inquiry)
 
-    return render(request, 'inquiries/add_update_lead.html', {'form': form, 'title': 'Update Lead Status', 'location_panchayat_context': inquiry.location_panchayat, 'block_context': inquiry.block})
+    return render(request, 'inquiries/add_update_lead.html', {'form': form, 'title': 'Update Lead Status'})
 
 # ================================================================================================================================================================
 @login_required
 @user_passes_test(is_staff)
 def get_panchayats(request):
-    block = request.GET.get('block', None)
-    if block:
-        file_path = "inquiries/static/Location_list.xlsx"
-        df = pd.read_excel(file_path)
+    file_path = "inquiries/static/Location_list.xlsx"
+    df = pd.read_excel(file_path)
 
-        # Filter by selected block
-        filtered_block_bool = df["BLOCK"] == block   # returns [ True, False, True, False, True]
-        filtered_block = df[filtered_block_bool]        # returns only those rows whose filtered_block_bool is True
-        filtered_df = filtered_block[["S.N", "Location_Panchayat"]].dropna()    # Selects only the columns "S.N" and "Location_Panchayat". Drops rows with missing values (NaN) in "Location_Panchayat".
+    # Get all location/panchayat data without block filtering
+    filtered_df = df[["S.N", "Location_Panchayat"]].dropna()    # Selects only the columns "S.N" and "Location_Panchayat". Drops rows with missing values (NaN) in "Location_Panchayat".
 
-        
-        # filtered_df = df[df["BLOCK"] == block][["S.N", "Location_Panchayat"]].dropna()
+    # Convert to JSON with 'S.N' as ID
+    data = [{'id': row["S.N"], 'name': row["Location_Panchayat"]} for _, row in filtered_df.iterrows()]
 
-        # Convert to JSON with 'S.N' as ID
-        data = [{'id': row["S.N"], 'name': row["Location_Panchayat"]} for _, row in filtered_df.iterrows()]
-
-        return JsonResponse({'panchayats': data})
-
-    return JsonResponse({'panchayats': []})
+    return JsonResponse({'panchayats': data})
 
 
 # ================================================================================================================================================================
@@ -860,11 +848,9 @@ def detailed_stats(request):
     # Counts by Inquiry Source
     inquiries_by_source = inquiries.values('inquiry_source').annotate(total=Count('id')).order_by('-total')
 
-    # Counts by Location/Panchayat
-    inquiries_by_location = inquiries.values('location_panchayat').annotate(total=Count('id')).order_by('-total')
+
     
-    # Counts by Block
-    inquiries_by_block = inquiries.values('block').annotate(total=Count('id')).order_by('-total')
+
 
     # Inquiry Trends (Last 7 Days)
     '''
@@ -907,8 +893,8 @@ def detailed_stats(request):
         # Detailed Stats
         'inquiries_by_class': inquiries_by_class,
         'inquiries_by_source': inquiries_by_source,
-        'inquiries_by_location': inquiries_by_location,
-        'inquiries_by_block': inquiries_by_block,
+
+
 
         # Trends and Recent Activity
         'recent_trends': recent_trends,
@@ -1343,10 +1329,10 @@ def Prepare_Context_For_Filter_Leads_Component(request):
     lead_ids = base_queryset.values_list('id', flat=True)
     students = base_queryset.values_list('student_name', flat=True).distinct()
     parents = base_queryset.values_list('parent_name', flat=True).distinct()
-    locations_panchayats = base_queryset.values_list('location_panchayat', flat=True).distinct()
+
     lead_emails = base_queryset.values_list('email', flat=True).exclude(email__isnull=True).distinct()
     mobile_numbers = base_queryset.values_list('mobile_number', flat=True).distinct()
-    blocks = base_queryset.values_list('block', flat=True).distinct()
+
     inquiry_sources = base_queryset.values_list('inquiry_source', flat=True).distinct()
     statuses = base_queryset.values_list('status', flat=True).distinct()
     student_classes = base_queryset.values_list('student_class', flat=True).distinct()
@@ -1361,8 +1347,7 @@ def Prepare_Context_For_Filter_Leads_Component(request):
     selected_parent_names = query_params.getlist('parent_name[]')
     selected_lead_emails = query_params.getlist('lead_email[]')
     selected_mobile_numbers = query_params.getlist('mobile_number[]')
-    selected_blocks = query_params.getlist('block[]')
-    selected_location_panchayats = query_params.getlist('location_panchayat[]')
+
     selected_inquiry_sources = query_params.getlist('inquiry_source[]')
     selected_statuses = query_params.getlist('status[]')
     selected_agent_ids = query_params.getlist('agent_id[]')
@@ -1377,8 +1362,6 @@ def Prepare_Context_For_Filter_Leads_Component(request):
         'agents': agents,
         'lead_emails': lead_emails,
         'mobile_numbers': mobile_numbers,
-        'location_panchayats': locations_panchayats,
-        'blocks': blocks,
         'inquiry_sources': inquiry_sources,
         'statuses': statuses,
         'student_classes': student_classes,
@@ -1391,8 +1374,6 @@ def Prepare_Context_For_Filter_Leads_Component(request):
         "selected_parent_names": selected_parent_names,
         "selected_lead_emails": selected_lead_emails,
         "selected_mobile_numbers": selected_mobile_numbers,
-        "selected_blocks": selected_blocks,
-        "selected_location_panchayats": selected_location_panchayats,
         "selected_inquiry_sources": selected_inquiry_sources,
         "selected_statuses": selected_statuses,
         "selected_agent_ids": selected_agent_ids,
@@ -1865,25 +1846,43 @@ def transfer_lead_view(request, lead_id):
     lead = get_object_or_404(Lead, id=lead_id)
     
     # Check if the current user can transfer this lead
-    if request.user.role == 'Agent' and lead.assigned_agent != request.user:
-        messages.error(request, "You can only transfer leads assigned to you.")
-        return redirect('inquiry_list')
+    if request.user.role == 'Agent':
+        # Agents can transfer leads assigned to them OR viewer leads
+        if lead.assigned_agent != request.user and lead.status != 'Viewer':
+            messages.error(request, "You can only transfer leads assigned to you or viewer leads.")
+            return redirect('inquiry_list')
     
     if request.method == 'POST':
         form = TransferLeadForm(request.POST, current_agent=request.user)
         if form.is_valid():
-            target_agent = form.cleaned_data['target_agent']
+            transfer_type = form.cleaned_data['transfer_type']
             transfer_reason = form.cleaned_data['transfer_reason']
             
             # Store the old agent for logging
             old_agent = lead.assigned_agent
             
-            # Update the lead
-            lead.transferred_from = old_agent
-            lead.transferred_to = target_agent
-            lead.assigned_agent = target_agent
-            lead.transfer_date = timezone.now()
-            lead.transfer_reason = transfer_reason
+            if transfer_type == 'agent':
+                target_agent = form.cleaned_data['target_agent']
+                # Update the lead for agent transfer
+                lead.transferred_from = old_agent
+                lead.transferred_to = target_agent
+                lead.assigned_agent = target_agent
+                lead.transfer_date = timezone.now()
+                lead.transfer_reason = transfer_reason
+                
+                # If this was a viewer lead, change status to 'Inquiry' when transferred
+                if lead.status == 'Viewer':
+                    lead.status = 'Inquiry'
+                
+            elif transfer_type == 'viewer':
+                # Transfer to viewer status (make available to all agents)
+                lead.transferred_from = old_agent
+                lead.transferred_to = None  # No specific agent
+                lead.assigned_agent = None  # Unassigned
+                lead.status = 'Viewer'  # Set to viewer status
+                lead.transfer_date = timezone.now()
+                lead.transfer_reason = transfer_reason
+            
             lead.save()
             
             # Log the transfer
@@ -1893,10 +1892,22 @@ def transfer_lead_view(request, lead_id):
                 changed_by=request.user
             )
             
-            messages.success(
-                request, 
-                f"Lead '{lead.student_name}' successfully transferred from {old_agent.name if old_agent else 'Unassigned'} to {target_agent.name}"
-            )
+            # Create appropriate success message
+            if transfer_type == 'agent':
+                if old_agent:
+                    message = f"Lead '{lead.student_name}' successfully transferred from {old_agent.name} to {target_agent.name}"
+                else:
+                    message = f"Lead '{lead.student_name}' successfully claimed by {target_agent.name}"
+                
+                if lead.status == 'Inquiry':
+                    message += " (Status changed from Viewer to Inquiry)"
+            else:  # transfer_type == 'viewer'
+                if old_agent:
+                    message = f"Lead '{lead.student_name}' successfully made available to all agents (Viewer status) by {old_agent.name}"
+                else:
+                    message = f"Lead '{lead.student_name}' successfully made available to all agents (Viewer status)"
+            
+            messages.success(request, message)
             return redirect('inquiry_list')
         else:
             messages.error(request, "Please correct the errors below.")

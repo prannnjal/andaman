@@ -20,23 +20,18 @@ df = pd.read_excel(file_path)
 class InquiryForm(forms.ModelForm):
     class Meta:
         model = Lead
-        fields = ['student_name','parent_name','mobile_number','email','address','block','location_panchayat','inquiry_source','student_class','status','remarks','inquiry_date','follow_up_date','registration_date','admission_test_date','admission_offered_date','admission_confirmed_date','rejected_date','admin_assigned']      # what fields from Lead model to be included in this form (assigned_agent removed for auto-assignment)
+        fields = ['student_name','parent_name','mobile_number','email','address','inquiry_source','student_class','status','remarks','inquiry_date','follow_up_date','registration_date','admission_test_date','admission_offered_date','admission_confirmed_date','rejected_date','admin_assigned']      # what fields from Lead model to be included in this form (assigned_agent removed for auto-assignment)
+        
+        labels = {
+            'student_name': 'School Name',
+            'parent_name': 'Concerned Person',
+            'inquiry_source': 'Select Inquiry Source',
+            'student_class': 'Select Student Class',
+        }
         
     def __init__(self, *args, **kwargs):        # constructor
       
         super().__init__(*args, **kwargs)       # calling parent class constructor
-        
-        # Add current block to choices if it's missing
-        # Handle "block" field: ensure saved value is shown even if not in choices
-        if self.instance and self.instance.block:
-            current_block = self.instance.block
-            block_choices = list(self.fields['block'].choices)
-            block_values = [choice[0] for choice in block_choices]
-            if current_block not in block_values:
-                block_choices.insert(1, (current_block, current_block))  # After the empty option
-        else:
-            block_choices = list(self.fields['block'].choices)
-            
         
         if not self.instance or not self.instance.pk:
             self.fields['inquiry_date'].initial = timezone.localdate()
@@ -51,22 +46,8 @@ class InquiryForm(forms.ModelForm):
         for field in date_fields:
             self.fields[field].widget = forms.DateInput(attrs={'type': 'date'})                                        
         
-        # Modify the select field to have a default placeholder
-        '''
-        This explicitly sets the widget for the "admin_assigned" field to a dropdown menu (<select>).
-        
-        Even if Django already assigns a <select> by default, this ensures we customize its options.
-        
-        self.fields['admin_assigned'].choices contains all the options Django generates from the model.
-        
-        list(...)[1:] removes the first choice (which is usually an empty option added by Django automatically). Then, + appends the remaining choices so the field still works properly.
-        '''
-        # Set the final choices with the placeholder at the top
-        self.fields['block'].choices = [('', 'Select the Block')] + block_choices[1:]
-        
-        # Set empty Location/Panchayat initially
-        self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])       
-        
+        # Set placeholders for select fields
+        # inquiry_source and student_class have choices, so we can set Select widgets
         self.fields['inquiry_source'].widget = forms.Select(choices=[('', 'Select Inquiry Source')] + list(self.fields['inquiry_source'].choices)[1:])
         
         self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Student Class')] + list(self.fields['student_class'].choices)[1:])
@@ -105,31 +86,24 @@ class AgentUpdateLeadForm(forms.ModelForm):
         model = Lead
         fields = [
             'student_name', 'parent_name', 'mobile_number', 'email', 'address',
-            'block', 'location_panchayat', 'inquiry_source', 'student_class', 'status', 'remarks',
+            'inquiry_source', 'student_class', 'status', 'remarks',
             'inquiry_date', 'follow_up_date', 'registration_date', 
             'admission_test_date', 'admission_offered_date', 
             'admission_confirmed_date', 'rejected_date', 'admin_assigned', 'assigned_agent'
         ]
         
+        labels = {
+            'student_name': 'School Name',
+            'parent_name': 'Concerned Person',
+            'inquiry_source': 'Select Inquiry Source',
+            'student_class': 'Select Student Class',
+        }
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Add current block to choices if it's missing
-        if self.instance and self.instance.block:
-            current_block = self.instance.block
-            block_choices = list(self.fields['block'].choices)
-            block_values = [choice[0] for choice in block_choices]
-            if current_block not in block_values:
-                block_choices.insert(1, (current_block, current_block))
-        else:
-            block_choices = list(self.fields['block'].choices)
-        
-        # Set the final choices with the placeholder at the top
-        self.fields['block'].choices = [('', 'Select the Block')] + block_choices[1:]
-        
-        # Set empty Location/Panchayat initially
-        self.fields['location_panchayat'].widget = forms.Select(choices=[('', 'Select Block First')])
-        
+        # Set placeholders for select fields
+        # student_class has choices, so we can set Select widget
         self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Student Class')] + list(self.fields['student_class'].choices)[1:])
         
         # Assign the 'date' widget to the date fields individually
@@ -312,16 +286,33 @@ class UpdateUserForm(forms.ModelForm):
 
 class TransferLeadForm(forms.Form):
     """
-    Form for transferring leads between agents
+    Form for transferring leads between agents or to viewer status
     """
+    TRANSFER_CHOICES = [
+        ('agent', 'Transfer to Another Agent'),
+        ('viewer', 'Make Available to All Agents (Viewer Status)'),
+    ]
+    
+    transfer_type = forms.ChoiceField(
+        choices=TRANSFER_CHOICES,
+        widget=forms.RadioSelect(attrs={
+            'class': 'form-check-input',
+            'onchange': 'toggleTargetAgent()'
+        }),
+        initial='agent',
+        help_text='Choose how you want to transfer this lead'
+    )
+    
     target_agent = forms.ModelChoiceField(
         queryset=CustomUser.objects.filter(role='Agent'),
         empty_label="Select an agent to transfer to",
         widget=forms.Select(attrs={
             'class': 'form-control',
-            'style': 'width: 100%;'
+            'style': 'width: 100%;',
+            'id': 'target-agent-select'
         }),
-        help_text='Choose the agent you want to transfer this lead to'
+        help_text='Choose the agent you want to transfer this lead to',
+        required=False
     )
     
     transfer_reason = forms.CharField(
@@ -343,6 +334,16 @@ class TransferLeadForm(forms.Form):
             self.fields['target_agent'].queryset = CustomUser.objects.filter(
                 role='Agent'
             ).exclude(id=current_agent.id)
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        transfer_type = cleaned_data.get('transfer_type')
+        target_agent = cleaned_data.get('target_agent')
+        
+        if transfer_type == 'agent' and not target_agent:
+            raise forms.ValidationError("Please select an agent to transfer to.")
+        
+        return cleaned_data
 
 # ====================================================================================
 
@@ -355,7 +356,7 @@ class CallRecordingForm(forms.ModelForm):
         fields = ['recording_file', 'notes']
         widgets = {
             'recording_file': forms.FileInput(attrs={
-                'accept': 'audio/*,video/*',
+                'accept': '.mp3,.aac,audio/mp3,audio/aac',
                 'class': 'form-control',
                 'id': 'call-recording-input'
             }),
@@ -373,10 +374,10 @@ class CallRecordingForm(forms.ModelForm):
             if file.size > 50 * 1024 * 1024:
                 raise forms.ValidationError("File size must be under 50MB.")
             
-            # Check file extension
-            allowed_extensions = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.mp4', '.avi', '.mov']
+            # Check file extension - only MP3 and AAC allowed
+            allowed_extensions = ['.mp3', '.aac']
             file_extension = os.path.splitext(file.name)[1].lower()
             if file_extension not in allowed_extensions:
-                raise forms.ValidationError(f"Only the following file types are allowed: {', '.join(allowed_extensions)}")
+                raise forms.ValidationError("Only MP3 (.mp3) and AAC (.aac) files are allowed for call recordings.")
         
         return file

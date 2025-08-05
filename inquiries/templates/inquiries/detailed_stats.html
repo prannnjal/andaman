@@ -243,46 +243,10 @@
             </div>
 
             <div class="table_wrapper">
-                <!-- Inquiries by Block -->
-                <h3>Inquiries by Block:</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Block</th>
-                            <th>Inquiries Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for blocks in inquiries_by_block %}
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?block[]={{ blocks.block }}">
-                            <td>{{ blocks.block }}</td>
-                            <td>{{ blocks.total }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
             </div>
 
-            <div class="table_wrapper">
-                <!-- Inquiries by Location -->
-                <h3>Inquiries by Location:</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Location</th>
-                            <th>Inquiries Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for location in inquiries_by_location %}
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?location_panchayat[]={{ location.location_panchayat }}">
-                            <td>{{ location.location_panchayat }}</td>
-                            <td>{{ location.total }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+
 
             <div class="table_wrapper">
                 <!-- Recent Inquiries -->

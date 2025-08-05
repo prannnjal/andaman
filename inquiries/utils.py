@@ -2,9 +2,6 @@ import os
 from datetime import timedelta
 from mutagen import File
 from mutagen.mp3 import MP3
-from mutagen.wave import WAVE
-from mutagen.oggvorbis import OggVorbis
-from mutagen.easyid3 import EasyID3
 from django.core.exceptions import ValidationError
 
 def extract_audio_duration(file_path):
@@ -22,37 +19,25 @@ def extract_audio_duration(file_path):
         file_extension = os.path.splitext(file_path)[1].lower()
         print(f"Processing file: {file_path} (extension: {file_extension})")
         
-        # Handle different file types
+        # Handle different file types - only MP3 and AAC supported
         if file_extension in ['.mp3']:
             audio = MP3(file_path)
             duration = audio.info.length if audio.info else None
             print(f"MP3 duration: {duration}")
             return duration
             
-        elif file_extension in ['.wav']:
-            audio = WAVE(file_path)
-            duration = audio.info.length if audio.info else None
-            print(f"WAV duration: {duration}")
-            return duration
-            
-        elif file_extension in ['.ogg']:
-            audio = OggVorbis(file_path)
-            duration = audio.info.length if audio.info else None
-            print(f"OGG duration: {duration}")
-            return duration
-            
-        elif file_extension in ['.m4a', '.aac', '.mp4', '.avi', '.mov']:
-            # Try to get duration using mutagen's generic File class
+        elif file_extension in ['.aac']:
+            # Try to get duration using mutagen's generic File class for AAC
             audio = File(file_path)
             if audio and hasattr(audio.info, 'length'):
                 duration = audio.info.length
-                print(f"Generic audio/video duration: {duration}")
+                print(f"AAC duration: {duration}")
                 return duration
-            print(f"No duration info found for {file_extension} file")
+            print(f"No duration info found for AAC file")
             return None
             
         else:
-            print(f"Unsupported file type: {file_extension}")
+            print(f"Unsupported file type: {file_extension}. Only MP3 and AAC files are supported.")
             return None
             
     except Exception as e:

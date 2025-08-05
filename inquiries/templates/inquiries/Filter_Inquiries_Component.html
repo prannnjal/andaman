@@ -257,7 +257,7 @@
             </div>
 
             <div class="same_row_wrapper">
-                <select name="student_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Student Names">                    
+                <select name="student_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select School Names">                    
                     {% for student in students %}                    
                         <option value="{{ student }}" {% if student in selected_student_names %}selected{% endif %}>
                             {{ student }}
@@ -266,7 +266,7 @@
                 </select>
 
 
-                <select name="parent_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Parent Names">                    
+                <select name="parent_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Concerned Persons">                    
                     {% for parent in parents %}                    
                         <option value="{{ parent }}" {% if parent in selected_parent_names %}selected{% endif %}>
                             {{ parent }}
@@ -296,22 +296,7 @@
             </div>
 
             <div class="same_row_wrapper">
-                <select name="block[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Blocks">
-                    {% for block in blocks %}                    
-                        <option value="{{ block }}" {% if block in selected_blocks %}selected{% endif %}>
-                            {{ block }}
-                        </option>
-                    {% endfor %}
-                </select>
 
-
-                <select name="location_panchayat[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Location/Panchayat">
-                    {% for location_panchayat in location_panchayats %}                    
-                        <option value="{{ location_panchayat }}" {% if location_panchayat in selected_location_panchayats %}selected{% endif %}>
-                            {{ location_panchayat }}
-                        </option>
-                    {% endfor %}
-                </select>
 
             </div>
 

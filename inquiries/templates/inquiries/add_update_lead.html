@@ -214,13 +214,9 @@
         text-decoration: underline;
     }
 
-    #id_location_panchayat option[value="Other"] {
-        color: red;
-    }
 
-    #id_block option[value="Other"] {
-        color: red;
-    }
+
+
     
     .same_row_wrapper {
         display: flex;
@@ -278,14 +274,14 @@
             <div class="same_row_wrapper">
                 <div class="form-group">
                     <!-- {{ form.student_name.id_for_label }} generates the id of the input field associated with student_name. -->
-                    <label for="{{ form.student_name.id_for_label }}">Student Name</label>
+                    <label for="{{ form.student_name.id_for_label }}">School Name</label>
     
                     <!-- This will render the input field associated with student_name -->
                     {{ form.student_name }}                     
                 </div>
     
                 <div class="form-group">
-                    <label for="{{ form.parent_name.id_for_label }}">Parent Name</label>
+                    <label for="{{ form.parent_name.id_for_label }}">Concerned Person</label>
                     {{ form.parent_name }}
                 </div>  
             </div>
@@ -309,33 +305,7 @@
                 {{ form.address }}
             </div>
 
-            <div class="same_row_wrapper">
-                <div>
-                    <div class="form-group">
-                        <label for="{{ form.block.id_for_label }}">Block</label>
-                        {{ form.block }}
-                    </div>
-        
-                    <!-- Manual Block Input Field (Initially Hidden) -->
-                    <div class="form-group" id="manual-block-field" style="display: none;">
-                        <label for="manual_block">Enter Block</label>
-                        <input type="text" name="manual_block" id="manual_block" placeholder="Enter Block">
-                    </div>
-                </div>
-    
-                <div>
-                    <div class="form-group">
-                        <label for="{{ form.location_panchayat.id_for_label }}">Location/Panchayat</label>
-                        {{ form.location_panchayat }}
-                    </div>
-        
-                    <!-- Manual input field (Hidden initially) -->
-                    <div class="form-group" id="manual-panchayat-field" style="display: none;">
-                        <label for="manual_location_panchayat">Enter Location/Panchayat</label>
-                        <input type="text" name="manual_location_panchayat" id="manual_location_panchayat" placeholder="Enter Location/Panchayat">
-                    </div>
-                </div>
-            </div>
+
 
             <div class="same_row_wrapper">                
                 <div class="form-group">
@@ -414,8 +384,8 @@
                 
                 <div class="form-group">
                     <label for="call-recording-input">Upload Call Recording</label>
-                    <input type="file" id="call-recording-input" name="call_recording" accept="audio/*,video/*" class="form-control">
-                    <small class="form-text text-muted">Supported formats: MP3, WAV, M4A, AAC, OGG, MP4, AVI, MOV (Max 50MB)</small>
+                    <input type="file" id="call-recording-input" name="call_recording" accept=".mp3,.aac,audio/mp3,audio/aac" class="form-control">
+                    <small class="form-text text-muted">Supported formats: MP3 (.mp3) and AAC (.aac) only (Max 50MB)</small>
                 </div>
                 
                 <div class="form-group">
@@ -599,133 +569,8 @@
     </script>
 
 
-    <script>
-        /* Ensure context variables are safely passed as JavaScript variables */
-        var block_context = "{{ block_context|escapejs }}";
-        var location_panchayat_context = "{{ location_panchayat_context|escapejs }}";
-    
-        $(document).ready(function() {
-            var blockDropdown = $('#id_block'); 
-            var manualBlockField = $('#manual-block-field');    
-            var manualBlockInput = $('#manual_block');
-    
-            var panchayatDropdown = $('#id_location_panchayat');
-            var manualPanchayatField = $('#manual-panchayat-field');
-            var manualPanchayatInput = $('#manual_location_panchayat');
-    
-            function loadPanchayats(block_context, location_panchayat_context) {
-                if (block_context !== "Other") {
-                    $.ajax({
-                        url: "{% url 'get_panchayats' %}",
-                        data: { 'block': block_context },
-                        dataType: 'json',
-                        success: function(response) {   
-                            panchayatDropdown.empty();
-                            var found = false;
-                        
-                            $.each(response.panchayats, function(index, panchayat) {
-                                var isSelected = (panchayat.name === location_panchayat_context) ? "selected" : "";
-                                if (isSelected) {
-                                    found = true;
-                                }
-                                panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
-                            });
-                        
-                            if (location_panchayat_context && !found) {
-                                panchayatDropdown.append(`<option value="${location_panchayat_context}" selected>${location_panchayat_context}</option>`);
-                            }
 
-                            panchayatDropdown.append('<option value="Other">Other</option>');
-                        }
-                        
-                    });
-                }
-                else if (block_context === "Other") {
-                    panchayatDropdown.append(`<option value="${panchayat.name}" ${isSelected}>${panchayat.name}</option>`);
 
-                    panchayatDropdown.append('<option value="Other">Other</option>'); 
-                }
-            }
-    
-            // **If block_context exists, preload panchayats & select location_panchayat_context**
-            if (block_context && location_panchayat_context) {                
-                loadPanchayats(block_context, location_panchayat_context);
-            }
-        });
-    </script>
 
-    <!-- Script to detect whether the user selected 'Others' in 'Block' or 'Location/Panchayat' dropdown field -->
-    <script>
-        /* The $(document).ready() function executes as soon as the entire HTML document (DOM) has fully loaded, but before images, CSS, and other external resources are completely loaded.
-        */
-        $(document).ready(function() {
-            var blockDropdown = $('#id_block');
-            var manualBlockField = $('#manual-block-field');    
-            var manualBlockInput = $('#manual_block');
-        
-            var panchayatDropdown = $('#id_location_panchayat');
-            var manualPanchayatField = $('#manual-panchayat-field');
-            var manualPanchayatInput = $('#manual_location_panchayat');            
-        
-            function loadPanchayats(block) {
-                if (block && block !== "Other") {
-                    $.ajax({
-                        url: "{% url 'get_panchayats' %}",
-                        data: { 'block': block },
-                        dataType: 'json',
-                        success: function(response) {   
-                            panchayatDropdown.empty();
-                            panchayatDropdown.append('<option value="">Select Location/Panchayat</option>');
-                            $.each(response.panchayats, function(index, panchayat) {
-                                panchayatDropdown.append(`<option value="${panchayat.name}">${panchayat.name}</option>`);
-                            });
-                            panchayatDropdown.append('<option value="Other">Other</option>'); 
-                        }
-                    });
-                } 
-                else if (block === "Other") {
-                    panchayatDropdown.empty();
-                    panchayatDropdown.append('<option value="">Select Location/Panchayat</option>');
-                    panchayatDropdown.append('<option value="Other">Other</option>'); 
-                } 
-                else {
-                    panchayatDropdown.empty();
-                    panchayatDropdown.append('<option value="">Select Block First</option>');
-                }
-            }
-        
-            // **Check if there's a preselected block on page load**
-            var preselectedBlock = blockDropdown.val();
-            if (preselectedBlock) {
-                loadPanchayats(preselectedBlock);  // Fetch Panchayats on initial render
-            }
-        
-            // **Handle Block Dropdown Change**
-            blockDropdown.change(function() {
-                var block = $(this).val();
-                if (block === "Other") {
-                    manualBlockField.show();    
-                    manualBlockInput.prop('required', true);
-                } else {
-                    manualBlockField.hide();
-                    manualBlockInput.prop('required', false);
-                }
-                loadPanchayats(block);
-            });
-        
-        
-            // **Handle Panchayat Dropdown Change**
-            panchayatDropdown.change(function() {
-                if ($(this).val() === "Other") {
-                    manualPanchayatField.show();
-                    panchayatDropdown.hide();
-                    manualPanchayatInput.prop('required', true);
-                } else {
-                    manualPanchayatField.hide();                
-                    manualPanchayatInput.prop('required', false);
-                }
-            });
-        });
-    </script>
 </body>
 </html>

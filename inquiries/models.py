@@ -139,6 +139,7 @@ class Lead(models.Model):
         ('Admission Offered', 'Admission Offered'),
         ('Admission Confirmed', 'Admission Confirmed'),
         ('Rejected', 'Rejected'),
+        ('Viewer', 'Viewer'),
     ]
 
     student_name = models.CharField(max_length=100)
