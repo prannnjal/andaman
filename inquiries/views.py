@@ -37,6 +37,7 @@ from django.db.models import Count, Q, F, FloatField, ExpressionWrapper
 from urllib.parse import urlencode
 from django.db.models.functions import Round
 import os
+from django.db.models import Avg, Sum
 
 # ======================================================================================================================================================================
 def is_authentic(user):
@@ -223,6 +224,18 @@ def Filter_Inquiries(request):
     
     inquiries = Filter_By_Date(inquiries, 'from', query_params.get('admission_confirmed_date_from'), 'admission_confirmed_date')
     inquiries = Filter_By_Date(inquiries, 'to', query_params.get('admission_confirmed_date_to'), 'admission_confirmed_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('rejected_date_from'), 'rejected_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('rejected_date_to'), 'rejected_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('follow_up_date_from'), 'follow_up_date')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('follow_up_date_to'), 'follow_up_date')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('last_follow_up_updation_from'), 'last_follow_up_updation')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('last_follow_up_updation_to'), 'last_follow_up_updation')
+    
+    inquiries = Filter_By_Date(inquiries, 'from', query_params.get('last_inquiry_updation_from'), 'last_inquiry_updation')
+    inquiries = Filter_By_Date(inquiries, 'to', query_params.get('last_inquiry_updation_to'), 'last_inquiry_updation')
     
     inquiries = Filter_By_Date(inquiries, 'from', query_params.get('rejected_date_from'), 'rejected_date')
     inquiries = Filter_By_Date(inquiries, 'to', query_params.get('rejected_date_to'), 'rejected_date')
@@ -538,6 +551,7 @@ def manage_lead_status(request, inquiry_id):
             # Handle call recording upload (separate from lead form)
             call_recording_file = request.FILES.get('call_recording')
             call_notes = request.POST.get('call_notes')
+            call_duration_seconds = request.POST.get('call_duration_seconds')
             
             if call_recording_file:
                 try:
@@ -552,16 +566,38 @@ def manage_lead_status(request, inquiry_id):
                         uploaded_by=request.user
                     )
                     
-                    # Extract duration from the uploaded file
-                    try:
-                        file_path = call_recording.recording_file.path
-                        duration_seconds = extract_audio_duration(file_path)
-                        if duration_seconds:
-                            call_recording.duration = format_duration(duration_seconds)
-                            call_recording.save()
-                    except Exception as e:
-                        print(f"Error extracting duration: {str(e)}")
-                        # Continue without duration if extraction fails
+                    # Extract duration using multiple methods
+                    duration_seconds = None
+                    
+                    # Method 1: Use JavaScript-extracted duration if available
+                    if call_duration_seconds and call_duration_seconds.strip():
+                        try:
+                            duration_seconds = float(call_duration_seconds)
+                            print(f"Using JavaScript-extracted duration: {duration_seconds} seconds")
+                        except ValueError:
+                            print(f"Invalid JavaScript duration value: {call_duration_seconds}")
+                    
+                    # Method 2: Extract duration from file using mutagen
+                    if not duration_seconds:
+                        try:
+                            # Ensure the file is saved and accessible
+                            if call_recording.recording_file and hasattr(call_recording.recording_file, 'path'):
+                                file_path = call_recording.recording_file.path
+                                duration_seconds = extract_audio_duration(file_path)
+                                if duration_seconds:
+                                    print(f"Using mutagen-extracted duration: {duration_seconds} seconds")
+                            else:
+                                print("Recording file not accessible for duration extraction")
+                        except Exception as e:
+                            print(f"Error extracting duration with mutagen: {str(e)}")
+                    
+                    # Save duration if we have it
+                    if duration_seconds and duration_seconds > 0:
+                        call_recording.duration = format_duration(duration_seconds)
+                        call_recording.save()
+                        print(f"Saved duration: {call_recording.duration}")
+                    else:
+                        print("No valid duration extracted")
                         
                 except Exception as e:
                     print(f"Error creating call recording: {str(e)}")
@@ -627,7 +663,7 @@ def get_panchayats(request):
 def dashboard(request):
     # print("===========================> inside dashboard view")
     user = request.user  # Get the logged-in user
-
+    
     # Get all inquiries if user is admin, else filter by assigned_agent
     if user.role == "Admin": 
         inquiries = Lead.objects.all()  # Admin sees all
@@ -657,11 +693,48 @@ def dashboard(request):
     call_recording_stats = {}
     if user.role == "Admin":
         from .models import CallRecording
+        from django.db.models import Avg, Sum, Count
+        from datetime import timedelta
+        
         total_recordings = CallRecording.objects.count()
         recordings_today = CallRecording.objects.filter(call_date__date=today).count()
         leads_with_recordings = Lead.objects.filter(call_recordings__isnull=False).distinct().count()
         total_leads = Lead.objects.count()
         recording_coverage = round((leads_with_recordings / total_leads * 100) if total_leads > 0 else 0, 1)
+        
+        # Duration statistics
+        recordings_with_duration = CallRecording.objects.filter(duration__isnull=False)
+        avg_duration = recordings_with_duration.aggregate(avg=Avg('duration'))['avg']
+        total_duration = recordings_with_duration.aggregate(total=Sum('duration'))['total']
+        
+        # Duration distribution (last 30 days)
+        thirty_days_ago = today - timedelta(days=30)
+        recent_recordings = CallRecording.objects.filter(
+            call_date__date__gte=thirty_days_ago,
+            duration__isnull=False
+        )
+        
+        # Duration categories
+        short_calls = recent_recordings.filter(duration__lte=timedelta(minutes=2)).count()
+        medium_calls = recent_recordings.filter(
+            duration__gt=timedelta(minutes=2),
+            duration__lte=timedelta(minutes=5)
+        ).count()
+        long_calls = recent_recordings.filter(duration__gt=timedelta(minutes=5)).count()
+        
+        # Format duration for display
+        def format_duration(duration):
+            if duration:
+                total_seconds = int(duration.total_seconds())
+                hours = total_seconds // 3600
+                minutes = (total_seconds % 3600) // 60
+                seconds = total_seconds % 60
+                
+                if hours > 0:
+                    return f"{hours}h {minutes}m {seconds}s"
+                else:
+                    return f"{minutes}m {seconds}s"
+            return "N/A"
         
         call_recording_stats = {
             'total_recordings': total_recordings,
@@ -669,6 +742,12 @@ def dashboard(request):
             'leads_with_recordings': leads_with_recordings,
             'total_leads': total_leads,
             'recording_coverage': recording_coverage,
+            'avg_duration': format_duration(avg_duration),
+            'total_duration': format_duration(total_duration),
+            'short_calls': short_calls,
+            'medium_calls': medium_calls,
+            'long_calls': long_calls,
+            'recent_recordings_count': recent_recordings.count(),
         }
 
     # Counts by Student Class
@@ -725,12 +804,31 @@ def dashboard(request):
 @user_passes_test(is_staff)
 def detailed_stats(request):
     user = request.user  # Get the logged-in user
+    
+    # Get date filter parameters
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
 
     # Get all inquiries if user is admin, else filter by assigned_agent
     if user.role=="Admin":
         inquiries = Lead.objects.all()  # Admin sees all
     else:
         inquiries = Lead.objects.filter(assigned_agent=user)  # Agent sees only their assigned inquiries
+    
+    # Apply date filters if provided
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, "%Y-%m-%d").date()
+            inquiries = inquiries.filter(inquiry_date__gte=from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, "%Y-%m-%d").date()
+            inquiries = inquiries.filter(inquiry_date__lte=to_date)
+        except ValueError:
+            pass
 
     # Overall Counts
     total_inquiries = inquiries.filter(status='Inquiry').count()
@@ -815,6 +913,10 @@ def detailed_stats(request):
         # Trends and Recent Activity
         'recent_trends': recent_trends,
         'recent_inquiries': recent_inquiries,
+        
+        # Date Filter Parameters
+        'date_from': date_from,
+        'date_to': date_to,
     }
     
     # print("===============================> today date in detailed_stats = ", today)
@@ -828,12 +930,31 @@ def detailed_stats(request):
 @user_passes_test(is_staff)
 def export_inquiries_excel(request):
     user = request.user  # Get the logged-in user
+    
+    # Get date filter parameters
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
 
     # If the user is an admin, get all inquiries; otherwise, get only the logged-in agent's inquiries
     if user.role=="Admin":
         inquiries = Lead.objects.all()
     else:
         inquiries = Lead.objects.filter(assigned_agent=user)  # Filter only assigned inquiries for the agent
+    
+    # Apply date filters if provided
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, "%Y-%m-%d").date()
+            inquiries = inquiries.filter(inquiry_date__gte=from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, "%Y-%m-%d").date()
+            inquiries = inquiries.filter(inquiry_date__lte=to_date)
+        except ValueError:
+            pass
 
     # Create a workbook and select the active worksheet
     workbook = Workbook()   # Create a new Excel workbook
@@ -1492,6 +1613,26 @@ def Filter_School_Users(school_users, request): # Make sure to run annotate func
 @user_passes_test(is_admin)
 def school_users_list_view(request):
     users = CustomUser.objects.all()
+    
+    # Get date filter parameters
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    
+    # Apply date filters if provided
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, "%Y-%m-%d").date()
+            users = users.filter(date_joined__date__gte=from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, "%Y-%m-%d").date()
+            users = users.filter(date_joined__date__lte=to_date)
+        except ValueError:
+            pass
+    
     users = Annotate_Performance_Fields_for_Agents(users)
     users = Filter_School_Users(users, request)   # Run annotate part before calling it
     
@@ -1500,6 +1641,8 @@ def school_users_list_view(request):
         'actions': ['Manage Leads', 'Delete User', 'Update User'],
         'show_performance_metrics': True,
         'base_url_name': reverse('school_users_list'),
+        'date_from': date_from,
+        'date_to': date_to,
     }
     
     return render(request, 'inquiries/agent/school_users_list.html', context)
@@ -1836,3 +1979,142 @@ def delete_recording_api(request, recording_id):
         
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+# ======================================================================================================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def call_duration_analytics_view(request):
+    """
+    Detailed call duration analytics for admins
+    """
+    from .models import CallRecording
+    from django.db.models import Avg, Sum, Count, Q
+    from datetime import timedelta
+    
+    today = now().date()
+    
+    # Get date filter parameters
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    
+    # Get all recordings with duration
+    recordings_with_duration = CallRecording.objects.filter(duration__isnull=False)
+    
+    # Apply date filters if provided
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, "%Y-%m-%d").date()
+            recordings_with_duration = recordings_with_duration.filter(call_date__date__gte=from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, "%Y-%m-%d").date()
+            recordings_with_duration = recordings_with_duration.filter(call_date__date__lte=to_date)
+        except ValueError:
+            pass
+    
+    # Overall statistics
+    total_recordings = CallRecording.objects.count()
+    recordings_with_duration_count = recordings_with_duration.count()
+    avg_duration = recordings_with_duration.aggregate(avg=Avg('duration'))['avg']
+    total_duration = recordings_with_duration.aggregate(total=Sum('duration'))['total']
+    
+    # Duration distribution
+    short_calls = recordings_with_duration.filter(duration__lte=timedelta(minutes=2)).count()
+    medium_calls = recordings_with_duration.filter(
+        duration__gt=timedelta(minutes=2),
+        duration__lte=timedelta(minutes=5)
+    ).count()
+    long_calls = recordings_with_duration.filter(duration__gt=timedelta(minutes=5)).count()
+    
+    # Time-based analysis (last 30 days)
+    thirty_days_ago = today - timedelta(days=30)
+    recent_recordings = recordings_with_duration.filter(call_date__date__gte=thirty_days_ago)
+    recent_avg_duration = recent_recordings.aggregate(avg=Avg('duration'))['avg']
+    
+    # Agent performance by call duration
+    agent_stats = []
+    from .models import CustomUser
+    agents = CustomUser.objects.filter(role='Agent')
+    
+    for agent in agents:
+        agent_recordings = recordings_with_duration.filter(uploaded_by=agent)
+        agent_count = agent_recordings.count()
+        if agent_count > 0:
+            agent_avg = agent_recordings.aggregate(avg=Avg('duration'))['avg']
+            agent_total = agent_recordings.aggregate(total=Sum('duration'))['total']
+            
+            # Agent duration distribution
+            agent_short_calls = agent_recordings.filter(duration__lte=timedelta(minutes=2)).count()
+            agent_medium_calls = agent_recordings.filter(
+                duration__gt=timedelta(minutes=2),
+                duration__lte=timedelta(minutes=5)
+            ).count()
+            agent_long_calls = agent_recordings.filter(duration__gt=timedelta(minutes=5)).count()
+            
+            # Calculate percentages
+            agent_short_percent = (agent_short_calls / agent_count * 100) if agent_count > 0 else 0
+            agent_medium_percent = (agent_medium_calls / agent_count * 100) if agent_count > 0 else 0
+            agent_long_percent = (agent_long_calls / agent_count * 100) if agent_count > 0 else 0
+            
+            # Recent activity (last 30 days)
+            agent_recent_recordings = agent_recordings.filter(call_date__date__gte=thirty_days_ago)
+            agent_recent_count = agent_recent_recordings.count()
+            agent_recent_avg = agent_recent_recordings.aggregate(avg=Avg('duration'))['avg']
+            
+            agent_stats.append({
+                'agent': agent,
+                'count': agent_count,
+                'avg_duration': agent_avg,
+                'total_duration': agent_total,
+                'short_calls': agent_short_calls,
+                'medium_calls': agent_medium_calls,
+                'long_calls': agent_long_calls,
+                'short_percent': agent_short_percent,
+                'medium_percent': agent_medium_percent,
+                'long_percent': agent_long_percent,
+                'recent_count': agent_recent_count,
+                'recent_avg_duration': agent_recent_avg,
+            })
+    
+    # Sort agents by total calls (most active first)
+    agent_stats.sort(key=lambda x: x['count'], reverse=True)
+    
+    # Format duration helper function
+    def format_duration(duration):
+        if duration:
+            total_seconds = int(duration.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            
+            if hours > 0:
+                return f"{hours}h {minutes}m {seconds}s"
+            else:
+                return f"{minutes}m {seconds}s"
+        return "N/A"
+    
+    # Recent recordings with details
+    recent_recordings_list = recent_recordings.select_related('lead', 'uploaded_by').order_by('-call_date')[:20]
+    
+    context = {
+        'total_recordings': total_recordings,
+        'recordings_with_duration_count': recordings_with_duration_count,
+        'avg_duration': format_duration(avg_duration),
+        'total_duration': format_duration(total_duration),
+        'short_calls': short_calls,
+        'medium_calls': medium_calls,
+        'long_calls': long_calls,
+        'recent_avg_duration': format_duration(recent_avg_duration),
+        'recent_recordings_count': recent_recordings.count(),
+        'agent_stats': agent_stats,
+        'recent_recordings_list': recent_recordings_list,
+        'format_duration': format_duration,
+        'date_from': date_from,
+        'date_to': date_to,
+    }
+    
+    return render(request, 'inquiries/call_duration_analytics.html', context)

@@ -426,6 +426,7 @@
                 <div class="form-group">
                     <label for="call-duration-display">Call Duration</label>
                     <input type="text" id="call-duration-display" readonly class="form-control" placeholder="Duration will be extracted automatically">
+                    <input type="hidden" id="call-duration-seconds" name="call_duration_seconds" value="">
                 </div>
                 
                 <!-- Existing Call Recordings -->
@@ -511,8 +512,13 @@
                             const seconds = Math.floor(duration % 60);
                             const formattedDuration = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                             durationDisplay.value = formattedDuration;
+                            
+                            // Store duration in seconds in hidden field
+                            document.getElementById('call-duration-seconds').value = duration.toString();
+                            console.log('Duration extracted:', duration, 'seconds');
                         } else {
                             durationDisplay.value = 'Duration could not be extracted';
+                            document.getElementById('call-duration-seconds').value = '';
                         }
                     };
                     

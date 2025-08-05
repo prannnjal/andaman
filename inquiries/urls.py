@@ -64,4 +64,7 @@ urlpatterns = [
     path('api/lead/<int:lead_id>/recordings/', views.lead_recordings_api, name='lead_recordings_api'),
     path('api/recording/<int:recording_id>/delete/', views.delete_recording_api, name='delete_recording_api'),
 
+    # Call Duration Analytics
+    path('call-duration-analytics/', views.call_duration_analytics_view, name='call_duration_analytics'),
+
 ]

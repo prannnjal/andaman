@@ -244,6 +244,9 @@
 
     <h1>{{heading}}</h1>
     
+    <!-- Date Filter Component -->
+    {% include "inquiries/date_filter_component.html" %}
+    
     <!-- Buttons to open modals -->
     <div class="buttons_wrapper">
         {% if "Add Inquiry" in dashboard_buttons %}
@@ -295,6 +298,10 @@
                     Auto-Assign Unassigned Leads
                 </button>
             </form>
+            
+            <button class="header-btn manage" onClick="window.location.href='{% url 'call_duration_analytics' %}'" style="background-color: #17a2b8;">
+                Call Duration Analytics
+            </button>
         {% endif %}
     </div>
 

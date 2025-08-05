@@ -13,30 +13,46 @@ def extract_audio_duration(file_path):
     Returns duration in seconds as float
     """
     try:
+        # Check if file exists
+        if not os.path.exists(file_path):
+            print(f"File does not exist: {file_path}")
+            return None
+            
         # Get file extension
         file_extension = os.path.splitext(file_path)[1].lower()
+        print(f"Processing file: {file_path} (extension: {file_extension})")
         
         # Handle different file types
         if file_extension in ['.mp3']:
             audio = MP3(file_path)
-            return audio.info.length if audio.info else None
+            duration = audio.info.length if audio.info else None
+            print(f"MP3 duration: {duration}")
+            return duration
             
         elif file_extension in ['.wav']:
             audio = WAVE(file_path)
-            return audio.info.length if audio.info else None
+            duration = audio.info.length if audio.info else None
+            print(f"WAV duration: {duration}")
+            return duration
             
         elif file_extension in ['.ogg']:
             audio = OggVorbis(file_path)
-            return audio.info.length if audio.info else None
+            duration = audio.info.length if audio.info else None
+            print(f"OGG duration: {duration}")
+            return duration
             
         elif file_extension in ['.m4a', '.aac', '.mp4', '.avi', '.mov']:
             # Try to get duration using mutagen's generic File class
             audio = File(file_path)
             if audio and hasattr(audio.info, 'length'):
-                return audio.info.length
+                duration = audio.info.length
+                print(f"Generic audio/video duration: {duration}")
+                return duration
+            print(f"No duration info found for {file_extension} file")
             return None
             
         else:
+            print(f"Unsupported file type: {file_extension}")
             return None
             
     except Exception as e:

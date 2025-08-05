@@ -265,6 +265,15 @@
             color: white;
         }
         
+        /* Call Duration Summary Column Styling */
+        .call-duration-summary-cell {
+            max-width: 200px;
+            min-width: 180px;
+            background-color: #f8f9fa;
+            border-left: 3px solid #007bff;
+            vertical-align: top;
+        }
+        
         @media(max-width: 700px){
             .table_wrapper{
                 max-height: 60vh;
@@ -284,6 +293,11 @@
             .call-recording-cell {
                 max-width: 200px;
                 min-width: 180px;
+            }
+            
+            .call-duration-summary-cell {
+                max-width: 150px;
+                min-width: 120px;
             }
             
             .recording-item {
@@ -399,6 +413,11 @@
                 
                 <th id="call_recordings" onclick="sortColumn(event,17,'string')">
                     Call Recordings
+                    <span class="sort-icon"></span>
+                </th>
+                
+                <th id="call_duration_summary" onclick="sortColumn(event,18,'string')">
+                    Call Duration Summary
                     <span class="sort-icon"></span>
                 </th>                                                                             
 
@@ -538,11 +557,25 @@
                     {% else %}
                         <span style="color: #999; font-size: 12px;">No recordings</span>
                     {% endif %}
+                </td>
+                
+                <td class="call-duration-summary-cell">
+                    {% if inquiry.call_recordings_count > 0 %}
+                        <div style="font-size: 12px; color: #007bff;">
+                            <strong>Latest Duration:</strong> {{ inquiry.latest_call_duration|default:"N/A" }}<br>
+                            <strong>Total Recordings:</strong> {{ inquiry.call_recordings_count }}<br>
+                            {% if inquiry.latest_call_date %}
+                                <strong>Last Call:</strong> {{ inquiry.latest_call_date|date:"M d, Y" }}
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <span style="color: #999; font-size: 12px;">No recordings</span>
+                    {% endif %}
                 </td>                                       
             </tr>
             {% empty %}
             <tr>
-                <td colspan="18">No inquiries available.</td>  <!-- ✅ FIXED -->
+                <td colspan="19">No inquiries available.</td>  <!-- ✅ FIXED -->
             </tr>
             {% endfor %}
         </tbody>

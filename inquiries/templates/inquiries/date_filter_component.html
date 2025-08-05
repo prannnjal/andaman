@@ -1,0 +1,190 @@
+{% load static %}
+
+<div class="date-filter-container" style="background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px;">
+    <h4 style="margin-top: 0; color: #333; border-bottom: 2px solid #007bff; padding-bottom: 8px;">
+        <i class="fas fa-calendar-alt"></i> Date Filter
+    </h4>
+    
+    <form method="GET" id="date-filter-form" style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+        <!-- Preserve existing query parameters -->
+        {% for key, value in request.GET.items %}
+            {% if key != 'date_from' and key != 'date_to' %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endif %}
+        {% endfor %}
+        
+        <div class="date-input-group">
+            <label for="date_from" style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">
+                From Date:
+            </label>
+            <input type="date" 
+                   id="date_from" 
+                   name="date_from" 
+                   value="{{ date_from|default:'' }}"
+                   class="form-control"
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        </div>
+        
+        <div class="date-input-group">
+            <label for="date_to" style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">
+                To Date:
+            </label>
+            <input type="date" 
+                   id="date_to" 
+                   name="date_to" 
+                   value="{{ date_to|default:'' }}"
+                   class="form-control"
+                   style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+        </div>
+        
+        <div class="date-filter-buttons" style="display: flex; gap: 10px;">
+            <button type="submit" 
+                    class="btn btn-primary"
+                    style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                <i class="fas fa-filter"></i> Apply Filter
+            </button>
+            
+            <button type="button" 
+                    onclick="clearDateFilter()"
+                    class="btn btn-secondary"
+                    style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
+        
+        <!-- Quick Date Presets -->
+        <div class="date-presets" style="margin-top: 10px; width: 100%;">
+            <label style="font-weight: 600; color: #555; margin-right: 10px;">Quick Filters:</label>
+            <button type="button" onclick="setDateRange('today')" class="btn btn-sm btn-outline-primary">Today</button>
+            <button type="button" onclick="setDateRange('yesterday')" class="btn btn-sm btn-outline-primary">Yesterday</button>
+            <button type="button" onclick="setDateRange('last7days')" class="btn btn-sm btn-outline-primary">Last 7 Days</button>
+            <button type="button" onclick="setDateRange('last30days')" class="btn btn-sm btn-outline-primary">Last 30 Days</button>
+            <button type="button" onclick="setDateRange('thisMonth')" class="btn btn-sm btn-outline-primary">This Month</button>
+            <button type="button" onclick="setDateRange('lastMonth')" class="btn btn-sm btn-outline-primary">Last Month</button>
+        </div>
+    </form>
+    
+    <!-- Active Filter Display -->
+    {% if date_from or date_to %}
+    <div class="active-filter" style="margin-top: 15px; padding: 10px; background: #e3f2fd; border-radius: 4px; border-left: 4px solid #2196f3;">
+        <strong>Active Date Filter:</strong>
+        {% if date_from and date_to %}
+            {{ date_from }} to {{ date_to }}
+        {% elif date_from %}
+            From {{ date_from }}
+        {% elif date_to %}
+            Until {{ date_to }}
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .date-filter-container {
+        font-family: 'Arial', sans-serif;
+    }
+    
+    .date-input-group {
+        min-width: 150px;
+    }
+    
+    .btn {
+        transition: all 0.3s ease;
+    }
+    
+    .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 12px;
+        margin-right: 5px;
+    }
+    
+    .btn-outline-primary {
+        background: transparent;
+        color: #007bff;
+        border: 1px solid #007bff;
+    }
+    
+    .btn-outline-primary:hover {
+        background: #007bff;
+        color: white;
+    }
+    
+    @media (max-width: 768px) {
+        .date-filter-container form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .date-input-group {
+            min-width: auto;
+        }
+        
+        .date-filter-buttons {
+            justify-content: center;
+        }
+        
+        .date-presets {
+            text-align: center;
+        }
+    }
+</style>
+
+<script>
+    function clearDateFilter() {
+        document.getElementById('date_from').value = '';
+        document.getElementById('date_to').value = '';
+        document.getElementById('date-filter-form').submit();
+    }
+    
+    function setDateRange(preset) {
+        const today = new Date();
+        let fromDate = '';
+        let toDate = '';
+        
+        switch(preset) {
+            case 'today':
+                fromDate = toDate = today.toISOString().split('T')[0];
+                break;
+            case 'yesterday':
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                fromDate = toDate = yesterday.toISOString().split('T')[0];
+                break;
+            case 'last7days':
+                const last7Days = new Date(today);
+                last7Days.setDate(today.getDate() - 7);
+                fromDate = last7Days.toISOString().split('T')[0];
+                toDate = today.toISOString().split('T')[0];
+                break;
+            case 'last30days':
+                const last30Days = new Date(today);
+                last30Days.setDate(today.getDate() - 30);
+                fromDate = last30Days.toISOString().split('T')[0];
+                toDate = today.toISOString().split('T')[0];
+                break;
+            case 'thisMonth':
+                fromDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                toDate = today.toISOString().split('T')[0];
+                break;
+            case 'lastMonth':
+                const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                fromDate = lastMonth.toISOString().split('T')[0];
+                toDate = new Date(today.getFullYear(), today.getMonth(), 0).toISOString().split('T')[0];
+                break;
+        }
+        
+        document.getElementById('date_from').value = fromDate;
+        document.getElementById('date_to').value = toDate;
+        // Don't auto-submit - let user click Apply Filter button
+    }
+    
+    // Remove auto-submit functionality - only submit when Apply Filter button is clicked
+    document.addEventListener('DOMContentLoaded', function() {
+        // No auto-submit on date change - user must click Apply Filter button
+    });
+</script> 
