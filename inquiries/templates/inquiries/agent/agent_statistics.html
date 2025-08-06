@@ -135,6 +135,7 @@
             {% endif %}
             <select name="period" class="form-select" style="max-width: 180px;">
                 <option value="day" {% if period == 'day' %}selected{% endif %}>Today</option>
+                <option value="yesterday" {% if period == 'yesterday' %}selected{% endif %}>Yesterday</option>
                 <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
                 <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
             </select>

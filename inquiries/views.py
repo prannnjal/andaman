@@ -2248,11 +2248,17 @@ def agent_statistics_view(request):
     agents = CustomUser.objects.filter(role='Agent')
     period = request.GET.get('period', 'day')
     today = now().date()
-    start_date = today
-    if period == 'week':
-        start_date = today - timedelta(days=today.weekday())
-    elif period == 'month':
-        start_date = today.replace(day=1)
+    if period == 'yesterday':
+        from datetime import timedelta as dt_timedelta
+        start_date = today - dt_timedelta(days=1)
+        end_date = start_date
+    else:
+        start_date = today
+        end_date = today
+        if period == 'week':
+            start_date = today - timedelta(days=today.weekday())
+        elif period == 'month':
+            start_date = today.replace(day=1)
 
     # Admin can filter by agent, agent can only see their own stats
     if user.role == 'Admin':
@@ -2274,6 +2280,13 @@ def agent_statistics_view(request):
         follow_ups = LeadLogs.objects.filter(changed_by=user, changed_at__date__gte=start_date)
         calls = CallRecording.objects.filter(uploaded_by=user, call_date__date__gte=start_date)
         admissions = leads.filter(status='Admission Confirmed')
+
+    # For 'yesterday', filter only that day
+    if period == 'yesterday':
+        leads = leads.filter(inquiry_date=start_date)
+        follow_ups = follow_ups.filter(changed_at__date=start_date)
+        calls = calls.filter(call_date__date=start_date)
+        admissions = admissions.filter(inquiry_date=start_date)
 
     # Calculate call duration statistics
     calls_with_duration = calls.filter(duration__isnull=False)
@@ -2309,6 +2322,8 @@ def agent_statistics_view(request):
     date_range = []
     if period == 'day':
         date_range = [today]
+    elif period == 'yesterday':
+        date_range = [start_date]
     elif period == 'week':
         date_range = [start_date + timedelta(days=i) for i in range(0, (today - start_date).days + 1)]
     elif period == 'month':
@@ -2345,3 +2360,17 @@ def agent_statistics_view(request):
         'show_agent_filter': user.role == 'Admin',
     }
     return render(request, 'inquiries/agent/agent_statistics.html', context)
+
+def active_agents_status_view(request):
+    from .models import CustomUser
+    agents = CustomUser.objects.filter(role='Agent')
+    active_threshold = now() - timedelta(minutes=10)
+    agent_data = []
+    for agent in agents:
+        is_active = agent.last_login and agent.last_login >= active_threshold
+        agent_data.append({
+            'name': agent.name,
+            'last_login': agent.last_login.strftime('%Y-%m-%d %H:%M:%S') if agent.last_login else 'Never',
+            'is_active': is_active,
+        })
+    return JsonResponse({'agents': agent_data})

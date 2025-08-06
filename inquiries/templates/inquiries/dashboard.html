@@ -129,7 +129,7 @@
                                 <i class="bi bi-person-plus-fill me-2"></i> Add User
                             </a>
                         </li>
-                        {% endif %}
+                        {% endif %}                        
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'follow_up_management' %}">
                                 <i class="bi bi-arrow-repeat me-2"></i> Follow-ups
@@ -227,19 +227,69 @@
                                     <div class="fs-3 fw-bold text-danger">{{ rejected }}</div>
                                     <div class="text-muted">Rejected</div>
                                 </div>
-                            </div>
-                        </div>
+                    </div>                
+                </div>
                     </div>
                     <!-- Chart Placeholder -->
                     <div class="chart-placeholder mb-4">
                         <span>Chart/Analytics Coming Soon</span>
-                    </div>
+                </div>         
                     {% if user.role == "Admin" %}
-                    <div class="mb-4 d-flex justify-content-end">
+                    <div class="mb-4 d-flex justify-content-end gap-2">
                         <a href="{% url 'agent_statistics' %}" class="btn btn-info" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-weight: 600; border-radius: 0.5rem;">
                             <i class="bi bi-person-lines-fill me-1"></i> Agent Statistics
                         </a>
+                        <button class="btn btn-success" id="activeAgentsBtn" style="font-weight:600; border-radius:0.5rem;">
+                            <i class="bi bi-people-fill me-1"></i> Active Agents
+                        </button>
                     </div>
+                    <!-- Active Agents Modal -->
+                    <div class="modal fade" id="activeAgentsModal" tabindex="-1" aria-labelledby="activeAgentsModalLabel" aria-hidden="true">
+                      <div class="modal-dialog modal-lg modal-dialog-centered">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="activeAgentsModalLabel">Active Agents</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div id="activeAgentsList" class="list-group">
+                              <div class="text-center text-muted">Loading...</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <script>
+                      document.addEventListener('DOMContentLoaded', function() {
+                        const btn = document.getElementById('activeAgentsBtn');
+                        const modal = new bootstrap.Modal(document.getElementById('activeAgentsModal'));
+                        btn.addEventListener('click', function() {
+                          document.getElementById('activeAgentsList').innerHTML = '<div class="text-center text-muted">Loading...</div>';
+                          fetch('{% url 'active_agents_status' %}')
+                            .then(res => res.json())
+                            .then(data => {
+                              const agents = data.agents;
+                              if (agents.length === 0) {
+                                document.getElementById('activeAgentsList').innerHTML = '<div class="text-center text-muted">No agents found.</div>';
+                                return;
+                              }
+                              document.getElementById('activeAgentsList').innerHTML = agents.map(agent => `
+                                <div class="list-group-item d-flex align-items-center justify-content-between">
+                                  <div>
+                                    <span class="fw-semibold">${agent.name}</span>
+                                  </div>
+                                  <div class="d-flex align-items-center gap-3">
+                                    <span class="badge ${agent.is_active ? 'bg-success' : 'bg-danger'}" style="font-size:1em;">${agent.is_active ? 'Active' : 'Inactive'}</span>
+                                    <span class="text-secondary" style="font-size:0.95em;">${agent.last_login}</span>
+                                  </div>
+                                </div>
+                              `).join('');
+                            });
+                          modal.show();
+                        });
+                      });
+                    </script>
+        </div>
                     {% endif %}
                     <!-- Tables -->
                     <div class="row g-4">
@@ -248,172 +298,172 @@
                                 <h5 class="fw-bold mb-3">Overall Status</h5>
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
-                                        <tr>
-                                            <th>Category</th>
-                                            <th>Count</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry">
-                                            <td>Inquiries</td>
-                                            <td>{{ total_inquiries }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration">
-                                            <td>Registrations</td>
-                                            <td>{{ total_registrations }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test">
-                                            <td>Admission Tests</td>
-                                            <td>{{ total_tests }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered">
-                                            <td>Admissions Offered</td>
-                                            <td>{{ total_admissions_offered }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed">
-                                            <td>Admissions Confirmed</td>
-                                            <td>{{ total_admissions_confirmed }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected">
-                                            <td>Rejected</td>
-                                            <td>{{ rejected }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <tr>
+                            <th>Category</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry">
+                            <td>Inquiries</td>
+                            <td>{{ total_inquiries }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration">
+                            <td>Registrations</td>
+                            <td>{{ total_registrations }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test">
+                            <td>Admission Tests</td>
+                            <td>{{ total_tests }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered">
+                            <td>Admissions Offered</td>
+                            <td>{{ total_admissions_offered }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed">
+                            <td>Admissions Confirmed</td>
+                            <td>{{ total_admissions_confirmed }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected">
+                            <td>Rejected</td>
+                            <td>{{ rejected }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
                         </div>
                         <div class="col-lg-6">
                             <div class="table-responsive p-3">
                                 <h5 class="fw-bold mb-3">Today's Status</h5>
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
-                                        <tr>
-                                            <th>Category</th>
-                                            <th>Today's Count</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry&inquiry_date_from={{todays_date}}">
-                                            <td>Inquiries</td>
-                                            <td>{{ inquiries_today }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration&registration_date_from={{todays_date}}">
-                                            <td>Registrations</td>
-                                            <td>{{ registrations_today }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test&admission_test_date_from={{todays_date}}">
-                                            <td>Admission Tests</td>
-                                            <td>{{ tests_today }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered&admission_offered_date_from={{todays_date}}">
-                                            <td>Admissions Offered</td>
-                                            <td>{{ admissions_offered_today }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed&admission_confirmed_date_from={{todays_date}}">
-                                            <td>Admissions Confirmed</td>
-                                            <td>{{ admissions_confirmed_today }}</td>
-                                        </tr>
-                                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected&rejected_date_from={{todays_date}}">
-                                            <td>Rejected</td>
-                                            <td>{{ rejected_today }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        <tr>
+                            <th>Category</th>
+                            <th>Today's Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry&inquiry_date_from={{todays_date}}">
+                            <td>Inquiries</td>
+                            <td>{{ inquiries_today }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration&registration_date_from={{todays_date}}">
+                            <td>Registrations</td>
+                            <td>{{ registrations_today }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test&admission_test_date_from={{todays_date}}">
+                            <td>Admission Tests</td>
+                            <td>{{ tests_today }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered&admission_offered_date_from={{todays_date}}">
+                            <td>Admissions Offered</td>
+                            <td>{{ admissions_offered_today }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed&admission_confirmed_date_from={{todays_date}}">
+                            <td>Admissions Confirmed</td>
+                            <td>{{ admissions_confirmed_today }}</td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected&rejected_date_from={{todays_date}}">
+                            <td>Rejected</td>
+                            <td>{{ rejected_today }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
                     </div>
-                    {% if user.role == "Admin" and call_recording_stats %}
+        {% if user.role == "Admin" and call_recording_stats %}
                     <div class="row g-4 mt-4">
                         <div class="col-12">
                             <div class="table-responsive p-3">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h5 class="fw-bold mb-0">Call Recording Statistics</h5>
                                     <a href="{% url 'call_duration_analytics' %}" class="btn btn-primary btn-sm">View Detailed Analytics</a>
-                                </div>
+            </div>
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
-                                        <tr>
-                                            <th>Metric</th>
-                                            <th>Count</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>Total Call Recordings</td>
-                                            <td>{{ call_recording_stats.total_recordings }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Recordings Today</td>
-                                            <td>{{ call_recording_stats.recordings_today }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Leads with Recordings</td>
-                                            <td>{{ call_recording_stats.leads_with_recordings }} / {{ call_recording_stats.total_leads }}</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Recording Coverage</td>
-                                            <td>{{ call_recording_stats.recording_coverage }}%</td>
-                                        </tr>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Total Call Recordings</td>
+                            <td>{{ call_recording_stats.total_recordings }}</td>
+                        </tr>
+                        <tr>
+                            <td>Recordings Today</td>
+                            <td>{{ call_recording_stats.recordings_today }}</td>
+                        </tr>
+                        <tr>
+                            <td>Leads with Recordings</td>
+                            <td>{{ call_recording_stats.leads_with_recordings }} / {{ call_recording_stats.total_leads }}</td>
+                        </tr>
+                        <tr>
+                            <td>Recording Coverage</td>
+                            <td>{{ call_recording_stats.recording_coverage }}%</td>
+                        </tr>
                                         <tr class="fw-bold bg-light">
                                             <td>Average Call Duration</td>
                                             <td>{{ call_recording_stats.avg_duration }}</td>
-                                        </tr>
+                        </tr>
                                         <tr class="fw-bold bg-light">
                                             <td>Total Call Duration</td>
                                             <td>{{ call_recording_stats.total_duration }}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                        </tr>
+                    </tbody>
+                </table>
                                 <div class="mt-4">
                                     <h6 class="fw-bold">Call Duration Distribution (Last 30 Days)</h6>
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
-                                            <tr>
-                                                <th>Duration Category</th>
-                                                <th>Count</th>
-                                                <th>Percentage</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>Short Calls (≤ 2 min)</td>
-                                                <td>{{ call_recording_stats.short_calls }}</td>
-                                                <td>
-                                                    {% if call_recording_stats.recent_recordings_count > 0 %}
-                                                        {% widthratio call_recording_stats.short_calls call_recording_stats.recent_recordings_count 100 %}%
+                        <tr>
+                            <th>Duration Category</th>
+                            <th>Count</th>
+                            <th>Percentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Short Calls (≤ 2 min)</td>
+                            <td>{{ call_recording_stats.short_calls }}</td>
+                            <td>
+                                {% if call_recording_stats.recent_recordings_count > 0 %}
+                                    {% widthratio call_recording_stats.short_calls call_recording_stats.recent_recordings_count 100 %}%
                                                     {% else %}0%{% endif %}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Medium Calls (2-5 min)</td>
-                                                <td>{{ call_recording_stats.medium_calls }}</td>
-                                                <td>
-                                                    {% if call_recording_stats.recent_recordings_count > 0 %}
-                                                        {% widthratio call_recording_stats.medium_calls call_recording_stats.recent_recordings_count 100 %}%
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Medium Calls (2-5 min)</td>
+                            <td>{{ call_recording_stats.medium_calls }}</td>
+                            <td>
+                                {% if call_recording_stats.recent_recordings_count > 0 %}
+                                    {% widthratio call_recording_stats.medium_calls call_recording_stats.recent_recordings_count 100 %}%
                                                     {% else %}0%{% endif %}
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>Long Calls (> 5 min)</td>
-                                                <td>{{ call_recording_stats.long_calls }}</td>
-                                                <td>
-                                                    {% if call_recording_stats.recent_recordings_count > 0 %}
-                                                        {% widthratio call_recording_stats.long_calls call_recording_stats.recent_recordings_count 100 %}%
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Long Calls (> 5 min)</td>
+                            <td>{{ call_recording_stats.long_calls }}</td>
+                            <td>
+                                {% if call_recording_stats.recent_recordings_count > 0 %}
+                                    {% widthratio call_recording_stats.long_calls call_recording_stats.recent_recordings_count 100 %}%
                                                     {% else %}0%{% endif %}
-                                                </td>
-                                            </tr>
+                            </td>
+                        </tr>
                                             <tr class="fw-bold bg-secondary text-white">
-                                                <td>Total Recent Recordings</td>
-                                                <td>{{ call_recording_stats.recent_recordings_count }}</td>
-                                                <td>100%</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <td>Total Recent Recordings</td>
+                            <td>{{ call_recording_stats.recent_recordings_count }}</td>
+                            <td>100%</td>
+                        </tr>
+                    </tbody>
+                </table>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    {% endif %}
+            </div>
+        </div>
+        {% endif %}
                 </div>
             </main>
         </div>

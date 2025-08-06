@@ -11,8 +11,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
+<style>
+  body {
             font-family: 'Inter', Arial, sans-serif;
             background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
             min-height: 100vh;
@@ -85,7 +85,7 @@
             border: none;
             border-radius: 0.5rem;
             padding: 0.75rem 2rem;
-            font-weight: 600;
+    font-weight: 600;
             transition: all 0.3s ease;
         }
         .btn-secondary:hover {
@@ -124,9 +124,9 @@
             top: 50%;
             transform: translateY(-50%);
             background: none;
-            border: none;
+    border: none;
             color: #6b7280;
-            cursor: pointer;
+    cursor: pointer;
             transition: all 0.3s ease;
         }
         .password-toggle-btn:hover {
@@ -189,8 +189,8 @@
         }
         .tooltip-custom {
             position: relative;
-            display: inline-block;
-        }
+    display: inline-block;
+  }
         .tooltip-custom .tooltiptext {
             visibility: hidden;
             width: 200px;
@@ -269,7 +269,7 @@
             background: white;
             padding: 0 0.25rem;
         }
-    </style>
+</style>
 </head>
 <body>
     <!-- Progress Indicator -->
@@ -282,9 +282,9 @@
         <i class="bi bi-check-circle me-1"></i>Auto-saved
     </div>
 
-    <div class="container">
-        {% include "inquiries/Alerts.html" %}
-        
+<div class="container">
+  {% include "inquiries/Alerts.html" %}
+
         <div class="form-card">
             <div class="text-center mb-4">
                 <h2 class="fw-bold text-dark mb-2">
@@ -295,8 +295,8 @@
             </div>
 
             <form method="post" class="needs-validation" novalidate id="userForm">
-                {% csrf_token %}
-                
+      {% csrf_token %}
+      
                 <div class="row g-3">
                     <!-- Name Field -->
                     <div class="col-md-6">
@@ -332,8 +332,8 @@
                             {{ form.email }}
                             <i class="bi bi-check-circle-fill text-success validation-icon"></i>
                             <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
-                        </div>
-                    </div>
+        </div>
+        </div>
 
                     <!-- Role Field -->
                     <div class="col-md-6">
@@ -344,8 +344,8 @@
                             {{ form.role }}
                             <i class="bi bi-check-circle-fill text-success validation-icon"></i>
                             <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
-                        </div>
-                    </div>
+        </div>
+        </div>
 
                     <!-- Expiration Time Field -->
                     <div class="col-md-6">
@@ -353,11 +353,11 @@
                             <label for="{{ form.expiration_time.id_for_label }}" class="form-label">
                                 <i class="bi bi-calendar-clock me-1"></i>Expiration Time
                             </label>
-                            {{ form.expiration_time }}
+          {{ form.expiration_time }}
                             <i class="bi bi-check-circle-fill text-success validation-icon"></i>
                             <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
                         </div>
-                    </div>
+        </div>
 
                     <!-- Password 1 Field -->
                     <div class="col-md-6">
@@ -374,13 +374,13 @@
                             <div class="password-strength" id="passwordStrength">
                                 <div class="password-strength-bar" id="strengthBar"></div>
                             </div>
-                            {% if form.password1.help_text %}
+          {% if form.password1.help_text %}
                                 <div class="form-text">{{ form.password1.help_text }}</div>
-                            {% endif %}
+          {% endif %}
                             <i class="bi bi-check-circle-fill text-success validation-icon"></i>
                             <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
                         </div>
-                    </div>
+        </div>
 
                     <!-- Password 2 Field -->
                     <div class="col-md-6">
@@ -394,14 +394,14 @@
                                     <i class="bi bi-eye" id="eye-{{ form.password2.id_for_label }}"></i>
                                 </button>
                             </div>
-                            {% if form.password2.help_text %}
+          {% if form.password2.help_text %}
                                 <div class="form-text">{{ form.password2.help_text }}</div>
-                            {% endif %}
+          {% endif %}
                             <i class="bi bi-check-circle-fill text-success validation-icon"></i>
                             <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
                         </div>
-                    </div>
-                </div>
+        </div>
+      </div>
 
                 <!-- Submit Buttons -->
                 <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
@@ -412,9 +412,9 @@
                         <i class="bi bi-person-plus me-1"></i>Add User
                     </button>
                 </div>
-            </form>
-        </div>
-    </div>
+    </form>
+  </div>
+</div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
