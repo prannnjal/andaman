@@ -67,4 +67,11 @@ urlpatterns = [
     # Call Duration Analytics
     path('call-duration-analytics/', views.call_duration_analytics_view, name='call_duration_analytics'),
 
+    # ====================================================================================
+    # Google Sheets Integration URLs
+    # ====================================================================================
+    path('google-sheets/setup/', views.google_sheets_setup_view, name='google_sheets_setup'),
+    path('google-sheets/preview/', views.google_sheets_preview_view, name='google_sheets_preview'),
+    path('google-sheets/import/', views.google_sheets_import_view, name='google_sheets_import'),
+
 ]

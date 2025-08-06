@@ -2129,3 +2129,114 @@ def call_duration_analytics_view(request):
     }
     
     return render(request, 'inquiries/call_duration_analytics.html', context)
+
+# ======================================================================================================================================================================
+# Google Sheets Integration Views
+# ======================================================================================================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def google_sheets_import_view(request):
+    """View for importing leads from Google Sheets"""
+    from .google_sheets_service import GoogleSheetsService
+    
+    context = {
+        'title': 'Import Leads from Google Sheets',
+        'error_message': None,
+        'success_message': None,
+        'import_result': None
+    }
+    
+    if request.method == 'POST':
+        spreadsheet_id = request.POST.get('spreadsheet_id', '').strip()
+        range_name = request.POST.get('range_name', '').strip()
+        
+        if not spreadsheet_id:
+            context['error_message'] = 'Please provide a valid Google Sheets ID'
+        elif not range_name:
+            context['error_message'] = 'Please provide a valid range (e.g., Sheet1!A1:Z1000)'
+        else:
+            try:
+                # Initialize Google Sheets service
+                sheets_service = GoogleSheetsService()
+                
+                # Import leads
+                result = sheets_service.import_leads_from_sheet(
+                    spreadsheet_id=spreadsheet_id,
+                    range_name=range_name,
+                    admin_user=request.user
+                )
+                
+                context['import_result'] = result
+                
+                if result['success']:
+                    context['success_message'] = result['message']
+                else:
+                    context['error_message'] = result['message']
+                    
+            except FileNotFoundError as e:
+                context['error_message'] = str(e)
+            except Exception as e:
+                context['error_message'] = f'Error connecting to Google Sheets: {str(e)}'
+    
+    return render(request, 'inquiries/google_sheets_import.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def google_sheets_preview_view(request):
+    """View for previewing Google Sheets data before import"""
+    from .google_sheets_service import GoogleSheetsService
+    
+    context = {
+        'title': 'Preview Google Sheets Data',
+        'error_message': None,
+        'sheet_data': None,
+        'sheet_info': None
+    }
+    
+    if request.method == 'POST':
+        spreadsheet_id = request.POST.get('spreadsheet_id', '').strip()
+        range_name = request.POST.get('range_name', '').strip()
+        
+        if not spreadsheet_id:
+            context['error_message'] = 'Please provide a valid Google Sheets ID'
+        elif not range_name:
+            context['error_message'] = 'Please provide a valid range (e.g., Sheet1!A1:Z1000)'
+        else:
+            try:
+                # Initialize Google Sheets service
+                sheets_service = GoogleSheetsService()
+                
+                # Get sheet info
+                sheet_info = sheets_service.get_sheet_info(spreadsheet_id)
+                if sheet_info:
+                    context['sheet_info'] = sheet_info
+                
+                # Read sheet data
+                sheet_data = sheets_service.read_sheet(spreadsheet_id, range_name)
+                
+                if sheet_data:
+                    context['sheet_data'] = sheet_data
+                    context['headers'] = sheet_data[0] if sheet_data else []
+                    context['data_rows'] = sheet_data[1:6] if len(sheet_data) > 1 else []  # Show first 5 rows
+                    context['total_rows'] = len(sheet_data) - 1 if len(sheet_data) > 1 else 0
+                else:
+                    context['error_message'] = 'No data found in the specified range'
+                    
+            except FileNotFoundError as e:
+                context['error_message'] = str(e)
+            except Exception as e:
+                context['error_message'] = f'Error connecting to Google Sheets: {str(e)}'
+    
+    return render(request, 'inquiries/google_sheets_preview.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def google_sheets_setup_view(request):
+    """View for Google Sheets setup instructions"""
+    context = {
+        'title': 'Google Sheets Setup Instructions'
+    }
+    return render(request, 'inquiries/google_sheets_setup.html', context)

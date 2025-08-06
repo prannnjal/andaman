@@ -238,6 +238,10 @@
                             <a href="{% url 'add_inquiry' %}"><li>Add New Inquiry</li></a>
                             
                             <a href="{% url 'assign_lead' %}"><li>Assign Agent to Lead</li></a>
+                        {% endif %}
+
+                        {% if user.role == "Admin" %}
+                            <a href="{% url 'google_sheets_setup' %}"><li>Google Sheets Import</li></a>
                         {% endif %}                        
                           
                     </div>                

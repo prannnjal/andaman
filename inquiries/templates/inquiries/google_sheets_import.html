@@ -1,0 +1,135 @@
+{% extends 'inquiries/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1>Import Leads from Google Sheets</h1>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-download"></i> Import Leads from Google Sheets
+                    </h3>
+                </div>
+                <div class="card-body">
+                    {% if error_message %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> {{ error_message }}
+                        </div>
+                    {% endif %}
+
+                    {% if success_message %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> {{ success_message }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" class="mb-4">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="spreadsheet_id">Google Sheets ID *</label>
+                                    <input type="text" class="form-control" id="spreadsheet_id" name="spreadsheet_id" 
+                                           value="{% if request.GET.spreadsheet_id %}{{ request.GET.spreadsheet_id }}{% elif request.POST.spreadsheet_id %}{{ request.POST.spreadsheet_id }}{% endif %}"
+                                           placeholder="e.g., 1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms" required>
+                                    <small class="form-text text-muted">
+                                        Found in the URL: https://docs.google.com/spreadsheets/d/<strong>YOUR_SHEET_ID</strong>/edit
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="range_name">Range *</label>
+                                    <input type="text" class="form-control" id="range_name" name="range_name" 
+                                           value="{% if request.GET.range_name %}{{ request.GET.range_name }}{% elif request.POST.range_name %}{{ request.POST.range_name }}{% endif %}"
+                                           placeholder="e.g., Sheet1!A1:Z1000" required>
+                                    <small class="form-text text-muted">
+                                        Specify the sheet name and range (e.g., Sheet1!A1:Z1000)
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-download"></i> Import Leads
+                        </button>
+                    </form>
+
+                    {% if import_result %}
+                        <div class="import-results">
+                            {% if import_result.success %}
+                                <div class="alert alert-success">
+                                    <h5><i class="fas fa-check-circle"></i> Import Successful</h5>
+                                    <p><strong>{{ import_result.imported_count }}</strong> leads were successfully imported.</p>
+                                </div>
+                            {% else %}
+                                <div class="alert alert-warning">
+                                    <h5><i class="fas fa-exclamation-triangle"></i> Import Completed with Issues</h5>
+                                    <p><strong>{{ import_result.imported_count }}</strong> leads were imported.</p>
+                                </div>
+                            {% endif %}
+
+                            {% if import_result.errors %}
+                                <div class="alert alert-warning">
+                                    <h5><i class="fas fa-exclamation-triangle"></i> Errors Found</h5>
+                                    <p>The following errors occurred during import:</p>
+                                    <ul class="error-list">
+                                        {% for error in import_result.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> Import Information</h5>
+                        <ul>
+                            <li><strong>Required Headers:</strong> student_name, parent_name, mobile_number, email, address, block, location_panchayat, inquiry_source, student_class</li>
+                            <li><strong>Optional Headers:</strong> status, remarks, inquiry_date, registration_date, admission_test_date, admission_offered_date, admission_confirmed_date, rejected_date, follow_up_date</li>
+                            <li>Duplicate leads (same mobile number and email) will be skipped</li>
+                            <li>Leads will be automatically assigned to agents with the least workload</li>
+                            <li>Only admin users can perform imports</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'google_sheets_preview' %}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> Preview Data First
+                        </a>
+                        <a href="{% url 'google_sheets_setup' %}" class="btn btn-secondary">
+                            <i class="fas fa-cog"></i> Setup Instructions
+                        </a>
+                        <a href="{% url 'inquiry_list' %}" class="btn btn-info">
+                            <i class="fas fa-list"></i> View All Leads
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-fill form fields from URL parameters if they exist
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const spreadsheetId = urlParams.get('spreadsheet_id');
+    const rangeName = urlParams.get('range_name');
+    
+    if (spreadsheetId && !document.getElementById('spreadsheet_id').value) {
+        document.getElementById('spreadsheet_id').value = spreadsheetId;
+    }
+    
+    if (rangeName && !document.getElementById('range_name').value) {
+        document.getElementById('range_name').value = rangeName;
+    }
+});
+</script>
+{% endblock %} 

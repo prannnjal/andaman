@@ -1,0 +1,117 @@
+{% extends 'inquiries/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1>Google Sheets Integration</h1>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-cog"></i> Google Sheets Setup Instructions
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> Setup Instructions</h5>
+                        <p>Follow these steps to set up Google Sheets integration for importing leads:</p>
+                    </div>
+
+                    <div class="setup-steps">
+                        <div class="step">
+                            <h5><span class="badge badge-primary">Step 1</span> Create Google Cloud Project</h5>
+                            <ol>
+                                <li>Go to <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a></li>
+                                <li>Create a new project or select an existing one</li>
+                                <li>Enable the Google Sheets API for your project</li>
+                            </ol>
+                        </div>
+
+                        <div class="step">
+                            <h5><span class="badge badge-primary">Step 2</span> Create Credentials</h5>
+                            <ol>
+                                <li>In your Google Cloud project, go to "APIs & Services" > "Credentials"</li>
+                                <li>Click "Create Credentials" > "OAuth 2.0 Client IDs"</li>
+                                <li>Choose "Desktop application" as the application type</li>
+                                <li>Download the credentials file and rename it to <code>credentials.json</code></li>
+                                <li>Place the <code>credentials.json</code> file in your project root directory</li>
+                            </ol>
+                        </div>
+
+                        <div class="step">
+                            <h5><span class="badge badge-primary">Step 3</span> Prepare Your Google Sheet</h5>
+                            <ol>
+                                <li>Create a new Google Sheet or use an existing one</li>
+                                <li>Make sure your sheet has the following headers in the first row:</li>
+                                <ul>
+                                    <li><strong>Required:</strong> student_name, parent_name, mobile_number, email, address, block, location_panchayat, inquiry_source, student_class</li>
+                                    <li><strong>Optional:</strong> status, remarks, inquiry_date, registration_date, admission_test_date, admission_offered_date, admission_confirmed_date, rejected_date, follow_up_date</li>
+                                </ul>
+                                <li>Share the sheet with the email address from your credentials (if using service account)</li>
+                            </ol>
+                        </div>
+
+                        <div class="step">
+                            <h5><span class="badge badge-primary">Step 4</span> Get Sheet Information</h5>
+                            <ol>
+                                <li>Open your Google Sheet in the browser</li>
+                                <li>Copy the Sheet ID from the URL: <code>https://docs.google.com/spreadsheets/d/<strong>YOUR_SHEET_ID</strong>/edit</code></li>
+                                <li>Note the sheet name and range you want to import (e.g., "Sheet1!A1:Z1000")</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h5><i class="fas fa-exclamation-triangle"></i> Important Notes</h5>
+                        <ul>
+                            <li>Make sure your Google Sheet is properly formatted with headers in the first row</li>
+                            <li>The first time you run the import, you'll be redirected to Google for authentication</li>
+                            <li>Only admin users can import leads from Google Sheets</li>
+                            <li>Duplicate leads (same mobile number and email) will be skipped</li>
+                        </ul>
+                    </div>
+
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-circle"></i> If You Get "Access blocked" Error</h5>
+                        <p><strong>Quick Fix:</strong> Add yourself as a test user in Google Cloud Console:</p>
+                        <ol>
+                            <li>Go to: <a href="https://console.cloud.google.com/apis/credentials/consent?project=gen-lang-client-0204356111" target="_blank">OAuth Consent Screen</a></li>
+                            <li>Scroll down to "Test users" section</li>
+                            <li>Click "Add Users"</li>
+                            <li>Add your email: <code>pranjalkumar445@gmail.com</code></li>
+                            <li>Click "Save"</li>
+                            <li>Try the import again</li>
+                        </ol>
+                        <p><strong>Better Solution:</strong> Use a Service Account (no verification needed):</p>
+                        <ol>
+                            <li>Go to: <a href="https://console.cloud.google.com/apis/credentials?project=gen-lang-client-0204356111" target="_blank">Credentials</a></li>
+                            <li>Click "Create Credentials" → "Service Account"</li>
+                            <li>Create service account and download JSON key</li>
+                            <li>Rename to <code>service-account-key.json</code> and place in project root</li>
+                            <li>Share your Google Sheet with the service account email</li>
+                        </ol>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'google_sheets_preview' %}" class="btn btn-primary">
+                            <i class="fas fa-eye"></i> Preview Sheet Data
+                        </a>
+                        <a href="{% url 'google_sheets_import' %}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Import Leads
+                        </a>
+                        <a href="/static/google_sheets_template.xlsx" class="btn btn-info" download>
+                            <i class="fas fa-file-excel"></i> Download Template
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} 
