@@ -105,7 +105,7 @@ class GoogleSheetsService:
         if len(row_data) < len(headers):
             row_data = row_data + [''] * (len(headers) - len(row_data))
         # Only check required fields
-        required_fields = ['student_name', 'parent_name', 'mobile_number', 'email', 'address', 'block', 'location_panchayat', 'inquiry_source', 'student_class']
+        required_fields = ['student_name', 'parent_name', 'mobile_number', 'email', 'address']
         for field in required_fields:
             if field in headers:
                 field_index = headers.index(field)
