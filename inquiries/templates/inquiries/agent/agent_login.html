@@ -1,147 +1,1013 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="format-detection" content="telephone=no">
+    <title>Staff Login - CRM School</title>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Modern UI CSS -->
+    <link rel="stylesheet" href="{% static 'css/modern-ui.css' %}">
+    <link rel="stylesheet" href="{% static 'css/toast.css' %}">
+    
     <style>
-        /* General Styles */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+        /* CSS Variables for theming */
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --warning-color: #f59e0b;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --primary-color: #818cf8;
+            --primary-hover: #6366f1;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --border-color: #374151;
+        }
+
+        /* Reset and base styles */
+        * {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh; /* Full height */
-        }
-
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .form-container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px; /* Restricting width */
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 16px;
             box-sizing: border-box;
         }
 
-        button {
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Particle background */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            padding: 12px;
-            background-color: #007BFF;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* Main container */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 420px;
+            margin: 20px;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        /* Glassmorphism card */
+        .login-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--shadow-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+            z-index: -1;
+        }
+
+        /* Header */
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .login-logo i {
+            font-size: 24px;
+            color: white;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            transition: var(--transition);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .form-input:focus + .input-icon {
+            color: var(--primary-color);
+        }
+
+        /* Password toggle */
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-color);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        /* Submit button */
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: var(--border-radius);
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
         }
 
-        button:hover {
-            background-color: #0056b3;
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
         }
 
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading state */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .theme-toggle i {
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        /* Alert messages */
         .alert {
-            background-color: #ff0019;
-            color: #ffffff;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 24px;
             font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideIn 0.3s ease-out;
         }
-        .alert p {
-            margin: 0; /* Removes extra space */         
-        }
-        
 
-        p {
+        .alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Forgot password link */
+        .forgot-password {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 24px;
         }
 
-        p a {
-            color: #007BFF;
-            font-size: 14px;
+        .forgot-password a {
+            color: var(--primary-color);
             text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
         }
 
-        p a:hover {
+        .forgot-password a:hover {
+            color: var(--primary-hover);
             text-decoration: underline;
         }
 
-        /* Responsive Design */
-        @media screen and (max-width: 600px) {
-            .form-container {
-                padding: 20px;
-                width: 90%; /* Ensure it's full width on small screens */
+        /* Form validation styles */
+        .form-input.valid {
+            border-color: var(--success-color);
+        }
+
+        .form-input.invalid {
+            border-color: var(--error-color);
+        }
+
+        .validation-message {
+            font-size: 12px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .validation-message.valid {
+            color: var(--success-color);
+        }
+
+        .validation-message.invalid {
+            color: var(--error-color);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .login-container {
+                margin: 15px;
+                max-width: 100%;
             }
 
-            button {
+            .login-card {
+                padding: 30px 20px;
+            }
+
+            .login-title {
+                font-size: 26px;
+            }
+
+            .login-subtitle {
+                font-size: 13px;
+            }
+
+            .form-input {
+                padding: 14px 16px;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+
+            .submit-btn {
+                padding: 14px;
+                font-size: 16px;
+            }
+
+            .theme-toggle {
+                top: 15px;
+                right: 15px;
+                width: 35px;
+                height: 35px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 10px;
+            }
+
+            .login-card {
+                padding: 24px 16px;
+            }
+
+            .login-title {
+                font-size: 24px;
+            }
+
+            .login-logo {
+                width: 50px;
+                height: 50px;
+            }
+
+            .login-logo i {
+                font-size: 20px;
+            }
+
+            .form-input {
+                padding: 12px 14px;
+            }
+
+            .submit-btn {
+                padding: 12px;
+            }
+
+            .forgot-password a {
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .login-container {
+                margin: 5px;
+            }
+
+            .login-card {
+                padding: 20px 12px;
+            }
+
+            .login-title {
+                font-size: 22px;
+            }
+
+            .login-subtitle {
+                font-size: 12px;
+            }
+
+            .form-input {
+                padding: 10px 12px;
                 font-size: 14px;
             }
 
-            label {
+            .submit-btn {
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+
+        /* Landscape orientation for mobile */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body {
+                min-height: 100vh;
+                padding: 10px 0;
+            }
+
+            .login-container {
+                margin: 5px;
+            }
+
+            .login-card {
+                padding: 20px;
+            }
+
+            .login-header {
+                margin-bottom: 20px;
+            }
+
+            .login-logo {
+                width: 40px;
+                height: 40px;
+                margin-bottom: 10px;
+            }
+
+            .login-title {
+                font-size: 20px;
+                margin-bottom: 4px;
+            }
+
+            .login-subtitle {
                 font-size: 12px;
+            }
+
+            .form-group {
+                margin-bottom: 15px;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 320px) {
+            .login-container {
+                margin: 2px;
+            }
+
+            .login-card {
+                padding: 16px 10px;
+            }
+
+            .login-title {
+                font-size: 20px;
+            }
+
+            .form-input {
+                padding: 8px 10px;
+                font-size: 13px;
+            }
+
+            .submit-btn {
+                padding: 8px;
+                font-size: 13px;
+            }
+        }
+
+        /* Large screens */
+        @media (min-width: 1200px) {
+            .login-container {
+                max-width: 480px;
+            }
+
+            .login-card {
+                padding: 50px;
+            }
+
+            .login-title {
+                font-size: 32px;
+            }
+
+            .login-subtitle {
+                font-size: 16px;
+            }
+
+            .form-input {
+                padding: 18px 22px;
+                font-size: 18px;
+            }
+
+            .submit-btn {
+                padding: 18px;
+                font-size: 18px;
+            }
+        }
+
+        /* Ultra-wide screens */
+        @media (min-width: 1920px) {
+            .login-container {
+                max-width: 520px;
+            }
+
+            .login-card {
+                padding: 60px;
+            }
+
+            .login-title {
+                font-size: 36px;
+            }
+
+            .login-subtitle {
+                font-size: 18px;
+            }
+        }
+
+        /* High DPI displays */
+        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+            .login-card {
+                border-width: 0.5px;
+            }
+
+            .form-input {
+                border-width: 1px;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            .particles,
+            .theme-toggle {
+                display: none;
+            }
+
+            .login-card {
+                background: white !important;
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus styles for keyboard navigation */
+        .form-input:focus,
+        .submit-btn:focus,
+        .theme-toggle:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+
+        /* Mobile keyboard handling */
+        @media (max-width: 768px) {
+            body {
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+            }
+            
+            .login-container {
+                min-height: 100vh;
+                min-height: -webkit-fill-available;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            
+            /* Prevent zoom on input focus */
+            input[type="text"],
+            input[type="password"],
+            input[type="email"] {
+                font-size: 16px;
+            }
+        }
+
+        /* iOS Safari specific fixes */
+        @supports (-webkit-touch-callout: none) {
+            .login-container {
+                min-height: -webkit-fill-available;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Theme toggle -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
 
-    <div class="form-container">
-        <h2>Staff Login</h2>
+    <!-- Particle background -->
+    <div class="particles" id="particles"></div>
 
-        <!-- Display success or error messages -->
-        {% include "inquiries/Alerts.html" %}
-
-        <!-- Login Form -->
-        <form method="POST">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="username">Enter email or 10-digit Phone Number:</label>
-                <input type="text" name="username" placeholder="Email or Phone No." required>             
+    <!-- Main login container -->
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h1 class="login-title">Welcome Back</h1>
+                <p class="login-subtitle">Sign in to your CRM account</p>
             </div>
-           
-            <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" name="password" required>
+
+            <!-- Alert messages -->
+            {% include "inquiries/Alerts.html" %}
+
+            <!-- Login Form -->
+            <form method="POST" id="loginForm">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="username" class="form-label">
+                        <i class="fas fa-user me-2"></i>Email or Phone Number
+                    </label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input" 
+                        placeholder="Enter your email or phone number"
+                        required
+                        autocomplete="username"
+                        aria-describedby="username-validation"
+                    >
+                    <i class="fas fa-user input-icon"></i>
+                    <div id="username-validation" class="validation-message"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">
+                        <i class="fas fa-lock me-2"></i>Password
+                    </label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input" 
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                        aria-describedby="password-validation"
+                    >
+                    <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <div id="password-validation" class="validation-message"></div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span class="btn-text">Sign In</span>
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </button>
+            </form>
+
+            <!-- Forgot Password Link -->
+            <div class="forgot-password">
+                <a href="{% url 'password_reset_request' %}">
+                    <i class="fas fa-key me-1"></i>Forgot your password?
+                </a>
             </div>
-
-            <button type="submit">Login</button>
-        </form>
-
-        <!-- Forgot Password Link -->
-        <p><a href="{% url 'password_reset_request' %}">Forgot your password?</a></p>
+        </div>
     </div>
 
+    <!-- Modern UI JavaScript -->
+    <script src="{% static 'js/modern-ui.js' %}"></script>
+    
+    <script>
+        // Initialize Modern UI features
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            const themeIcon = themeToggle.querySelector('i');
+
+        // Check for saved theme preference or default to light mode
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        body.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            themeIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Particle background animation
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 4 + 2;
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const delay = Math.random() * 6;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.animationDelay = `${delay}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Password visibility toggle
+        const passwordToggle = document.getElementById('passwordToggle');
+        const passwordInput = document.getElementById('password');
+        const passwordIcon = passwordToggle.querySelector('i');
+
+        passwordToggle.addEventListener('click', () => {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            passwordIcon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+        });
+
+        // Form validation
+        const usernameInput = document.getElementById('username');
+        const submitBtn = document.getElementById('submitBtn');
+        const loginForm = document.getElementById('loginForm');
+
+        function validateUsername(value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phoneRegex = /^\d{10}$/;
+            
+            if (!value) {
+                return { isValid: false, message: 'Email or phone number is required' };
+            }
+            
+            if (emailRegex.test(value) || phoneRegex.test(value)) {
+                return { isValid: true, message: '✓ Valid input' };
+            }
+            
+            return { isValid: false, message: 'Please enter a valid email or 10-digit phone number' };
+        }
+
+        function validatePassword(value) {
+            if (!value) {
+                return { isValid: false, message: 'Password is required' };
+            }
+            
+            if (value.length < 6) {
+                return { isValid: false, message: 'Password must be at least 6 characters' };
+            }
+            
+            return { isValid: true, message: '✓ Valid password' };
+        }
+
+        function updateValidation(input, validationResult) {
+            const validationElement = document.getElementById(`${input.id}-validation`);
+            
+            input.classList.remove('valid', 'invalid');
+            validationElement.classList.remove('valid', 'invalid');
+            
+            if (validationResult.isValid) {
+                input.classList.add('valid');
+                validationElement.classList.add('valid');
+            } else {
+                input.classList.add('invalid');
+                validationElement.classList.add('invalid');
+            }
+            
+            validationElement.textContent = validationResult.message;
+        }
+
+        // Real-time validation
+        usernameInput.addEventListener('input', (e) => {
+            const validation = validateUsername(e.target.value);
+            updateValidation(e.target, validation);
+        });
+
+        passwordInput.addEventListener('input', (e) => {
+            const validation = validatePassword(e.target.value);
+            updateValidation(e.target, validation);
+        });
+
+        // Form submission with loading state
+        loginForm.addEventListener('submit', (e) => {
+            const usernameValidation = validateUsername(usernameInput.value);
+            const passwordValidation = validatePassword(passwordInput.value);
+            
+            if (!usernameValidation.isValid || !passwordValidation.isValid) {
+                e.preventDefault();
+                updateValidation(usernameInput, usernameValidation);
+                updateValidation(passwordInput, passwordValidation);
+                return;
+            }
+
+            // Show loading state
+            const btnText = submitBtn.querySelector('.btn-text');
+            const loading = submitBtn.querySelector('.loading');
+            
+            btnText.style.display = 'none';
+            loading.classList.add('active');
+            submitBtn.disabled = true;
+        });
+
+        // Initialize particles
+        createParticles();
+
+        // Responsive particle adjustment
+        function adjustParticlesForScreen() {
+            const particlesContainer = document.getElementById('particles');
+            if (!particlesContainer) return;
+
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            // Adjust particle count based on screen size
+            let particleCount = 50;
+            if (screenWidth < 768) particleCount = 30;
+            if (screenWidth < 480) particleCount = 20;
+            if (screenWidth < 360) particleCount = 15;
+            
+            // Clear existing particles
+            particlesContainer.innerHTML = '';
+            
+            // Recreate particles with new count
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 4 + 2;
+                const x = Math.random() * screenWidth;
+                const y = Math.random() * screenHeight;
+                const delay = Math.random() * 6;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                particle.style.animationDelay = `${delay}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Handle window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(adjustParticlesForScreen, 250);
+        });
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(adjustParticlesForScreen, 500);
+        });
+
+        // Auto-hide alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+
+        // Add keyboard navigation support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && document.activeElement === passwordInput) {
+                submitBtn.click();
+            }
+        });
+
+        // Add focus management for accessibility
+        usernameInput.addEventListener('focus', () => {
+            usernameInput.parentElement.style.transform = 'scale(1.02)';
+        });
+
+        usernameInput.addEventListener('blur', () => {
+            usernameInput.parentElement.style.transform = 'scale(1)';
+        });
+
+        passwordInput.addEventListener('focus', () => {
+            passwordInput.parentElement.style.transform = 'scale(1.02)';
+        });
+
+        passwordInput.addEventListener('blur', () => {
+            passwordInput.parentElement.style.transform = 'scale(1)';
+        });
+        });
+    </script>
 </body>
 </html>
