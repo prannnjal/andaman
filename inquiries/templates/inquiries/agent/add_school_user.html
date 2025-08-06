@@ -1,151 +1,598 @@
 {% block content %}
-<style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f6f8;
-    padding: 20px;
-    margin: 0;
-  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New User</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+            min-height: 100vh;
+            padding: 2rem 0;
+        }
+        .form-card {
+            border-radius: 1rem;
+            box-shadow: 0 2px 12px rgba(99, 102, 241, 0.08);
+            background: #fff;
+            padding: 2.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: slideInUp 0.6s ease-out;
+        }
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+            transition: color 0.3s;
+        }
+        .form-control, .form-select {
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            transform: translateY(-1px);
+        }
+        .form-control.is-valid {
+            border-color: #10b981;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2310b981' d='m2.3 6.73.94-.94 2.89 2.89 2.89-2.89.94.94L4.82 9.56z'/%3e%3c/svg%3e");
+        }
+        .form-control.is-invalid {
+            border-color: #ef4444;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23ef4444'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 1.4 1.4M7.2 4.6l-1.4 1.4'/%3e%3c/svg%3e");
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .btn-secondary {
+            background: #6b7280;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+        }
+        .form-text {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        .alert {
+            border-radius: 0.5rem;
+            border: none;
+            animation: slideInDown 0.5s ease-out;
+        }
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .password-toggle {
+            position: relative;
+        }
+        .password-toggle .form-control {
+            padding-right: 3rem;
+        }
+        .password-toggle-btn {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .password-toggle-btn:hover {
+            color: #374151;
+            transform: translateY(-50%) scale(1.1);
+        }
+        .password-strength {
+            margin-top: 0.5rem;
+            height: 4px;
+            border-radius: 2px;
+            background: #e5e7eb;
+            overflow: hidden;
+        }
+        .password-strength-bar {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        .strength-weak { background: #ef4444; width: 25%; }
+        .strength-fair { background: #f59e0b; width: 50%; }
+        .strength-good { background: #10b981; width: 75%; }
+        .strength-strong { background: #059669; width: 100%; }
+        .progress-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #e5e7eb;
+            z-index: 9999;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .field-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .field-group.animate {
+            animation: pulse 0.6s ease-in-out;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .validation-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .form-control.is-valid + .validation-icon,
+        .form-control.is-invalid + .validation-icon {
+            opacity: 1;
+        }
+        .tooltip-custom {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip-custom .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #374151;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+        }
+        .tooltip-custom:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .auto-save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+        .auto-save-indicator.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .suggestion-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        .suggestion-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .suggestion-item:hover {
+            background: #f3f4f6;
+        }
+        .floating-label {
+            position: absolute;
+            top: 0.75rem;
+            left: 1rem;
+            color: #6b7280;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .form-control:focus + .floating-label,
+        .form-control:not(:placeholder-shown) + .floating-label {
+            top: -0.5rem;
+            left: 0.75rem;
+            font-size: 0.75rem;
+            color: #6366f1;
+            background: white;
+            padding: 0 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Indicator -->
+    <div class="progress-indicator">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
 
-  h2, h3 {
-    color: #222;
-    margin-bottom: 20px;
-  }
+    <!-- Auto-save Indicator -->
+    <div class="auto-save-indicator" id="autoSaveIndicator">
+        <i class="bi bi-check-circle me-1"></i>Auto-saved
+    </div>
 
-  .container {
-    max-width: 1100px;
-    margin: 0 auto;
-  }
+    <div class="container">
+        {% include "inquiries/Alerts.html" %}
+        
+        <div class="form-card">
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-dark mb-2">
+                    <i class="bi bi-person-plus-fill text-primary me-2"></i>
+                    Add New User
+                </h2>
+                <p class="text-muted">Create a new user account for your CRM system</p>
+            </div>
 
-  .card {
-    background-color: #fff;
-    border-radius: 10px;
-    padding: 30px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    margin-bottom: 40px;
-    width: 50vw;
-    margin: 1rem auto;
-  }
+            <form method="post" class="needs-validation" novalidate id="userForm">
+                {% csrf_token %}
+                
+                <div class="row g-3">
+                    <!-- Name Field -->
+                    <div class="col-md-6">
+                        <div class="field-group">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="bi bi-person me-1"></i>Full Name
+                            </label>
+                            {{ form.name }}
+                            <i class="bi bi-check-circle-fill text-success validation-icon"></i>
+                            <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
+                            <div class="suggestion-box" id="nameSuggestions"></div>
+                        </div>
+                    </div>
 
-  label {
-    display: block;
-    margin-top: 15px;
-    font-weight: 600;
-    color: #333;
-  }
+                    <!-- Mobile Number Field -->
+                    <div class="col-md-6">
+                        <div class="field-group">
+                            <label for="{{ form.mobile_number.id_for_label }}" class="form-label">
+                                <i class="bi bi-telephone me-1"></i>Mobile Number
+                            </label>
+                            {{ form.mobile_number }}
+                            <i class="bi bi-check-circle-fill text-success validation-icon"></i>
+                            <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
+                        </div>
+                    </div>
 
-  input, select {
-    width: 100%;
-    padding: 10px;
-    margin-top: 6px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 15px;
-  }
+                    <!-- Email Field -->
+                    <div class="col-md-6">
+                        <div class="field-group">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">
+                                <i class="bi bi-envelope me-1"></i>Email Address
+                            </label>
+                            {{ form.email }}
+                            <i class="bi bi-check-circle-fill text-success validation-icon"></i>
+                            <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
+                        </div>
+                    </div>
 
-  button {
-    margin: 25px auto 0;
-    background-color: #007bff;
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    display: block;
-    font-size: 16px;
-  }
+                    <!-- Role Field -->
+                    <div class="col-md-6">
+                        <div class="field-group">
+                            <label for="{{ form.role.id_for_label }}" class="form-label">
+                                <i class="bi bi-shield-check me-1"></i>Role
+                            </label>
+                            {{ form.role }}
+                            <i class="bi bi-check-circle-fill text-success validation-icon"></i>
+                            <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
+                        </div>
+                    </div>
 
-  button:hover {
-    background-color: #0056b3;
-  }
+                    <!-- Expiration Time Field -->
+                    <div class="col-md-6">
+                        <div class="field-group">
+                            <label for="{{ form.expiration_time.id_for_label }}" class="form-label">
+                                <i class="bi bi-calendar-clock me-1"></i>Expiration Time
+                            </label>
+                            {{ form.expiration_time }}
+                            <i class="bi bi-check-circle-fill text-success validation-icon"></i>
+                            <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
+                        </div>
+                    </div>
 
-  .navigation {
-    text-align: center;
-    margin: 1.5rem auto 0.5rem auto;
-  }
+                    <!-- Password 1 Field -->
+                    <div class="col-md-6">
+                        <div class="field-group">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">
+                                <i class="bi bi-lock me-1"></i>Password
+                            </label>
+                            <div class="password-toggle">
+                                {{ form.password1 }}
+                                <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ form.password1.id_for_label }}')">
+                                    <i class="bi bi-eye" id="eye-{{ form.password1.id_for_label }}"></i>
+                                </button>
+                            </div>
+                            <div class="password-strength" id="passwordStrength">
+                                <div class="password-strength-bar" id="strengthBar"></div>
+                            </div>
+                            {% if form.password1.help_text %}
+                                <div class="form-text">{{ form.password1.help_text }}</div>
+                            {% endif %}
+                            <i class="bi bi-check-circle-fill text-success validation-icon"></i>
+                            <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
+                        </div>
+                    </div>
 
-  .add_new_agent {
-    background-color: #28a745;
-    color: #fff !important;
-    padding: 15px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-block;
-  }
+                    <!-- Password 2 Field -->
+                    <div class="col-md-6">
+                        <div class="field-group">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">
+                                <i class="bi bi-lock-fill me-1"></i>Confirm Password
+                            </label>
+                            <div class="password-toggle">
+                                {{ form.password2 }}
+                                <button type="button" class="password-toggle-btn" onclick="togglePassword('{{ form.password2.id_for_label }}')">
+                                    <i class="bi bi-eye" id="eye-{{ form.password2.id_for_label }}"></i>
+                                </button>
+                            </div>
+                            {% if form.password2.help_text %}
+                                <div class="form-text">{{ form.password2.help_text }}</div>
+                            {% endif %}
+                            <i class="bi bi-check-circle-fill text-success validation-icon"></i>
+                            <i class="bi bi-x-circle-fill text-danger validation-icon"></i>
+                        </div>
+                    </div>
+                </div>
 
-  .add_new_agent:hover {
-    background-color: #218838;
-  }
-
-.same_row_wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: start;
-}
-
-.form-group {
-  flex: 1 1 calc(50% - 20px); /* Two per row with gap */
-  display: flex;
-  flex-direction: column;
-}
-
-</style>
-
-<div class="container">
-
-  {% include "inquiries/Alerts.html" %}
-
-  <div class="card">
-    <h2>Add New User</h2>
-
-    <form method="post">
-      {% csrf_token %}
-      
-      <div class="same_row_wrapper">
-        <div class="form-group">
-          {{ form.name.label_tag }} {{ form.name }}
+                <!-- Submit Buttons -->
+                <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <i class="bi bi-person-plus me-1"></i>Add User
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="form-group">
-          {{ form.mobile_number.label_tag }} {{ form.mobile_number }}
-        </div>
-        <div class="form-group">
-          {{ form.email.label_tag }} {{ form.email }}
-        </div>
-        <div class="form-group">
-          {{ form.role.label_tag }} {{ form.role }}
-        </div>
+    </div>
 
-        <div class="form-group">
-          <label for="{{ form.expiration_time.id_for_label }}">Expiration Time:</label>
-          {{ form.expiration_time }}
-        </div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let autoSaveTimer;
+        let formData = {};
 
-        <div class="form-group">
-          {{ form.password1.label_tag }} {{ form.password1 }}
-          {% if form.password1.help_text %}
-            <small style="color: #666; font-size: 12px;">{{ form.password1.help_text }}</small>
-          {% endif %}
-        </div>
+        // Add Bootstrap classes to form fields
+        document.addEventListener('DOMContentLoaded', function() {
+            const formFields = document.querySelectorAll('input, select');
+            formFields.forEach(field => {
+                field.classList.add('form-control');
+                if (field.tagName === 'SELECT') {
+                    field.classList.remove('form-control');
+                    field.classList.add('form-select');
+                }
+            });
 
-        <div class="form-group">
-          {{ form.password2.label_tag }} {{ form.password2 }}
-          {% if form.password2.help_text %}
-            <small style="color: #666; font-size: 12px;">{{ form.password2.help_text }}</small>
-          {% endif %}
-        </div>
-      </div>
+            // Initialize interactive features
+            initializeForm();
+        });
 
-      <!-- ✅ Submit button outside flex row -->
-      <button type="submit">Add User</button>
-    </form>
+        function initializeForm() {
+            // Real-time validation
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    validateField(this);
+                    updateProgress();
+                    autoSave();
+                });
+                input.addEventListener('blur', function() {
+                    validateField(this);
+                });
+            });
 
-  </div>
+            // Password strength meter
+            const passwordField = document.getElementById('{{ form.password1.id_for_label }}');
+            if (passwordField) {
+                passwordField.addEventListener('input', function() {
+                    checkPasswordStrength(this.value);
+                });
+            }
 
-  <div class="navigation">
-    <a href="{% url 'dashboard' %}" class="add_new_agent">Back to Dashboard</a>
-  </div>
-</div>
+            // Name suggestions
+            const nameField = document.getElementById('{{ form.name.id_for_label }}');
+            if (nameField) {
+                nameField.addEventListener('input', function() {
+                    showNameSuggestions(this.value);
+                });
+            }
+        }
 
+        function validateField(field) {
+            const fieldGroup = field.closest('.field-group');
+            const isValid = field.checkValidity();
+            
+            field.classList.remove('is-valid', 'is-invalid');
+            field.classList.add(isValid ? 'is-valid' : 'is-invalid');
+            
+            if (field.value.length > 0) {
+                fieldGroup.classList.add('animate');
+                setTimeout(() => fieldGroup.classList.remove('animate'), 600);
+            }
+        }
+
+        function checkPasswordStrength(password) {
+            const strengthBar = document.getElementById('strengthBar');
+            let strength = 0;
+            let className = 'strength-weak';
+
+            if (password.length >= 8) strength += 25;
+            if (/[a-z]/.test(password)) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+
+            if (strength >= 100) className = 'strength-strong';
+            else if (strength >= 75) className = 'strength-good';
+            else if (strength >= 50) className = 'strength-fair';
+
+            strengthBar.className = `password-strength-bar ${className}`;
+        }
+
+        function showNameSuggestions(value) {
+            const suggestions = document.getElementById('nameSuggestions');
+            if (value.length < 2) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            // Mock suggestions - replace with real API call
+            const mockSuggestions = ['John Doe', 'Jane Smith', 'Mike Johnson'].filter(
+                name => name.toLowerCase().includes(value.toLowerCase())
+            );
+
+            if (mockSuggestions.length > 0) {
+                suggestions.innerHTML = mockSuggestions.map(name => 
+                    `<div class="suggestion-item" onclick="selectSuggestion('${name}')">${name}</div>`
+                ).join('');
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        }
+
+        function selectSuggestion(name) {
+            document.getElementById('{{ form.name.id_for_label }}').value = name;
+            document.getElementById('nameSuggestions').style.display = 'none';
+        }
+
+        function updateProgress() {
+            const form = document.getElementById('userForm');
+            const inputs = form.querySelectorAll('input, select');
+            const filledInputs = Array.from(inputs).filter(input => input.value.length > 0);
+            const progress = (filledInputs.length / inputs.length) * 100;
+            
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function autoSave() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                const form = document.getElementById('userForm');
+                const formData = new FormData(form);
+                
+                // Simulate auto-save
+                const indicator = document.getElementById('autoSaveIndicator');
+                indicator.classList.add('show');
+                setTimeout(() => indicator.classList.remove('show'), 2000);
+            }, 1000);
+        }
+
+        // Password toggle functionality
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const eyeIcon = document.getElementById('eye-' + fieldId);
+            
+            if (field.type === 'password') {
+                field.type = 'text';
+                eyeIcon.classList.remove('bi-eye');
+                eyeIcon.classList.add('bi-eye-slash');
+            } else {
+                field.type = 'password';
+                eyeIcon.classList.remove('bi-eye-slash');
+                eyeIcon.classList.add('bi-eye');
+            }
+        }
+
+        // Form validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        } else {
+                            // Show loading state
+                            const submitBtn = document.getElementById('submitBtn');
+                            submitBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin me-1"></i>Creating User...';
+                            submitBtn.disabled = true;
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.field-group')) {
+                document.getElementById('nameSuggestions').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
 {% endblock %}
