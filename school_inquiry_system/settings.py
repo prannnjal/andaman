@@ -52,7 +52,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')    # Critical for cryptographic signing (e.
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['dejawoo.site', 'www.dejawoo.site', '54.226.177.168', '127.0.0.1', '43.205.137.221', '192.168.0.159', 'localhost']
+ALLOWED_HOSTS = ['dejawoo.site', 'www.dejawoo.site', '54.226.177.168', '127.0.0.1', '43.205.137.221', '192.168.0.159', 'localhost', 'crm.dejawoo.site']
 
 CSRF_TRUSTED_ORIGINS = ["https://dejawoo.site"]
 
