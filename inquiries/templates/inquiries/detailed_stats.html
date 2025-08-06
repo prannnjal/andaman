@@ -1,262 +1,225 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-
+    <title>Detailed Statistics</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            color: #333;
-            margin: 0;
-            padding: 30px;
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+            min-height: 100vh;
         }
-
-        h1,
-        h2{
-            color: #ff0000;
-            text-align: center;
-            margin: 1rem 0 3rem 0;
-            font-size: 2rem;
-        }
-
-        /* Container */
-        .container {           
-            margin: auto;
-            padding: 30px;
-        }
-
-        /* Navigation Links */
-        ul {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 30px;
-            gap:10px;
-        }
-
-        li {
-            display: inline-block;
-            margin: 5px 15px;
-            border: 2px solid rgb(83, 1, 1);
-            padding: 7px;
-            border-radius: 8px;
-            background-color: #d8f3d7;
-        }
-
-        a {
-            text-decoration: none;
-            color: #000000;
-            font-weight: 500;
-            font-size: 14px;
-        }
-
-        a:hover {
-            color: #0056b3;
-            color: #000000;
-        }
-
-        .table_wrapper{
-            max-height: 50vh;
-            overflow: auto;    
-            border: 1px solid #606060;        
-        }
-
-        .table_wrapper h3{
-            position: sticky;
-            top:0;
-            z-index: 3;
-            background-color: white;
-            color: #333;
-       
-            border-top-left-radius: 8px;
-            border-top-right-radius: 8px;
-            text-align: center;
-            padding: 10px 0;            
-        }
-     
-        table {
-            width: 100%;
-            table-layout: fixed; /* Ensures columns remain uniform */
-            background: white;               
-            overflow: auto;
-            border-top: none;
-            box-sizing: border-box;            
-            border-top: none;
-        }
-
-        th, td {
-            padding: 15px;
-            text-align: center; /* Ensures all text is aligned */
-            border-bottom: 1px solid #ddd;
-            width: 50%; /* Ensures equal spacing */            
-        }
-
-        th {
-            background-color: #007bff;
-            color: white;
-            position: sticky;
-            top:40px;
-            z-index: 2;
-        }
-
-        tr:hover {
-            background-color: #f1f1f1;
-        }
-
-        .navigation {
-            margin-top: 30px;
+        h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 1.5rem;
+            margin-top: 1rem;
             text-align: center;
         }
-
-        .btn-back {
-            text-decoration: none;
-            color: #007BFF;
-            font-size: 16px;
+        .stats-card {
+            border-radius: 1rem;
+            box-shadow: 0 2px 12px rgba(99, 102, 241, 0.08);
+            background: #fff;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s ease;
         }
-    
-
-        /* Responsive Styling for Tables */
-        @media screen and (max-width: 768px) {
-            table {
-                font-size: 14px;
-              
-            }
-
-            th,
-            td {
-                padding: 10px;
-            }
+        .stats-card:hover {
+            transform: translateY(-2px);
         }
-
-        /* Responsive Flexbox Layout for Links */
-        @media screen and (max-width: 768px) {
-           
-            li {
-                margin: 5px 0;
-            }
-
-            h1 {
-                font-size: 28px;
-            }
-        }
-
-
-        @media screen and (max-width: 768px) {                
-            th, td {
-                padding: 10px;
-            }
-        }
-
-        .detailed_table_wrapper {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 2rem;
-        }
-
-        .detailed_table_wrapper div, .status_table_wrapper div {
-            width: 45%; /* Adjust as needed */
-            min-width: 300px; /* Ensures they fit on smaller screens */
-        }
-
-        .add_new_agent {
-            background-color: #049027cf;
-            color: #fff !important;
-            padding: 15px 20px;
-            border-radius: 5px;
-            text-decoration: none;
+        .table thead th {
+            background: #6366f1;
+            color: #fff;
             font-weight: 600;
+            vertical-align: middle;
+        }
+        .table tbody tr:hover {
+            background: #f1f5f9;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        .summary-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .summary-card p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .btn-back {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+            text-decoration: none;
             display: inline-block;
         }
-
-        .add_new_agent:hover {
-            background-color: #006836;
+        .btn-back:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            color: white;
+        }
+        .table-responsive {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
         }
     </style>
 </head>
-
-
-<html>
-    <body>
+<body>
+    <div class="container py-4">
         {% include "inquiries/Alerts.html" %}
-
+        
         <!-- Date Filter Component -->
         {% include "inquiries/date_filter_component.html" %}
         
-        <!-- Detailed Stats -->
-        <h2 class="table-title">Detailed Statistics</h2>
+        <h2><i class="bi bi-bar-chart-fill text-primary me-2"></i>Detailed Statistics</h2>
 
-        <div class="detailed_table_wrapper">
-            <div class="table_wrapper">                
-                <!-- Inquiries by Class -->
-                <h3>Inquiries by Class:</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Class</th>
-                            <th>Inquiries Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for inquiry in inquiries_by_class %}
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?student_class[]={{ inquiry.student_class }}">
-                            <td>{{ inquiry.student_class }}</td>
-                            <td>{{ inquiry.total }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- Summary Cards -->
+        <div class="stats-summary">
+            <div class="summary-card">
+                <h3>{{ inquiries_by_class|length }}</h3>
+                <p>Classes</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ inquiries_by_source|length }}</h3>
+                <p>Sources</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ recent_inquiries|length }}</h3>
+                <p>Recent Inquiries</p>
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <!-- Inquiries by Class -->
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0"><i class="bi bi-mortarboard-fill text-primary me-2"></i>Inquiries by Class</h4>
+                    <span class="badge bg-primary">{{ inquiries_by_class|length }} Classes</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="classChart"></canvas>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inquiry in inquiries_by_class %}
+                            <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?student_class[]={{ inquiry.student_class }}">
+                                <td>{{ inquiry.student_class }}</td>
+                                <td>{{ inquiry.total }}</td>
+                                <td>
+                                    {% widthratio inquiry.total total_inquiries 100 %}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <div class="table_wrapper">
-                <!-- Inquiries by Source -->
-                <h3>Inquiries by Source:</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Source</th>
-                            <th>Inquiries Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for source in inquiries_by_source %}
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?inquiry_source[]={{ source.inquiry_source }}">
-                            <td>{{ source.inquiry_source }}</td>
-                            <td>{{ source.total }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <!-- Inquiries by Source -->
+            <div class="stats-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0"><i class="bi bi-funnel-fill text-success me-2"></i>Inquiries by Source</h4>
+                    <span class="badge bg-success">{{ inquiries_by_source|length }} Sources</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="sourceChart"></canvas>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Source</th>
+                                <th>Count</th>
+                                <th>Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for source in inquiries_by_source %}
+                            <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?inquiry_source[]={{ source.inquiry_source }}">
+                                <td>{{ source.inquiry_source }}</td>
+                                <td>{{ source.total }}</td>
+                                <td>
+                                    {% widthratio source.total total_inquiries 100 %}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+        </div>
 
-            <div class="table_wrapper">
-
+        <!-- Recent Inquiries -->
+        <div class="stats-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="mb-0"><i class="bi bi-clock-history text-warning me-2"></i>Recent Inquiries</h4>
+                <span class="badge bg-warning">{{ recent_inquiries|length }} Recent</span>
             </div>
-
-
-
-            <div class="table_wrapper">
-                <!-- Recent Inquiries -->
-                <h3>Recent Inquiries:</h3>
-                <table>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th>Date</th>
                             <th>Source</th>
                             <th>Class</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -265,33 +228,105 @@
                             <td>{{ inquiry.inquiry_date }}</td>
                             <td>{{ inquiry.inquiry_source }}</td>
                             <td>{{ inquiry.student_class }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ inquiry.status|default:"Inquiry" }}</span>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
-                </table>        
+                </table>
             </div>
         </div>
 
-
-        <!-- Navigation Link -->
-        <div class="navigation">
-            <a href="{% url 'dashboard' %}" class="add_new_agent">Back to Dashboard</a>
+        <!-- Navigation -->
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard' %}" class="btn-back">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
         </div>
+    </div>
 
-
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                const rows = document.querySelectorAll(".clickable-row");
-                rows.forEach(row => {
-                    row.addEventListener("click", () => {
-                        const url = row.getAttribute("data-href");
-                        if (url) {
-                            window.location.href = url;
-                        }
-                    });
-                    row.style.cursor = 'pointer';
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Initialize charts when DOM is loaded
+        document.addEventListener("DOMContentLoaded", function () {
+            // Clickable rows functionality
+            const rows = document.querySelectorAll(".clickable-row");
+            rows.forEach(row => {
+                row.addEventListener("click", () => {
+                    const url = row.getAttribute("data-href");
+                    if (url) {
+                        window.location.href = url;
+                    }
                 });
             });
-        </script>
-    </body>
+
+            // Chart data from Django template
+            const classData = {
+                labels: [{% for inquiry in inquiries_by_class %}'{{ inquiry.student_class }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Inquiries by Class',
+                    data: [{% for inquiry in inquiries_by_class %}{{ inquiry.total }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: [
+                        '#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',
+                        '#ef4444', '#84cc16', '#f97316', '#ec4899', '#6b7280'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            };
+
+            const sourceData = {
+                labels: [{% for source in inquiries_by_source %}'{{ source.inquiry_source }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'Inquiries by Source',
+                    data: [{% for source in inquiries_by_source %}{{ source.total }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                    backgroundColor: [
+                        '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#8b5cf6',
+                        '#f97316', '#ec4899', '#84cc16', '#6b7280', '#6366f1'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            };
+
+            // Create charts
+            const classCtx = document.getElementById('classChart');
+            if (classCtx) {
+                new Chart(classCtx, {
+                    type: 'doughnut',
+                    data: classData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+
+            const sourceCtx = document.getElementById('sourceChart');
+            if (sourceCtx) {
+                new Chart(sourceCtx, {
+                    type: 'doughnut',
+                    data: sourceData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
 </html>

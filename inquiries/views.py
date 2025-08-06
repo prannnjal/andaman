@@ -2240,3 +2240,108 @@ def google_sheets_setup_view(request):
         'title': 'Google Sheets Setup Instructions'
     }
     return render(request, 'inquiries/google_sheets_setup.html', context)
+
+def agent_statistics_view(request):
+    from .models import CustomUser, Lead, LeadLogs, CallRecording
+    from django.db.models import Sum, Avg
+    user = request.user
+    agents = CustomUser.objects.filter(role='Agent')
+    period = request.GET.get('period', 'day')
+    today = now().date()
+    start_date = today
+    if period == 'week':
+        start_date = today - timedelta(days=today.weekday())
+    elif period == 'month':
+        start_date = today.replace(day=1)
+
+    # Admin can filter by agent, agent can only see their own stats
+    if user.role == 'Admin':
+        selected_agent_id = request.GET.get('agent_id')
+        if selected_agent_id:
+            agent = CustomUser.objects.get(id=selected_agent_id)
+            leads = Lead.objects.filter(assigned_agent=agent, inquiry_date__gte=start_date)
+            follow_ups = LeadLogs.objects.filter(changed_by=agent, changed_at__date__gte=start_date)
+            calls = CallRecording.objects.filter(uploaded_by=agent, call_date__date__gte=start_date)
+            admissions = leads.filter(status='Admission Confirmed')
+        else:
+            leads = Lead.objects.filter(inquiry_date__gte=start_date)
+            follow_ups = LeadLogs.objects.filter(changed_at__date__gte=start_date)
+            calls = CallRecording.objects.filter(call_date__date__gte=start_date)
+            admissions = leads.filter(status='Admission Confirmed')
+    else:
+        selected_agent_id = str(user.id)
+        leads = Lead.objects.filter(assigned_agent=user, inquiry_date__gte=start_date)
+        follow_ups = LeadLogs.objects.filter(changed_by=user, changed_at__date__gte=start_date)
+        calls = CallRecording.objects.filter(uploaded_by=user, call_date__date__gte=start_date)
+        admissions = leads.filter(status='Admission Confirmed')
+
+    # Calculate call duration statistics
+    calls_with_duration = calls.filter(duration__isnull=False)
+    total_duration = calls_with_duration.aggregate(total=Sum('duration'))['total']
+    avg_duration = calls_with_duration.aggregate(avg=Avg('duration'))['avg']
+    
+    def format_duration(duration):
+        if duration:
+            total_seconds = int(duration.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            
+            if hours > 0:
+                return f"{hours}h {minutes}m {seconds}s"
+            else:
+                return f"{minutes}m {seconds}s"
+        return "0m 0s"
+
+    # Aggregate stats
+    stats = {
+        'leads_handled': leads.count(),
+        'follow_ups': follow_ups.count(),
+        'calls_made': calls.count(),
+        'admissions': admissions.count(),
+        'total_duration': format_duration(total_duration),
+        'avg_duration': format_duration(avg_duration),
+    }
+
+    # Build activity log (grouped by date)
+    from django.db.models.functions import TruncDate
+    activity_log = []
+    date_range = []
+    if period == 'day':
+        date_range = [today]
+    elif period == 'week':
+        date_range = [start_date + timedelta(days=i) for i in range(0, (today - start_date).days + 1)]
+    elif period == 'month':
+        import calendar
+        last_day = calendar.monthrange(today.year, today.month)[1]
+        date_range = [start_date + timedelta(days=i) for i in range(0, today.day)]
+
+    for date in date_range:
+        leads_count = leads.filter(inquiry_date=date).count()
+        follow_ups_count = follow_ups.filter(changed_at__date=date).count()
+        calls_count = calls.filter(call_date__date=date).count()
+        admissions_count = admissions.filter(inquiry_date=date).count()
+        
+        # Calculate duration for this date
+        day_calls = calls.filter(call_date__date=date, duration__isnull=False)
+        day_duration = day_calls.aggregate(total=Sum('duration'))['total']
+        day_duration_formatted = format_duration(day_duration)
+        
+        activity_log.append({
+            'date': date.strftime('%Y-%m-%d'),
+            'leads_handled': leads_count,
+            'follow_ups': follow_ups_count,
+            'calls_made': calls_count,
+            'admissions': admissions_count,
+            'call_duration': day_duration_formatted,
+        })
+
+    context = {
+        'agents': agents,
+        'selected_agent_id': selected_agent_id or '',
+        'period': period,
+        'stats': stats,
+        'activity_log': activity_log,
+        'show_agent_filter': user.role == 'Admin',
+    }
+    return render(request, 'inquiries/agent/agent_statistics.html', context)

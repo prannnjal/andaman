@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Statistics</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: linear-gradient(120deg, #f8fafc 0%, #e0e7ff 100%);
+            min-height: 100vh;
+        }
+        h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #212529;
+            margin-bottom: 1.5rem;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .stats-card {
+            border-radius: 1rem;
+            box-shadow: 0 2px 12px rgba(99, 102, 241, 0.08);
+            background: #fff;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s ease;
+        }
+        .stats-card:hover {
+            transform: translateY(-2px);
+        }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .summary-card {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+        .summary-card h3 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .summary-card p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        .btn-back {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-back:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            color: white;
+        }
+        .table-responsive {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h2><i class="bi bi-person-lines-fill text-primary me-2"></i>Agent Statistics</h2>
+        <div class="text-center mb-3">
+            <span class="fs-5 fw-semibold">
+                {% if show_agent_filter %}
+                    {% if selected_agent_id %}
+                        {% for agent in agents %}
+                            {% if agent.id|stringformat:'s' == selected_agent_id %}
+                                {{ agent.name|default:agent.email }}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        All Agents
+                    {% endif %}
+                {% else %}
+                    {{ request.user.name|default:request.user.email }}
+                {% endif %}
+            </span>
+        </div>
+        <!-- Filter Bar -->
+        <form method="get" class="filter-bar mb-4">
+            {% if show_agent_filter %}
+            <select name="agent_id" class="form-select" style="max-width: 220px;">
+                <option value="">All Agents</option>
+                {% for agent in agents %}
+                <option value="{{ agent.id }}" {% if agent.id|stringformat:'s' == selected_agent_id %}selected{% endif %}>{{ agent.name|default:agent.email }}</option>
+                {% endfor %}
+            </select>
+            {% endif %}
+            <select name="period" class="form-select" style="max-width: 180px;">
+                <option value="day" {% if period == 'day' %}selected{% endif %}>Today</option>
+                <option value="week" {% if period == 'week' %}selected{% endif %}>This Week</option>
+                <option value="month" {% if period == 'month' %}selected{% endif %}>This Month</option>
+            </select>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Apply</button>
+        </form>
+        <!-- Summary Cards -->
+        <div class="stats-summary">
+            <div class="summary-card">
+                <h3>{{ stats.leads_handled }}</h3>
+                <p>Leads Handled</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ stats.follow_ups }}</h3>
+                <p>Follow-ups</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ stats.calls_made }}</h3>
+                <p>Calls Made</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ stats.admissions }}</h3>
+                <p>Admissions</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ stats.total_duration }}</h3>
+                <p>Total Call Duration</p>
+            </div>
+            <div class="summary-card">
+                <h3>{{ stats.avg_duration }}</h3>
+                <p>Average Call Duration</p>
+            </div>
+        </div>
+        <!-- Activity Chart -->
+        <div class="stats-card">
+            <h4 class="mb-3"><i class="bi bi-graph-up-arrow text-info me-2"></i>Activity Over Time</h4>
+            <div class="chart-container" style="height: 320px;">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+        <!-- Activity Table -->
+        <div class="stats-card">
+            <h4 class="mb-3"><i class="bi bi-list-task text-success me-2"></i>Detailed Activity Log</h4>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Leads Handled</th>
+                            <th>Follow-ups</th>
+                            <th>Calls Made</th>
+                            <th>Admissions</th>
+                            <th>Call Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in activity_log %}
+                        <tr>
+                            <td>{{ row.date }}</td>
+                            <td>{{ row.leads_handled }}</td>
+                            <td>{{ row.follow_ups }}</td>
+                            <td>{{ row.calls_made }}</td>
+                            <td>{{ row.admissions }}</td>
+                            <td>{{ row.call_duration }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Navigation -->
+        <div class="text-center mt-4">
+            <a href="{% url 'dashboard' %}" class="btn-back">
+                <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Chart.js Activity Chart
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctx = document.getElementById('activityChart');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [{% for row in activity_log %}'{{ row.date }}'{% if not forloop.last %}, {% endif %}{% endfor %}],
+                        datasets: [
+                            {
+                                label: 'Leads Handled',
+                                data: [{% for row in activity_log %}{{ row.leads_handled }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                                borderColor: '#6366f1',
+                                backgroundColor: 'rgba(99,102,241,0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Follow-ups',
+                                data: [{% for row in activity_log %}{{ row.follow_ups }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16,185,129,0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Calls Made',
+                                data: [{% for row in activity_log %}{{ row.calls_made }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                                borderColor: '#f59e0b',
+                                backgroundColor: 'rgba(245,158,11,0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: 'Admissions',
+                                data: [{% for row in activity_log %}{{ row.admissions }}{% if not forloop.last %}, {% endif %}{% endfor %}],
+                                borderColor: '#8b5cf6',
+                                backgroundColor: 'rgba(139,92,246,0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Date'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Count'
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

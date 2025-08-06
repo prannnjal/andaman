@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views # pre-built views for common authentication tasks like login, password reset etc
+from .views import agent_statistics_view
 
 urlpatterns = [
     path('list/', views.inquiry_list, name='inquiry_list'),
@@ -74,4 +75,7 @@ urlpatterns = [
     path('google-sheets/preview/', views.google_sheets_preview_view, name='google_sheets_preview'),
     path('google-sheets/import/', views.google_sheets_import_view, name='google_sheets_import'),
 
+]
+urlpatterns += [
+    path('agent/statistics/', agent_statistics_view, name='agent_statistics'),
 ]
