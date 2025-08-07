@@ -133,13 +133,13 @@ class Lead(models.Model):
     ]
 
     STATUS_CHOICES = [
-        ('Inquiry', 'Inquiry'),
-        ('Registration', 'Registration'),
-        ('Admission Test', 'Admission Test'),
-        ('Admission Offered', 'Admission Offered'),
-        ('Admission Confirmed', 'Admission Confirmed'),
-        ('Rejected', 'Rejected'),
-        ('Viewer', 'Viewer'),
+        ('DNP', 'DNP'),
+        ('Not interested', 'Not interested'),
+        ('Interested', 'Interested'),
+        ('Follow Up', 'Follow Up'),
+        ('Low Budget', 'Low Budget'),
+        ('Meeting', 'Meeting'),
+        ('Proposal', 'Proposal'),
     ]
 
     student_name = models.CharField(max_length=100)

@@ -149,10 +149,10 @@ def Filter_Inquiries(request):
     elif user.role=="Agent":  # Agents can see their assigned leads + viewer leads
         # Get leads assigned to this agent
         assigned_leads = Lead.objects.filter(assigned_agent=user)
-        # Get viewer leads (visible to all agents)
-        viewer_leads = Lead.objects.filter(status='Viewer')
+        # Get leads with no assigned agent (available to all agents)
+        unassigned_leads = Lead.objects.filter(assigned_agent__isnull=True)
         # Combine both querysets
-        inquiries = assigned_leads.union(viewer_leads)
+        inquiries = assigned_leads.union(unassigned_leads)
         # print("=====================> after agent len(inquiries) filtered = ", len(inquiries)) 
     else:
         inquiries = Lead.objects.all()     # return an empty queryset if the user is neither an admin nor an agent
