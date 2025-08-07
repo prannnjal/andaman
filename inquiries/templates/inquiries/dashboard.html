@@ -912,6 +912,87 @@
             .clickable-row:hover {
                 transform: translateX(2px);
             }
+
+            /* Make header movable in mobile view */
+            .dashboard-header {
+                position: relative;
+                cursor: grab;
+                user-select: none;
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                transition: transform 0.3s ease-out;
+            }
+
+            .dashboard-header:active {
+                cursor: grabbing;
+            }
+
+            .dashboard-header.dragging {
+                transition: none;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 1001;
+            }
+
+            /* Add visual indicator for draggable header */
+            .dashboard-header::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 40px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 2px;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                pointer-events: none;
+            }
+
+            .dashboard-header:hover::before {
+                opacity: 1;
+            }
+
+            .dashboard-header.dragging::before {
+                opacity: 0;
+            }
+
+            /* Add drag handle indicator */
+            .drag-handle {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                width: 20px;
+                height: 20px;
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: grab;
+                transition: all 0.3s ease;
+                z-index: 1002;
+            }
+
+            .drag-handle::before {
+                content: '⋮⋮';
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 8px;
+                line-height: 1;
+                letter-spacing: -1px;
+            }
+
+            .drag-handle:active {
+                cursor: grabbing;
+                background: rgba(255, 255, 255, 0.4);
+                transform: scale(1.1);
+            }
+
+            .dashboard-header.dragging .drag-handle {
+                background: rgba(255, 255, 255, 0.6);
+                transform: scale(1.2);
+            }
         }
 
         /* Mobile Menu Overlay */
@@ -1122,6 +1203,7 @@
         <div class="main-content" id="mainContent">
                 <!-- Header -->
             <div class="dashboard-header">
+                <div class="drag-handle"></div>
                 <div class="header-left">
                     <button class="sidebar-toggle" id="sidebarToggle">
                         <i class="bi bi-list"></i>
@@ -1530,6 +1612,109 @@
                         mobileOverlay.classList.remove('show');
                     }
                 }
+            }
+
+            // Mobile header drag functionality
+            if (window.innerWidth <= 768) {
+                const dashboardHeader = document.querySelector('.dashboard-header');
+                let isDragging = false;
+                let startY = 0;
+                let startX = 0;
+                let currentY = 0;
+                let currentX = 0;
+                let initialY = 0;
+                let initialX = 0;
+
+                function handleTouchStart(e) {
+                    isDragging = true;
+                    startY = e.touches[0].clientY;
+                    startX = e.touches[0].clientX;
+                    initialY = dashboardHeader.offsetTop;
+                    initialX = dashboardHeader.offsetLeft;
+                    dashboardHeader.classList.add('dragging');
+                }
+
+                function handleTouchMove(e) {
+                    if (!isDragging) return;
+                    
+                    e.preventDefault();
+                    currentY = e.touches[0].clientY - startY;
+                    currentX = e.touches[0].clientX - startX;
+                    
+                    // Limit movement to reasonable bounds
+                    const maxMove = 100;
+                    const moveY = Math.max(-maxMove, Math.min(maxMove, currentY));
+                    const moveX = Math.max(-maxMove, Math.min(maxMove, currentX));
+                    
+                    dashboardHeader.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                }
+
+                function handleTouchEnd() {
+                    if (!isDragging) return;
+                    
+                    isDragging = false;
+                    dashboardHeader.classList.remove('dragging');
+                    
+                    // Animate back to original position
+                    dashboardHeader.style.transition = 'transform 0.3s ease-out';
+                    dashboardHeader.style.transform = 'translate(0, 0)';
+                    
+                    setTimeout(() => {
+                        dashboardHeader.style.transition = '';
+                    }, 300);
+                }
+
+                dashboardHeader.addEventListener('touchstart', handleTouchStart, { passive: false });
+                dashboardHeader.addEventListener('touchmove', handleTouchMove, { passive: false });
+                dashboardHeader.addEventListener('touchend', handleTouchEnd);
+
+                // Mouse drag functionality for testing on desktop
+                function handleMouseDown(e) {
+                    if (e.target.closest('.sidebar-toggle') || e.target.closest('.user-avatar')) {
+                        return; // Don't drag if clicking on interactive elements
+                    }
+                    
+                    isDragging = true;
+                    startY = e.clientY;
+                    startX = e.clientX;
+                    initialY = dashboardHeader.offsetTop;
+                    initialX = dashboardHeader.offsetLeft;
+                    dashboardHeader.classList.add('dragging');
+                }
+
+                function handleMouseMove(e) {
+                    if (!isDragging) return;
+                    
+                    e.preventDefault();
+                    currentY = e.clientY - startY;
+                    currentX = e.clientX - startX;
+                    
+                    // Limit movement to reasonable bounds
+                    const maxMove = 100;
+                    const moveY = Math.max(-maxMove, Math.min(maxMove, currentY));
+                    const moveX = Math.max(-maxMove, Math.min(maxMove, currentX));
+                    
+                    dashboardHeader.style.transform = `translate(${moveX}px, ${moveY}px)`;
+                }
+
+                function handleMouseUp() {
+                    if (!isDragging) return;
+                    
+                    isDragging = false;
+                    dashboardHeader.classList.remove('dragging');
+                    
+                    // Animate back to original position
+                    dashboardHeader.style.transition = 'transform 0.3s ease-out';
+                    dashboardHeader.style.transform = 'translate(0, 0)';
+                    
+                    setTimeout(() => {
+                        dashboardHeader.style.transition = '';
+                    }, 300);
+                }
+
+                dashboardHeader.addEventListener('mousedown', handleMouseDown);
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
             }
         });
     </script>
