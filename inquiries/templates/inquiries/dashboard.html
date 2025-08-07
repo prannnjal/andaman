@@ -1225,30 +1225,57 @@
                     <!-- Stats Cards -->
                 <div class="stats-grid">
                     <div class="stat-card">
-                        <div class="stat-number">{{ total_inquiries }}</div>
-                        <div class="stat-label">Inquiries</div>
-                                </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ total_registrations }}</div>
-                        <div class="stat-label">Registrations</div>
-                            </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ total_tests }}</div>
-                        <div class="stat-label">Admission Tests</div>
-                        </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ total_admissions_offered }}</div>
-                        <div class="stat-label">Admissions Offered</div>
-                                </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ total_admissions_confirmed }}</div>
-                        <div class="stat-label">Admissions Confirmed</div>
-                            </div>
-                    <div class="stat-card">
-                        <div class="stat-number">{{ rejected }}</div>
-                        <div class="stat-label">Rejected</div>
-                        </div>
-                                </div>
+                        <div class="stat-number">{{ total_leads }}</div>
+                        <div class="stat-label">Total Leads</div>
+                    </div>
+                </div>
+
+                <!-- Status Table -->
+                <div class="table-container">
+                    <div class="table-header">
+                        <h5>Status Overview</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=DNP">
+                                    <td>DNP</td>
+                                    <td>{{ dnp_count }}</td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Not interested">
+                                    <td>Not interested</td>
+                                    <td>{{ not_interested_count }}</td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Interested">
+                                    <td>Interested</td>
+                                    <td>{{ interested_count }}</td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Follow Up">
+                                    <td>Follow Up</td>
+                                    <td>{{ follow_up_count }}</td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Low Budget">
+                                    <td>Low Budget</td>
+                                    <td>{{ low_budget_count }}</td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Meeting">
+                                    <td>Meeting</td>
+                                    <td>{{ meeting_count }}</td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Proposal">
+                                    <td>Proposal</td>
+                                    <td>{{ proposal_count }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                     <!-- Chart Placeholder -->
                 <div class="chart-placeholder">
@@ -1291,89 +1318,90 @@
                     <div class="row g-4">
                         <div class="col-lg-6">
                         <div class="table-container">
-                            <div class="table-header">
-                                <h5>Overall Status</h5>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
+                        <div class="table-header">
+                        <h5>Overall Status</h5>
+                        </div>
+                        <div class="table-responsive">
+                        <table class="table">
+                        <thead>
                         <tr>
-                            <th>Category</th>
-                            <th>Count</th>
+                        <th>Category</th>
+                        <th>Count</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry">
-                            <td>Inquiries</td>
-                            <td>{{ total_inquiries }}</td>
+                        <td>Inquiries</td>
+                        <td>{{ total_inquiries }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration">
-                            <td>Registrations</td>
-                            <td>{{ total_registrations }}</td>
+                        <td>Registrations</td>
+                        <td>{{ total_registrations }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test">
-                            <td>Admission Tests</td>
-                            <td>{{ total_tests }}</td>
+                        <td>Admission Tests</td>
+                        <td>{{ total_tests }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered">
-                            <td>Admissions Offered</td>
-                            <td>{{ total_admissions_offered }}</td>
+                        <td>Admissions Offered</td>
+                        <td>{{ total_admissions_offered }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed">
-                            <td>Admissions Confirmed</td>
-                            <td>{{ total_admissions_confirmed }}</td>
+                        <td>Admissions Confirmed</td>
+                        <td>{{ total_admissions_confirmed }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected">
-                            <td>Rejected</td>
-                            <td>{{ rejected }}</td>
+                        <td>Rejected</td>
+                        <td>{{ rejected }}</td>
                         </tr>
-                    </tbody>
-                </table>
-                            </div>
-            </div>
+                        </tbody>
+                        </table>
+                        </div>
+                        </div>
                         </div>
                         <div class="col-lg-6">
                         <div class="table-container">
-                            <div class="table-header">
-                                <h5>Today's Status</h5>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
+                        <div class="table-header">
+                        <h5>Today's Status</h5>
+                        </div>
+                        <div class="table-responsive">
+                        <table class="table">
+                        <thead>
                         <tr>
-                            <th>Category</th>
-                            <th>Today's Count</th>
+                        <th>Category</th>
+                        <th>Today's Count</th>
                         </tr>
-                    </thead>
-                    <tbody>
+                        </thead>
+                        <tbody>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry&inquiry_date_from={{todays_date}}">
-                            <td>Inquiries</td>
-                            <td>{{ inquiries_today }}</td>
+                        <td>Inquiries</td>
+                        <td>{{ inquiries_today }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration&registration_date_from={{todays_date}}">
-                            <td>Registrations</td>
-                            <td>{{ registrations_today }}</td>
+                        <td>Registrations</td>
+                        <td>{{ registrations_today }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test&admission_test_date_from={{todays_date}}">
-                            <td>Admission Tests</td>
-                            <td>{{ tests_today }}</td>
+                        <td>Admission Tests</td>
+                        <td>{{ tests_today }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered&admission_offered_date_from={{todays_date}}">
-                            <td>Admissions Offered</td>
-                            <td>{{ admissions_offered_today }}</td>
+                        <td>Admissions Offered</td>
+                        <td>{{ admissions_offered_today }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed&admission_confirmed_date_from={{todays_date}}">
-                            <td>Admissions Confirmed</td>
-                            <td>{{ admissions_confirmed_today }}</td>
+                        <td>Admissions Confirmed</td>
+                        <td>{{ admissions_confirmed_today }}</td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected&rejected_date_from={{todays_date}}">
-                            <td>Rejected</td>
-                            <td>{{ rejected_today }}</td>
+                        <td>Rejected</td>
+                        <td>{{ rejected_today }}</td>
                         </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                        </tbody>
+                        </table>
+                        </div>
+                        </div>
+                        </div>
                     </div>
                 </div>
 

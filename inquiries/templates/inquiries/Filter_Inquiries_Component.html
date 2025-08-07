@@ -311,11 +311,13 @@
 
 
                 <select name="status[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Lead Status">
-                    {% for status in statuses %}                    
-                        <option value="{{ status }}" {% if status in selected_statuses %}selected{% endif %}>
-                            {{ status }}
-                        </option>
-                    {% endfor %}
+                    <option value="DNP" {% if 'DNP' in selected_statuses %}selected{% endif %}>DNP</option>
+                    <option value="Not interested" {% if 'Not interested' in selected_statuses %}selected{% endif %}>Not interested</option>
+                    <option value="Interested" {% if 'Interested' in selected_statuses %}selected{% endif %}>Interested</option>
+                    <option value="Follow Up" {% if 'Follow Up' in selected_statuses %}selected{% endif %}>Follow Up</option>
+                    <option value="Low Budget" {% if 'Low Budget' in selected_statuses %}selected{% endif %}>Low Budget</option>
+                    <option value="Meeting" {% if 'Meeting' in selected_statuses %}selected{% endif %}>Meeting</option>
+                    <option value="Proposal" {% if 'Proposal' in selected_statuses %}selected{% endif %}>Proposal</option>
                 </select>
 
             </div>

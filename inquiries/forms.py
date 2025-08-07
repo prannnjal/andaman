@@ -36,6 +36,16 @@ class InquiryForm(forms.ModelForm):
         if not self.instance or not self.instance.pk:
             self.fields['inquiry_date'].initial = timezone.localdate()
         
+        # Restrict status choices to only the new statuses
+        self.fields['status'].choices = [
+            ('DNP', 'DNP'),
+            ('Not interested', 'Not interested'),
+            ('Interested', 'Interested'),
+            ('Follow Up', 'Follow Up'),
+            ('Low Budget', 'Low Budget'),
+            ('Meeting', 'Meeting'),
+            ('Proposal', 'Proposal'),
+        ]
         
         # Assign the 'date' widget to the date fields individually
         date_fields = [
