@@ -366,7 +366,7 @@ class CallRecordingForm(forms.ModelForm):
         fields = ['recording_file', 'notes']
         widgets = {
             'recording_file': forms.FileInput(attrs={
-                'accept': '.mp3,.aac,audio/mp3,audio/aac',
+                'accept': '.mp3,.aac,.wav,audio/mp3,audio/aac,audio/wav',
                 'class': 'form-control',
                 'id': 'call-recording-input'
             }),
@@ -384,10 +384,10 @@ class CallRecordingForm(forms.ModelForm):
             if file.size > 50 * 1024 * 1024:
                 raise forms.ValidationError("File size must be under 50MB.")
             
-            # Check file extension - only MP3 and AAC allowed
-            allowed_extensions = ['.mp3', '.aac']
+            # Check file extension - only MP3, AAC, and WAV allowed
+            allowed_extensions = ['.mp3', '.aac', '.wav']
             file_extension = os.path.splitext(file.name)[1].lower()
             if file_extension not in allowed_extensions:
-                raise forms.ValidationError("Only MP3 (.mp3) and AAC (.aac) files are allowed for call recordings.")
+                raise forms.ValidationError("Only MP3 (.mp3), AAC (.aac), and WAV (.wav) files are allowed for call recordings.")
         
         return file
