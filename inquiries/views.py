@@ -543,6 +543,13 @@ def add_inquiry(request):
         
             inquiry.save()
             
+            # Check if new lead has "Not interested" status and was automatically transferred
+            if (inquiry.status == "Not interested" and 
+                inquiry.transferred_to and 
+                inquiry.transferred_to.role == 'Viewer'):
+                
+                messages.info(request, f"Lead automatically transferred to viewer: {inquiry.transferred_to.name} due to 'Not interested' status.")
+            
             Save_Lead_Logs(None, inquiry, request.user)
 
             # Get the assigned agent
@@ -669,6 +676,14 @@ def manage_lead_status(request, inquiry_id):
                     # Continue without call recording if creation fails
             
             new_inquiry_instance = inquiry  # Store the new data after changes
+            
+            # Check if status was changed to "Not interested" and lead was automatically transferred
+            if (old_inquiry_instance.status != "Not interested" and 
+                new_inquiry_instance.status == "Not interested" and
+                new_inquiry_instance.transferred_to and 
+                new_inquiry_instance.transferred_to.role == 'Viewer'):
+                
+                messages.info(request, f"Lead automatically transferred to viewer: {new_inquiry_instance.transferred_to.name} due to 'Not interested' status.")
             
             # Save logs of changes
             Save_Lead_Logs(old_inquiry_instance, new_inquiry_instance, request.user)

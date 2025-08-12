@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from django.contrib import messages
 from .models import Lead, CustomUser
 from django.db.models import Count
+from django.utils import timezone
 
 @receiver(pre_save, sender=Lead)
 def auto_assign_agent_on_lead_save(sender, instance, **kwargs):
@@ -14,6 +15,43 @@ def auto_assign_agent_on_lead_save(sender, instance, **kwargs):
         instance.auto_assign_agent()
         # Note: We can't use messages here as signals don't have access to request
         # The view will handle showing appropriate messages
+
+@receiver(pre_save, sender=Lead)
+def auto_transfer_not_interested_leads(sender, instance, **kwargs):
+    """
+    Automatically transfer leads with "Not interested" status to users with "Viewer" role
+    """
+    try:
+        # Get the original instance from database to compare status changes
+        if instance.pk:  # Only for existing leads (not new ones)
+            original_instance = Lead.objects.get(pk=instance.pk)
+            
+            # Check if status changed to "Not interested"
+            if (original_instance.status != "Not interested" and 
+                instance.status == "Not interested"):
+                
+                # Find a user with "Viewer" role
+                viewer_user = CustomUser.objects.filter(role='Viewer').first()
+                
+                if viewer_user:
+                    # Update transfer tracking fields
+                    instance.transferred_from = instance.assigned_agent
+                    instance.transferred_to = viewer_user
+                    instance.transfer_date = timezone.now()
+                    instance.transfer_reason = "Automatic transfer due to 'Not interested' status"
+                    
+                    # Assign the lead to the viewer
+                    instance.assigned_agent = viewer_user
+                    
+                    print(f"Lead {instance.student_name} automatically transferred to viewer: {viewer_user.name}")
+                else:
+                    print("No viewer users found for automatic transfer")
+                    
+    except Lead.DoesNotExist:
+        # This is a new lead, no need to check for status changes
+        pass
+    except Exception as e:
+        print(f"Error in auto_transfer_not_interested_leads: {str(e)}")
 
 @receiver(post_delete, sender=CustomUser)
 def redistribute_leads_on_agent_delete(sender, instance, **kwargs):

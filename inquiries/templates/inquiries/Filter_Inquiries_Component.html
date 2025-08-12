@@ -22,7 +22,7 @@
         .same_row_wrapper {
             display: flex;
             flex-direction: column;
-            gap: 24px;
+            gap: 32px;
             align-items: center;
             justify-content: center;
             margin: 0;
@@ -35,91 +35,146 @@
 
         .modal-content {
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(30px);
             margin: auto;
-            padding: 40px;
+            padding: 48px;
             border: none;
             width: 90vw;
-            max-width: 500px;
-            max-height: 80vh;
+            max-width: 600px;
+            max-height: 85vh;
             overflow: auto;
-            border-radius: 24px;
+            border-radius: 28px;
             box-shadow: 
-                0 25px 50px -12px rgba(0, 0, 0, 0.25),
-                0 0 0 1px rgba(255, 255, 255, 0.1);
+                0 32px 64px -12px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            animation: slideIn 0.3s ease-out;
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translate(-50%, -60%);
+                transform: translate(-50%, -65%) scale(0.95);
             }
             to {
                 opacity: 1;
-                transform: translate(-50%, -50%);
+                transform: translate(-50%, -50%) scale(1);
             }
         }
 
         /* Title Styling */
         h2 {
             text-align: center;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 40px;
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 48px;
             color: #1a202c;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
         }
 
         .filter-container {
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 20px;
-            padding: 32px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+            border-radius: 24px;
+            padding: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
         }
 
         .filter-label {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 16px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
             display: block;
             text-align: center;
             letter-spacing: -0.025em;
+            position: relative;
+        }
+
+        .filter-label::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            margin-right: 12px;
+            vertical-align: middle;
         }
 
         /* Modern Select Styling */
         .select_element_class {
-            padding: 16px 20px;
+            padding: 18px 24px;
             font-size: 16px;
-            border-radius: 16px;
+            border-radius: 18px;
             border: 2px solid #e2e8f0;
             width: 100%;
             box-sizing: border-box;
-            background: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
         }
 
         .select_element_class:focus {
             border-color: #667eea;
             outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            box-shadow: 
+                0 0 0 4px rgba(102, 126, 234, 0.1),
+                0 8px 24px rgba(102, 126, 234, 0.15);
             transform: translateY(-2px);
+            background: rgba(255, 255, 255, 1);
         }
 
         .select_element_class:hover {
             border-color: #a0aec0;
             transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
         }
 
         /* Button Styling */
@@ -127,20 +182,41 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 16px 32px;
+            padding: 18px 36px;
             font-size: 16px;
-            font-weight: 600;
-            border-radius: 16px;
+            font-weight: 700;
+            border-radius: 18px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 12px 32px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
             margin: 24px 8px 16px 8px;
-            min-width: 120px;
+            min-width: 140px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter_modal_btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .filter_modal_btn:hover::before {
+            left: 100%;
         }
 
         .filter_modal_btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            box-shadow: 
+                0 16px 40px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .filter_modal_btn:active {
@@ -150,25 +226,30 @@
         /* Reset Link Styles */
         .reset_modal_a {
             display: inline-block;
-            background: rgba(237, 242, 247, 0.8);
+            background: linear-gradient(145deg, rgba(237, 242, 247, 0.9), rgba(226, 232, 240, 0.8));
             color: #4a5568;
-            padding: 16px 32px;
+            padding: 18px 36px;
             font-size: 16px;
-            font-weight: 600;
-            border-radius: 16px;
+            font-weight: 700;
+            border-radius: 18px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             border: 2px solid transparent;
             margin: 16px 8px;
-            min-width: 120px;
+            min-width: 140px;
+            box-shadow: 
+                0 8px 24px rgba(0, 0, 0, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         .reset_modal_a:hover {
-            background: rgba(237, 242, 247, 1);
+            background: linear-gradient(145deg, rgba(237, 242, 247, 1), rgba(226, 232, 240, 1));
             color: #2d3748;
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 
+                0 12px 32px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
 
         /* Button Container */
@@ -176,31 +257,31 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
             flex-wrap: wrap;
-            margin-top: 32px;
+            margin-top: 40px;
         }
 
         /* Responsive Design */
         @media (max-width: 768px) {
             .modal-content {
                 width: 95vw;
-                padding: 24px;
-                border-radius: 20px;
+                padding: 32px 24px;
+                border-radius: 24px;
             }
             
             h2 {
-                font-size: 24px;
-                margin-bottom: 24px;
+                font-size: 28px;
+                margin-bottom: 32px;
             }
             
             .filter-container {
-                padding: 24px;
+                padding: 28px 24px;
             }
             
             .button-container {
                 flex-direction: column;
-                gap: 12px;
+                gap: 16px;
             }
             
             .filter_modal_btn,
@@ -305,15 +386,34 @@
             text-align: left;
         }
 
-        .select2-selection {
+        .select2-container--default .select2-selection--multiple {
             font-size: 16px;
             display: flex;
             align-items: center;
-            background-color: white;
-            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-radius: 18px !important;
             border: 2px solid #e2e8f0 !important;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            min-height: 60px;
+            padding: 8px 16px;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--multiple {
+            border-color: #667eea !important;
+            box-shadow: 
+                0 0 0 4px rgba(102, 126, 234, 0.1),
+                0 8px 24px rgba(102, 126, 234, 0.15) !important;
+            transform: translateY(-2px);
+        }
+
+        .select2-container--default .select2-selection--multiple:hover {
+            border-color: #a0aec0 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
         }
 
         /* Style the Select2 search input */
@@ -336,6 +436,122 @@
             line-height: 1.2;
         }
 
+        /* Enhanced Select2 Styles */
+        .select2-search__field {
+            font-size: 16px !important;            
+            padding: 12px 16px !important;            
+            border: none !important;
+            margin: 4px 0 !important;
+            border-radius: 12px !important;
+            outline: none !important;
+            text-align: left !important;
+            height: auto !important;      
+            width: 100% !important;
+            background: rgba(248, 250, 252, 0.8) !important;
+            color: #1a202c !important;
+            transition: all 0.3s ease;
+        }
+
+        .select2-search__field:focus {
+            background: rgba(255, 255, 255, 1) !important;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+        }
+
+        .select2-search__field::placeholder {
+            color: #718096 !important;
+            font-style: normal !important;
+            line-height: 1.2;
+            opacity: 0.7;
+        }
+
+        /* Style selected items */
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
+            padding: 6px 12px !important;
+            margin: 4px 8px 4px 0 !important;
+            font-size: 14px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: rgba(255, 255, 255, 0.8) !important;
+            margin-right: 8px !important;
+            font-weight: bold !important;
+            font-size: 16px !important;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-radius: 50% !important;
+        }
+
+        /* Style dropdown */
+        .select2-dropdown {
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 16px !important;
+            box-shadow: 
+                0 12px 32px rgba(0, 0, 0, 0.1),
+                0 4px 16px rgba(0, 0, 0, 0.05) !important;
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(20px);
+        }
+
+        .select2-results__option {
+            padding: 12px 16px !important;
+            font-size: 15px !important;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.5) !important;
+            transition: all 0.2s ease;
+        }
+
+        .select2-results__option:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)) !important;
+            color: #1a202c !important;
+        }
+
+        .select2-results__option--highlighted[aria-selected] {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+        }
+
+        /* Checkbox styling in dropdown */
+        .select2-results__option input[type="checkbox"] {
+            margin-right: 8px !important;
+            transform: scale(1.2) !important;
+            accent-color: #667eea !important;
+        }
+
+        /* Filter Description Styles */
+        .filter-description {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 16px 24px;
+            background: linear-gradient(145deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+            border-radius: 16px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .filter-description p {
+            margin: 0;
+            color: #4a5568;
+            font-size: 16px;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .filter-description-text {
+            text-align: center;
+            margin-bottom: 16px;
+            color: #718096;
+            font-size: 14px;
+            font-weight: 500;
+            font-style: italic;
+        }
+
     </style>
 </head>
 
@@ -344,17 +560,24 @@
 
     <div class="modal-content">
         <h2>🎯 Smart Lead Filter</h2>
+        
+        <div class="filter-description">
+            <p>Filter your leads by status and assigned agents to find exactly what you're looking for.</p>
+        </div>
 
         {% with request.GET.base_url_name as url_name %}
             <form id="filter-form" method="get" action="{{ request.GET.base_url_name }}">
         {% endwith %}
 
-            <!-- Status Filter Only -->
+            <!-- Status Filter -->
             <div class="same_row_wrapper">
                 <div class="filter-container">
                     <label class="filter-label">
                         🎯 Filter by Lead Status
                     </label>
+                    <div class="filter-description-text">
+                        Select one or more statuses to filter leads
+                    </div>
                     <select name="status[]" class="select_element_class" multiple style="width: 100%; height: 200px;" data-placeholder="Select Lead Status">
                         <option value="DNP" {% if 'DNP' in selected_statuses %}selected{% endif %}>🚫 DNP</option>
                         <option value="Not interested" {% if 'Not interested' in selected_statuses %}selected{% endif %}>❌ Not interested</option>
@@ -363,6 +586,25 @@
                         <option value="Meeting" {% if 'Meeting' in selected_statuses %}selected{% endif %}>🤝 Meeting</option>
                         <option value="Proposal" {% if 'Proposal' in selected_statuses %}selected{% endif %}>📋 Proposal</option>
                         <option value="Low Budget" {% if 'Low Budget' in selected_statuses %}selected{% endif %}>💰 Low Budget</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Agent Filter -->
+            <div class="same_row_wrapper">
+                <div class="filter-container">
+                    <label class="filter-label">
+                        👤 Filter by Assigned Agent
+                    </label>
+                    <div class="filter-description-text">
+                        Select one or more agents to filter leads
+                    </div>
+                    <select name="agent_id[]" class="select_element_class" multiple style="width: 100%; height: 200px;" data-placeholder="Select Assigned Agent">
+                        {% for agent in agents %}
+                            <option value="{{ agent.id }}" {% if agent.id|stringformat:"s" in selected_agent_ids %}selected{% endif %}>
+                                👤 {{ agent.name }} ({{ agent.email }})
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
@@ -384,7 +626,7 @@
 
     <!-- Initialize Select2 -->
     <script>
-        console.log('Filter component loaded successfully! Status filter only.');
+        console.log('Filter component loaded successfully! Status and Agent filters.');
         $(document).ready(function () {
             $('.searchable-select').select2({                
                 width: 'resolve'
