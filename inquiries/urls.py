@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views # pre-built views for common authentication tasks like login, password reset etc
-from .views import agent_statistics_view, active_agents_status_view
+from .views import agent_statistics_view, active_agents_status_view, agent_call_details_view
 
 urlpatterns = [
     path('list/', views.inquiry_list, name='inquiry_list'),
@@ -79,4 +79,5 @@ urlpatterns = [
 urlpatterns += [
     path('agent/statistics/', agent_statistics_view, name='agent_statistics'),
     path('agent/active-status/', active_agents_status_view, name='active_agents_status'),
+    path('agent/call-details/', agent_call_details_view, name='agent_call_details'),
 ]

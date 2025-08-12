@@ -2457,3 +2457,77 @@ def active_agents_status_view(request):
             'is_active': is_active,
         })
     return JsonResponse({'agents': agent_data})
+
+@login_required
+def agent_call_details_view(request):
+    """View to get call details for a specific date and agent"""
+    from .models import CallRecording
+    from django.http import JsonResponse
+    from datetime import datetime
+    
+    try:
+        # Get parameters
+        date_str = request.GET.get('date')
+        agent_id = request.GET.get('agent_id')
+        
+        if not date_str:
+            return JsonResponse({'success': False, 'error': 'Date parameter is required'})
+        
+        # Parse date
+        try:
+            target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'Invalid date format'})
+        
+        # Determine which agent's calls to fetch
+        if request.user.role == 'Admin':
+            # Admin can view any agent's calls
+            if agent_id:
+                try:
+                    agent = CustomUser.objects.get(id=agent_id, role='Agent')
+                except CustomUser.DoesNotExist:
+                    return JsonResponse({'success': False, 'error': 'Agent not found'})
+            else:
+                # If no agent specified, return error
+                return JsonResponse({'success': False, 'error': 'Agent ID is required for admin users'})
+        else:
+            # Agent can only view their own calls
+            agent = request.user
+        
+        # Get calls for the specified date and agent
+        calls = CallRecording.objects.filter(
+            uploaded_by=agent,
+            call_date__date=target_date
+        ).select_related('lead').order_by('call_date')
+        
+        # Format call data
+        calls_data = []
+        for call in calls:
+            # Format duration
+            duration_str = call.get_duration_display() if call.duration else 'Unknown'
+            
+            # Format call time
+            call_time = call.call_date.strftime('%H:%M:%S')
+            
+            calls_data.append({
+                'lead_name': call.lead.student_name if call.lead else 'Unknown Lead',
+                'lead_mobile': call.lead.mobile_number if call.lead else 'N/A',
+                'lead_email': call.lead.email if call.lead else 'N/A',
+                'lead_status': call.lead.status if call.lead else 'N/A',
+                'call_time': call_time,
+                'duration': duration_str,
+                'notes': call.notes or '',
+                'recording_url': call.recording_file.url if call.recording_file else None,
+                'recording_filename': call.recording_file.name.split('/')[-1] if call.recording_file else None
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'calls': calls_data,
+            'date': date_str,
+            'agent_name': agent.name,
+            'total_calls': len(calls_data)
+        })
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
