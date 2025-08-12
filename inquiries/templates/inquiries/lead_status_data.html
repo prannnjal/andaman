@@ -1,4 +1,5 @@
 {% load static %}
+{% load lead_status_filters %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -338,7 +339,7 @@
                         <option value="">All Agents</option>
                         {% for agent in agents %}
                         <option value="{{ agent.id }}" {% if filters.agent == agent.id|stringformat:"s" %}selected{% endif %}>
-                            {{ agent.get_full_name|default:agent.email|default:agent.mobile_number }}
+                            {{ agent.name|default:agent.email|default:agent.mobile_number }}
                         </option>
                         {% endfor %}
                     </select>
@@ -477,12 +478,12 @@
                                 {{ status_name }}
                             </span>
                         </div>
-                        {% for lead in leads %}
-                        <div class="text-white-50 mb-2">
-                            <strong>{{ lead.student_name }}</strong><br>
-                            <small>{{ lead.inquiry_date|date:"M d, Y" }} - {{ lead.assigned_agent.get_full_name|default:lead.assigned_agent.email|default:"Unassigned" }}</small>
-                        </div>
-                        {% endfor %}
+                                                 {% for lead in leads %}
+                         <div class="text-white-50 mb-2">
+                             <strong>{{ lead.student_name }}</strong><br>
+                             <small>{{ lead.inquiry_date|date:"M d, Y" }} - {{ lead.assigned_agent.name|default:lead.assigned_agent.email|default:"Unassigned" }}</small>
+                         </div>
+                         {% endfor %}
                     </div>
                 </div>
                 {% endif %}

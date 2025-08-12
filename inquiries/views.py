@@ -957,7 +957,7 @@ def lead_status_data(request):
                 agent_status_counts[status_code] = agent_leads.filter(status=status_code).count()
             
             agent_stats[agent.id] = {
-                'name': agent.get_full_name() or agent.email or agent.mobile_number,
+                'name': agent.name or agent.email or agent.mobile_number,
                 'total_leads': agent_leads.count(),
                 'status_counts': agent_status_counts
             }
