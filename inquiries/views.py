@@ -134,7 +134,70 @@ def Filter_By_Date(inquiries, choice, request_parameter, model_key):
             inquiries = inquiries.filter(**{f"{model_key}__lte" : date_val})
                                 
     return inquiries
+
+# ======================================================================================================================================================================
+
+def Filter_By_When(inquiries, when_filter):
+    """
+    Filter inquiries by relative time periods based on inquiry_date
+    """
+    from datetime import timedelta
+    today = timezone.now().date()
     
+    if when_filter == 'today':
+        inquiries = inquiries.filter(inquiry_date=today)
+    elif when_filter == 'yesterday':
+        yesterday = today - timedelta(days=1)
+        inquiries = inquiries.filter(inquiry_date=yesterday)
+    elif when_filter == 'this_week':
+        # Get start of current week (Monday)
+        start_of_week = today - timedelta(days=today.weekday())
+        inquiries = inquiries.filter(inquiry_date__gte=start_of_week, inquiry_date__lte=today)
+    elif when_filter == 'last_week':
+        # Get start of last week (Monday)
+        start_of_last_week = today - timedelta(days=today.weekday() + 7)
+        end_of_last_week = start_of_last_week + timedelta(days=6)
+        inquiries = inquiries.filter(inquiry_date__gte=start_of_last_week, inquiry_date__lte=end_of_last_week)
+    elif when_filter == 'this_month':
+        # Get start of current month
+        start_of_month = today.replace(day=1)
+        inquiries = inquiries.filter(inquiry_date__gte=start_of_month, inquiry_date__lte=today)
+    elif when_filter == 'last_month':
+        # Get start of last month
+        if today.month == 1:
+            start_of_last_month = today.replace(year=today.year-1, month=12, day=1)
+        else:
+            start_of_last_month = today.replace(month=today.month-1, day=1)
+        # Get end of last month
+        if today.month == 1:
+            end_of_last_month = today.replace(year=today.year-1, month=12, day=1) - timedelta(days=1)
+        else:
+            end_of_last_month = today.replace(month=today.month, day=1) - timedelta(days=1)
+        inquiries = inquiries.filter(inquiry_date__gte=start_of_last_month, inquiry_date__lte=end_of_last_month)
+    elif when_filter == 'this_year':
+        # Get start of current year
+        start_of_year = today.replace(month=1, day=1)
+        inquiries = inquiries.filter(inquiry_date__gte=start_of_year, inquiry_date__lte=today)
+    elif when_filter == 'last_year':
+        # Get start of last year
+        start_of_last_year = today.replace(year=today.year-1, month=1, day=1)
+        end_of_last_year = today.replace(year=today.year-1, month=12, day=31)
+        inquiries = inquiries.filter(inquiry_date__gte=start_of_last_year, inquiry_date__lte=end_of_last_year)
+    elif when_filter == 'last_7_days':
+        # Last 7 days including today
+        start_date = today - timedelta(days=6)
+        inquiries = inquiries.filter(inquiry_date__gte=start_date, inquiry_date__lte=today)
+    elif when_filter == 'last_30_days':
+        # Last 30 days including today
+        start_date = today - timedelta(days=29)
+        inquiries = inquiries.filter(inquiry_date__gte=start_date, inquiry_date__lte=today)
+    elif when_filter == 'last_90_days':
+        # Last 90 days including today
+        start_date = today - timedelta(days=89)
+        inquiries = inquiries.filter(inquiry_date__gte=start_date, inquiry_date__lte=today)
+    
+    return inquiries
+
 # ====================================================================================================================================================================== 
 def Filter_Inquiries(request):
     query_params = request.GET
@@ -249,6 +312,11 @@ def Filter_Inquiries(request):
     
     inquiries = Filter_By_Date(inquiries, 'from', request.GET.get('last_follow_up_updation_from'), 'last_follow_up_updation')
     inquiries = Filter_By_Date(inquiries, 'to', request.GET.get('last_follow_up_updation_to'), 'last_follow_up_updation')   
+    
+    # Handle "when" filter for relative time periods
+    when_filter = query_params.get('when_filter')
+    if when_filter:
+        inquiries = Filter_By_When(inquiries, when_filter)
     
     return inquiries
 
@@ -1352,6 +1420,7 @@ def Prepare_Context_For_Filter_Leads_Component(request):
     selected_statuses = query_params.getlist('status[]')
     selected_agent_ids = query_params.getlist('agent_id[]')
     selected_admin_ids = query_params.getlist('admin_id[]')
+    selected_when_filter = query_params.get('when_filter')
     
     # print("====================> selected_agent_ids = ", selected_agent_ids)
     
@@ -1378,6 +1447,7 @@ def Prepare_Context_For_Filter_Leads_Component(request):
         "selected_statuses": selected_statuses,
         "selected_agent_ids": selected_agent_ids,
         "selected_admin_ids": selected_admin_ids,
+        "selected_when_filter": selected_when_filter,
     }
     
 
@@ -2144,12 +2214,14 @@ def google_sheets_import_view(request):
         'title': 'Import Leads from Google Sheets',
         'error_message': None,
         'success_message': None,
-        'import_result': None
+        'import_result': None,
+        'available_agents': CustomUser.objects.filter(role='Agent').order_by('name')
     }
     
     if request.method == 'POST':
         spreadsheet_id = request.POST.get('spreadsheet_id', '').strip()
         range_name = request.POST.get('range_name', '').strip()
+        agent_id = request.POST.get('agent_id', '').strip()
         
         if not spreadsheet_id:
             context['error_message'] = 'Please provide a valid Google Sheets ID'
@@ -2160,11 +2232,21 @@ def google_sheets_import_view(request):
                 # Initialize Google Sheets service
                 sheets_service = GoogleSheetsService()
                 
+                # Get selected agent if specified
+                selected_agent = None
+                if agent_id:
+                    try:
+                        selected_agent = CustomUser.objects.get(id=agent_id, role='Agent')
+                    except CustomUser.DoesNotExist:
+                        context['error_message'] = 'Selected agent not found'
+                        return render(request, 'inquiries/google_sheets_import.html', context)
+                
                 # Import leads
                 result = sheets_service.import_leads_from_sheet(
                     spreadsheet_id=spreadsheet_id,
                     range_name=range_name,
-                    admin_user=request.user
+                    admin_user=request.user,
+                    selected_agent=selected_agent
                 )
                 
                 context['import_result'] = result
@@ -2192,7 +2274,8 @@ def google_sheets_preview_view(request):
         'title': 'Preview Google Sheets Data',
         'error_message': None,
         'sheet_data': None,
-        'sheet_info': None
+        'sheet_info': None,
+        'available_agents': CustomUser.objects.filter(role='Agent').order_by('name')
     }
     
     if request.method == 'POST':

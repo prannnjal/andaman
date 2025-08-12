@@ -10,94 +10,205 @@
 
     <style>
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 0px;
-            background-color: hsl(218, 57%, 97%);
-            color: #333;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #2d3748;
             text-align: center;
+            min-height: 100vh;
         }
 
         .same_row_wrapper {
             display: flex;
-            flex-direction: row;
-            gap: 20px;
-            align-items: start;
-            justify-content: space-between;
-            margin: 10px 0 30px 0;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            width: 100%;
         }
 
         .same_row_wrapper > * {
-            flex: 1;
+            width: 100%;
         }
 
         .modal-content {
             box-sizing: border-box;
-            background-color: #fff;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
             margin: auto;
-            padding: 10px 30px;
-            border: 1px solid #ccc;
-            width: 70vw; /* Restrict width to make it more compact */
-            max-width: 900px; /* Max width to prevent stretching too much */
-            max-height: 68vh;
+            padding: 40px;
+            border: none;
+            width: 90vw;
+            max-width: 500px;
+            max-height: 80vh;
             overflow: auto;
-            border-radius: 8px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.25),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
             position: fixed;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%); /* Centers the element */
+            transform: translate(-50%, -50%);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
         }
 
         /* Title Styling */
         h2 {
             text-align: center;
-            font-size: 26px;
-            margin-bottom: 30px;
-            color: #ff0000;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #1a202c;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
+        .filter-container {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
 
-        label {
-            font-size: 16px;
+        .filter-label {
+            font-size: 18px;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
+            color: #2d3748;
+            margin-bottom: 16px;
             display: block;
+            text-align: center;
+            letter-spacing: -0.025em;
         }
 
-        /* Input, Select and Date Input Styling */
-        input[type="text"],
-        select,
-        input[type="date"] {
-            padding: 10px;
+        /* Modern Select Styling */
+        .select_element_class {
+            padding: 16px 20px;
             font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            border-radius: 16px;
+            border: 2px solid #e2e8f0;
             width: 100%;
             box-sizing: border-box;
+            background: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
-        input[type="text"]:focus,
-        select:focus,
-        input[type="date"]:focus {
-            border-color: #4CAF50;
+        .select_element_class:focus {
+            border-color: #667eea;
             outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .select_element_class:hover {
+            border-color: #a0aec0;
+            transform: translateY(-1px);
+        }
+
+        /* Button Styling */
+        .filter_modal_btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            margin: 24px 8px 16px 8px;
+            min-width: 120px;
+        }
+
+        .filter_modal_btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        .filter_modal_btn:active {
+            transform: translateY(-1px);
         }
 
         /* Reset Link Styles */
-        a {
-            text-decoration: none;
-        }
-
-        /* Apply No-Style to Reset Link if Specified */
-        a.no-style {
-            all: unset; /* Resets all styles */
+        .reset_modal_a {
+            display: inline-block;
+            background: rgba(237, 242, 247, 0.8);
+            color: #4a5568;
+            padding: 16px 32px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 16px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            border: 2px solid transparent;
+            margin: 16px 8px;
+            min-width: 120px;
         }
 
-        .date-wrapper{
+        .reset_modal_a:hover {
+            background: rgba(237, 242, 247, 1);
+            color: #2d3748;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Button Container */
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 32px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95vw;
+                padding: 24px;
+                border-radius: 20px;
+            }
+            
+            h2 {
+                font-size: 24px;
+                margin-bottom: 24px;
+            }
+            
+            .filter-container {
+                padding: 24px;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .filter_modal_btn,
+            .reset_modal_a {
+                width: 100%;
+                margin: 8px 0;
+            }
+        }
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -198,14 +309,16 @@
             font-size: 16px;
             display: flex;
             align-items: center;
-            background-color: #fafafa;
-            border-radius: 6px;
-            border: 1px solid #ccc;            
+            background-color: white;
+            border-radius: 16px !important;
+            border: 2px solid #e2e8f0 !important;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         /* Style the Select2 search input */
         .select2-search__field {
-            font-size: 14px;            
+            font-size: 16px !important;            
             padding: 0rem 0.5rem !important;            
             border-top: 0px solid #999 !important;
             margin: 0.5rem 0 0 0 !important;
@@ -230,254 +343,39 @@
     {% include "inquiries/Alerts.html" %}
 
     <div class="modal-content">
-        <h2>Filter Inquiries</h2>
+        <h2>🎯 Smart Lead Filter</h2>
 
         {% with request.GET.base_url_name as url_name %}
             <form id="filter-form" method="get" action="{{ request.GET.base_url_name }}">
         {% endwith %}
 
+            <!-- Status Filter Only -->
             <div class="same_row_wrapper">
-                
-                <select name="lead_id[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Lead Ids">
-                    {% for id in lead_ids %}
-                        <option value="{{ id }}" {% if id|stringformat:"s" in selected_lead_ids %}selected{% endif %}>
-                            {{ id }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-
-                <select name="student_class[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Classes">
-                    {% for class in student_classes %}                    
-                        <option value="{{ class }}" {% if class in selected_classes %}selected{% endif %}>
-                            {{ class }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="same_row_wrapper">
-                <select name="student_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select School Names">                    
-                    {% for student in students %}                    
-                        <option value="{{ student }}" {% if student in selected_student_names %}selected{% endif %}>
-                            {{ student }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-
-                <select name="parent_name[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Concerned Persons">                    
-                    {% for parent in parents %}                    
-                        <option value="{{ parent }}" {% if parent in selected_parent_names %}selected{% endif %}>
-                            {{ parent }}
-                        </option>
-                    {% endfor %}
-                </select>            
-            </div>
-
-            <div class="same_row_wrapper">
-                <select name="lead_email[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Lead Emails">
-                    {% for lead_email in lead_emails %}                    
-                        <option value="{{ lead_email }}" {% if lead_email in selected_lead_emails %}selected{% endif %}>
-                            {{ lead_email }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-
-                <select name="mobile_number[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Mobile Numbers">
-                    {% for mobile_number in mobile_numbers %}                    
-                        <option value="{{ mobile_number }}" {% if mobile_number in selected_mobile_numbers %}selected{% endif %}>
-                            {{ mobile_number }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-            </div>
-
-            <div class="same_row_wrapper">
-
-
-            </div>
-
-            <div class="same_row_wrapper">
-                <select name="inquiry_source[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Inquiry Sources">
-                    {% for inquiry_source in inquiry_sources %}                    
-                        <option value="{{ inquiry_source }}" {% if inquiry_source in selected_inquiry_sources %}selected{% endif %}>
-                            {{ inquiry_source }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-
-                <select name="status[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select Lead Status">
-                    <option value="DNP" {% if 'DNP' in selected_statuses %}selected{% endif %}>DNP</option>
-                    <option value="Not interested" {% if 'Not interested' in selected_statuses %}selected{% endif %}>Not interested</option>
-                    <option value="Interested" {% if 'Interested' in selected_statuses %}selected{% endif %}>Interested</option>
-                    <option value="Follow Up" {% if 'Follow Up' in selected_statuses %}selected{% endif %}>Follow Up</option>
-                    <option value="Low Budget" {% if 'Low Budget' in selected_statuses %}selected{% endif %}>Low Budget</option>
-                    <option value="Meeting" {% if 'Meeting' in selected_statuses %}selected{% endif %}>Meeting</option>
-                    <option value="Proposal" {% if 'Proposal' in selected_statuses %}selected{% endif %}>Proposal</option>
-                </select>
-
-            </div>
-
-            <div class="same_row_wrapper">
-                <select name="agent_id[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select assigned Agents">
-                    {% for agent in agents %}
-                        <option value="{{ agent.id }}" {% if agent.id|stringformat:"s" in selected_agent_ids %}selected{% endif %}>
-                            Name:{{ agent.name }}, Phone:{{ agent.mobile_number }}, Email: {{ agent.email }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-
-                <select name="admin_id[]" class="select_element_class" multiple style="width: 100%;" data-placeholder="Select assigned Admins">
-                    {% for admin in admins %}
-                        <option value="{{ admin.id }}" {% if admin.id|stringformat:"s" in selected_admin_ids %}selected{% endif %}>
-                            Name:{{ admin.name }}, Phone:{{ admin.mobile_number }}, Email: {{ admin.email }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-            </div>
-
-
-            <!-- Date Filters -->
-            <div>
-                <span id="filter_date">Select Inquiry Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="inquiry_date_from" value="{{ request.GET.inquiry_date_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="inquiry_date_to" value="{{ request.GET.inquiry_date_to }}">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <span id="filter_date">Select Registration Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="registration_date_from" value="{{ request.GET.registration_date_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="registration_date_to" value="{{ request.GET.registration_date_to }}">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <span id="filter_date">Select Admission Test Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="admission_test_date_from" value="{{ request.GET.admission_test_date_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="admission_test_date_to" value="{{ request.GET.admission_test_date_to }}">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <span id="filter_date">Select Admission Offered Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="admission_offered_date_from" value="{{ request.GET.admission_offered_date_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="admission_offered_date_to" value="{{ request.GET.admission_offered_date_to }}">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <span id="filter_date">Select Admission Confirmed Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="admission_confirmed_date_from" value="{{ request.GET.admission_confirmed_date_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="admission_confirmed_date_to" value="{{ request.GET.admission_confirmed_date_to }}">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <span id="filter_date">Select Rejected Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="rejected_date_from" value="{{ request.GET.rejected_date_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="rejected_date_to" value="{{ request.GET.rejected_date_to }}">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <span id="filter_date">Select Follow-up Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="follow_up_date_from" value="{{ request.GET.follow_up_date_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="follow_up_date_to" value="{{ request.GET.follow_up_date_to }}">
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <span id="filter_date">Select Inquiry-Updation Date</span>
-
-                <div class="same_row_wrapper">
-                    <div class="date-wrapper">
-                        <label class="label_date_from">From:</label>
-                        <input type="date" name="last_inquiry_updation_from" value="{{ request.GET.last_inquiry_updation_from }}">
-                    </div>
-
-                    <div class="date-wrapper">
-                        <label class="label_date_to">To:</label>
-                        <input type="date" name="last_inquiry_updation_to" value="{{ request.GET.last_inquiry_updation_to }}">
-                    </div>
+                <div class="filter-container">
+                    <label class="filter-label">
+                        🎯 Filter by Lead Status
+                    </label>
+                    <select name="status[]" class="select_element_class" multiple style="width: 100%; height: 200px;" data-placeholder="Select Lead Status">
+                        <option value="DNP" {% if 'DNP' in selected_statuses %}selected{% endif %}>🚫 DNP</option>
+                        <option value="Not interested" {% if 'Not interested' in selected_statuses %}selected{% endif %}>❌ Not interested</option>
+                        <option value="Interested" {% if 'Interested' in selected_statuses %}selected{% endif %}>✅ Interested</option>
+                        <option value="Follow Up" {% if 'Follow Up' in selected_statuses %}selected{% endif %}>📞 Follow Up</option>
+                        <option value="Meeting" {% if 'Meeting' in selected_statuses %}selected{% endif %}>🤝 Meeting</option>
+                        <option value="Proposal" {% if 'Proposal' in selected_statuses %}selected{% endif %}>📋 Proposal</option>
+                        <option value="Low Budget" {% if 'Low Budget' in selected_statuses %}selected{% endif %}>💰 Low Budget</option>
+                    </select>
                 </div>
             </div>
 
             <!-- Submit and Reset -->
-            <button type="submit" class="filter_modal_btn">Filter</button>
-
-            <a class="reset_modal_a" href="{{ request.GET.base_url_name }}">
-                Reset
-            </a>
+            <div class="button-container">
+                <button type="submit" class="filter_modal_btn">
+                    🔍 Apply Filter
+                </button>
+                <a class="reset_modal_a" href="{{ request.GET.base_url_name }}">
+                    🔄 Reset
+                </a>
+            </div>
 
         </form>
     </div>
@@ -486,6 +384,7 @@
 
     <!-- Initialize Select2 -->
     <script>
+        console.log('Filter component loaded successfully! Status filter only.');
         $(document).ready(function () {
             $('.searchable-select').select2({                
                 width: 'resolve'

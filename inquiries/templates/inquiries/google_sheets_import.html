@@ -29,7 +29,7 @@
                     <form method="post" class="mb-4">
                         {% csrf_token %}
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="spreadsheet_id">Google Sheets ID *</label>
                                     <input type="text" class="form-control" id="spreadsheet_id" name="spreadsheet_id" 
@@ -40,7 +40,7 @@
                                     </small>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="range_name">Range *</label>
                                     <input type="text" class="form-control" id="range_name" name="range_name" 
@@ -48,6 +48,25 @@
                                            placeholder="e.g., Sheet1!A1:Z1000" required>
                                     <small class="form-text text-muted">
                                         Specify the sheet name and range (e.g., Sheet1!A1:Z1000)
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="agent_id">
+                                        <i class="fas fa-user-tie"></i> Assign to Agent (Optional)
+                                    </label>
+                                    <select class="form-control" id="agent_id" name="agent_id">
+                                        <option value="">-- Auto-assign to agents with least workload --</option>
+                                        {% for agent in available_agents %}
+                                            <option value="{{ agent.id }}" {% if request.POST.agent_id == agent.id|stringformat:"s" %}selected{% endif %}>
+                                                👤 {{ agent.name }} ({{ agent.mobile_number }})
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        <strong>Auto-distribute:</strong> Leave empty to automatically distribute leads among agents<br>
+                                        <strong>Direct assign:</strong> Select a specific agent to assign all leads to them
                                     </small>
                                 </div>
                             </div>
@@ -63,6 +82,7 @@
                                 <div class="alert alert-success">
                                     <h5><i class="fas fa-check-circle"></i> Import Successful</h5>
                                     <p><strong>{{ import_result.imported_count }}</strong> leads were successfully imported.</p>
+                                    <p class="mb-0"><i class="fas fa-info-circle"></i> {{ import_result.message }}</p>
                                 </div>
                             {% else %}
                                 <div class="alert alert-warning">
@@ -91,7 +111,12 @@
                             <li><strong>Required Headers:</strong> student_name, parent_name, mobile_number, email, address, block, location_panchayat, inquiry_source, student_class</li>
                             <li><strong>Optional Headers:</strong> status, remarks, inquiry_date, registration_date, admission_test_date, admission_offered_date, admission_confirmed_date, rejected_date, follow_up_date</li>
                             <li>Duplicate leads (same mobile number and email) will be skipped</li>
-                            <li>Leads will be automatically assigned to agents with the least workload</li>
+                            <li><strong>Agent Assignment:</strong> 
+                                <ul>
+                                    <li><strong>No agent selected:</strong> Leads will be automatically distributed among agents with the least workload</li>
+                                    <li><strong>Specific agent selected:</strong> All leads will be assigned directly to the selected agent</li>
+                                </ul>
+                            </li>
                             <li>Only admin users can perform imports</li>
                         </ul>
                     </div>

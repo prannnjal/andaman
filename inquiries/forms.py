@@ -384,3 +384,35 @@ class CallRecordingForm(forms.ModelForm):
             if file.size > 50 * 1024 * 1024:
                 raise forms.ValidationError("File size must be under 50MB.")
             # Remove file extension validation to allow all file types
+
+# ====================================================================================
+
+class WhenFilterForm(forms.Form):
+    """
+    Form for filtering inquiries by relative time periods
+    """
+    WHEN_CHOICES = [
+        ('', 'Select Time Period'),
+        ('today', 'Today'),
+        ('yesterday', 'Yesterday'),
+        ('this_week', 'This Week'),
+        ('last_week', 'Last Week'),
+        ('this_month', 'This Month'),
+        ('last_month', 'Last Month'),
+        ('this_year', 'This Year'),
+        ('last_year', 'Last Year'),
+        ('last_7_days', 'Last 7 Days'),
+        ('last_30_days', 'Last 30 Days'),
+        ('last_90_days', 'Last 90 Days'),
+    ]
+    
+    when_filter = forms.ChoiceField(
+        choices=WHEN_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'style': 'width: 100%;',
+            'id': 'when-filter-select'
+        }),
+        help_text='Filter inquiries by relative time period'
+    )

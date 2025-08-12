@@ -140,7 +140,7 @@ class GoogleSheetsService:
         except:
             return None
     
-    def import_leads_from_sheet(self, spreadsheet_id, range_name, admin_user):
+    def import_leads_from_sheet(self, spreadsheet_id, range_name, admin_user, selected_agent=None):
         """Import leads from Google Sheets"""
         try:
             # Read data from Google Sheet
@@ -226,8 +226,14 @@ class GoogleSheetsService:
                         admin_assigned=admin_user
                     )
                     
-                    # Auto-assign agent
-                    lead.auto_assign_agent()
+                    # Handle agent assignment
+                    if selected_agent:
+                        # Assign all leads to the selected agent
+                        lead.assigned_agent = selected_agent
+                    else:
+                        # Auto-assign agent based on workload
+                        lead.auto_assign_agent()
+                    
                     lead.save()
                     
                     imported_count += 1
@@ -235,9 +241,15 @@ class GoogleSheetsService:
                 except Exception as e:
                     errors.append(f"Row {row_index}: {str(e)}")
             
+            # Create appropriate message based on agent assignment method
+            if selected_agent:
+                message = f'Successfully imported {imported_count} leads and assigned all to {selected_agent.name}'
+            else:
+                message = f'Successfully imported {imported_count} leads and distributed among agents based on workload'
+            
             return {
                 'success': True,
-                'message': f'Successfully imported {imported_count} leads',
+                'message': message,
                 'imported_count': imported_count,
                 'errors': errors
             }
