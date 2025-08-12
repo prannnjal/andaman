@@ -918,6 +918,43 @@
             box-shadow: 0 2px 8px rgba(31, 41, 55, 0.3);
         }
 
+        /* Additional Status Badge Styles for Overall and Today's Status */
+        .status-inquiry {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+        }
+
+        .status-registration {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .status-test {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-offered {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-confirmed {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+        }
+
+        .status-rejected {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
         /* Trend Indicators */
         .trend-up {
             color: #10b981;
@@ -1430,12 +1467,13 @@
         </div>
                     {% endif %}
 
-                    <!-- Tables -->
+                    <!-- Enhanced Status Tables -->
                     <div class="row g-4">
                         <div class="col-lg-6">
                         <div class="table-container">
                         <div class="table-header">
-                        <h5>Overall Status</h5>
+                        <h5>📊 Overall Status Dashboard</h5>
+                        <small class="text-light">Complete Status Overview</small>
                         </div>
                         <div class="table-responsive">
                         <table class="table">
@@ -1443,32 +1481,58 @@
                         <tr>
                         <th>Category</th>
                         <th>Count</th>
+                        <th>Percentage</th>
+                        <th>Trend</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry">
-                        <td>Inquiries</td>
+                        <td>
+                            <span class="status-badge status-inquiry">📝 Inquiries</span>
+                        </td>
                         <td>{{ total_inquiries }}</td>
+                        <td>{% widthratio total_inquiries total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration">
-                        <td>Registrations</td>
+                        <td>
+                            <span class="status-badge status-registration">📋 Registrations</span>
+                        </td>
                         <td>{{ total_registrations }}</td>
+                        <td>{% widthratio total_registrations total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test">
-                        <td>Admission Tests</td>
+                        <td>
+                            <span class="status-badge status-test">✍️ Admission Tests</span>
+                        </td>
                         <td>{{ total_tests }}</td>
+                        <td>{% widthratio total_tests total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered">
-                        <td>Admissions Offered</td>
+                        <td>
+                            <span class="status-badge status-offered">🎓 Admissions Offered</span>
+                        </td>
                         <td>{{ total_admissions_offered }}</td>
+                        <td>{% widthratio total_admissions_offered total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed">
-                        <td>Admissions Confirmed</td>
+                        <td>
+                            <span class="status-badge status-confirmed">✅ Admissions Confirmed</span>
+                        </td>
                         <td>{{ total_admissions_confirmed }}</td>
+                        <td>{% widthratio total_admissions_confirmed total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected">
-                        <td>Rejected</td>
+                        <td>
+                            <span class="status-badge status-rejected">❌ Rejected</span>
+                        </td>
                         <td>{{ rejected }}</td>
+                        <td>{% widthratio rejected total_leads 100 %}%</td>
+                        <td><span class="trend-down">↘️</span></td>
                         </tr>
                         </tbody>
                         </table>
@@ -1478,7 +1542,8 @@
                         <div class="col-lg-6">
                         <div class="table-container">
                         <div class="table-header">
-                        <h5>Today's Status</h5>
+                        <h5>📅 Today's Status Dashboard</h5>
+                        <small class="text-light">Today's Activity Overview</small>
                         </div>
                         <div class="table-responsive">
                         <table class="table">
@@ -1486,32 +1551,58 @@
                         <tr>
                         <th>Category</th>
                         <th>Today's Count</th>
+                        <th>Daily %</th>
+                        <th>Trend</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry&inquiry_date_from={{todays_date}}">
-                        <td>Inquiries</td>
+                        <td>
+                            <span class="status-badge status-inquiry">📝 Inquiries</span>
+                        </td>
                         <td>{{ inquiries_today }}</td>
+                        <td>{% widthratio inquiries_today total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration&registration_date_from={{todays_date}}">
-                        <td>Registrations</td>
+                        <td>
+                            <span class="status-badge status-registration">📋 Registrations</span>
+                        </td>
                         <td>{{ registrations_today }}</td>
+                        <td>{% widthratio registrations_today total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test&admission_test_date_from={{todays_date}}">
-                        <td>Admission Tests</td>
+                        <td>
+                            <span class="status-badge status-test">✍️ Admission Tests</span>
+                        </td>
                         <td>{{ tests_today }}</td>
+                        <td>{% widthratio tests_today total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered&admission_offered_date_from={{todays_date}}">
-                        <td>Admissions Offered</td>
+                        <td>
+                            <span class="status-badge status-offered">🎓 Admissions Offered</span>
+                        </td>
                         <td>{{ admissions_offered_today }}</td>
+                        <td>{% widthratio admissions_offered_today total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed&admission_confirmed_date_from={{todays_date}}">
-                        <td>Admissions Confirmed</td>
+                        <td>
+                            <span class="status-badge status-confirmed">✅ Admissions Confirmed</span>
+                        </td>
                         <td>{{ admissions_confirmed_today }}</td>
+                        <td>{% widthratio admissions_confirmed_today total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
                         </tr>
                         <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected&rejected_date_from={{todays_date}}">
-                        <td>Rejected</td>
+                        <td>
+                            <span class="status-badge status-rejected">❌ Rejected</span>
+                        </td>
                         <td>{{ rejected_today }}</td>
+                        <td>{% widthratio rejected_today total_leads 100 %}%</td>
+                        <td><span class="trend-down">↘️</span></td>
                         </tr>
                         </tbody>
                         </table>
