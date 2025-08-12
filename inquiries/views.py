@@ -748,6 +748,18 @@ def dashboard(request):
     total_admissions_offered = inquiries.filter(status='Admission Offered').count()
     total_admissions_confirmed = inquiries.filter(status='Admission Confirmed').count()
     rejected = inquiries.filter(status='Rejected').count()
+    
+    # New Status Type Counts
+    dnp_count = inquiries.filter(status='DNP').count()
+    not_interested_count = inquiries.filter(status='Not interested').count()
+    interested_count = inquiries.filter(status='Interested').count()
+    follow_up_count = inquiries.filter(status='Follow Up').count()
+    low_budget_count = inquiries.filter(status='Low Budget').count()
+    meeting_count = inquiries.filter(status='Meeting').count()
+    proposal_count = inquiries.filter(status='Proposal').count()
+    
+    # Total Leads Count
+    total_leads = inquiries.count()
         
     # Today's Counts
     today = now().date()
@@ -854,6 +866,16 @@ def dashboard(request):
         'total_admissions_offered': total_admissions_offered,
         'total_admissions_confirmed': total_admissions_confirmed,
         'rejected': rejected,
+        
+        # New Status Type Stats
+        'dnp_count': dnp_count,
+        'not_interested_count': not_interested_count,
+        'interested_count': interested_count,
+        'follow_up_count': follow_up_count,
+        'low_budget_count': low_budget_count,
+        'meeting_count': meeting_count,
+        'proposal_count': proposal_count,
+        'total_leads': total_leads,
 
         # Today's Stats
         'inquiries_today': inquiries_today,

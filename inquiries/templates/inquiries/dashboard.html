@@ -863,6 +863,79 @@
             }
         }
 
+        /* Status Badge Styles */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-decoration: none;
+            transition: all var(--transition-speed);
+        }
+
+        .status-interested {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-followup {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .status-meeting {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        }
+
+        .status-proposal {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-lowbudget {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .status-notinterested {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+        }
+
+        .status-dnp {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(31, 41, 55, 0.3);
+        }
+
+        /* Trend Indicators */
+        .trend-up {
+            color: #10b981;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        .trend-down {
+            color: #ef4444;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
         /* Mobile-specific touch improvements */
         @media (max-width: 768px) {
             /* Improve touch targets */
@@ -1228,12 +1301,25 @@
                         <div class="stat-number">{{ total_leads }}</div>
                         <div class="stat-label">Total Leads</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ interested_count }}</div>
+                        <div class="stat-label">Interested</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ follow_up_count }}</div>
+                        <div class="stat-label">Follow Up</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">{{ meeting_count }}</div>
+                        <div class="stat-label">Meetings</div>
+                    </div>
                 </div>
 
-                <!-- Status Table -->
+                <!-- Status Overview Dashboard -->
                 <div class="table-container">
                     <div class="table-header">
-                        <h5>Status Overview</h5>
+                        <h5>🎯 Status Overview Dashboard</h5>
+                        <small class="text-light">Total Leads: {{ total_leads }}</small>
                     </div>
                     <div class="table-responsive">
                         <table class="table">
@@ -1241,36 +1327,66 @@
                                 <tr>
                                     <th>Status</th>
                                     <th>Count</th>
+                                    <th>Percentage</th>
+                                    <th>Trend</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=DNP">
-                                    <td>DNP</td>
-                                    <td>{{ dnp_count }}</td>
-                                </tr>
-                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Not interested">
-                                    <td>Not interested</td>
-                                    <td>{{ not_interested_count }}</td>
-                                </tr>
                                 <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Interested">
-                                    <td>Interested</td>
+                                    <td>
+                                        <span class="status-badge status-interested">✅ Interested</span>
+                                    </td>
                                     <td>{{ interested_count }}</td>
+                                    <td>{% widthratio interested_count total_leads 100 %}%</td>
+                                    <td><span class="trend-up">↗️</span></td>
                                 </tr>
                                 <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Follow Up">
-                                    <td>Follow Up</td>
+                                    <td>
+                                        <span class="status-badge status-followup">📞 Follow Up</span>
+                                    </td>
                                     <td>{{ follow_up_count }}</td>
-                                </tr>
-                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Low Budget">
-                                    <td>Low Budget</td>
-                                    <td>{{ low_budget_count }}</td>
+                                    <td>{% widthratio follow_up_count total_leads 100 %}%</td>
+                                    <td><span class="trend-up">↗️</span></td>
                                 </tr>
                                 <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Meeting">
-                                    <td>Meeting</td>
+                                    <td>
+                                        <span class="status-badge status-meeting">🤝 Meeting</span>
+                                    </td>
                                     <td>{{ meeting_count }}</td>
+                                    <td>{% widthratio meeting_count total_leads 100 %}%</td>
+                                    <td><span class="trend-up">↗️</span></td>
                                 </tr>
                                 <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Proposal">
-                                    <td>Proposal</td>
+                                    <td>
+                                        <span class="status-badge status-proposal">📋 Proposal</span>
+                                    </td>
                                     <td>{{ proposal_count }}</td>
+                                    <td>{% widthratio proposal_count total_leads 100 %}%</td>
+                                    <td><span class="trend-up">↗️</span></td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Low Budget">
+                                    <td>
+                                        <span class="status-badge status-lowbudget">💰 Low Budget</span>
+                                    </td>
+                                    <td>{{ low_budget_count }}</td>
+                                    <td>{% widthratio low_budget_count total_leads 100 %}%</td>
+                                    <td><span class="trend-down">↘️</span></td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Not interested">
+                                    <td>
+                                        <span class="status-badge status-notinterested">❌ Not interested</span>
+                                    </td>
+                                    <td>{{ not_interested_count }}</td>
+                                    <td>{% widthratio not_interested_count total_leads 100 %}%</td>
+                                    <td><span class="trend-down">↘️</span></td>
+                                </tr>
+                                <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=DNP">
+                                    <td>
+                                        <span class="status-badge status-dnp">🚫 DNP</span>
+                                    </td>
+                                    <td>{{ dnp_count }}</td>
+                                    <td>{% widthratio dnp_count total_leads 100 %}%</td>
+                                    <td><span class="trend-down">↘️</span></td>
                                 </tr>
                             </tbody>
                         </table>
