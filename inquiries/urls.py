@@ -68,6 +68,9 @@ urlpatterns = [
     # Call Duration Analytics
     path('call-duration-analytics/', views.call_duration_analytics_view, name='call_duration_analytics'),
 
+    # Lead Status Data
+    path('lead-status-data/', views.lead_status_data, name='lead_status_data'),
+
     # ====================================================================================
     # Google Sheets Integration URLs
     # ====================================================================================

@@ -895,6 +895,136 @@ def dashboard(request):
 
 @login_required
 @user_passes_test(is_staff)
+def lead_status_data(request):
+    """
+    Fetch and display comprehensive lead status data
+    """
+    user = request.user
+    
+    # Get all leads if user is admin, else filter by assigned_agent
+    if user.role == "Admin":
+        leads = Lead.objects.all()
+    else:
+        leads = Lead.objects.filter(assigned_agent=user)
+    
+    # Get filter parameters
+    status_filter = request.GET.get('status')
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    agent_filter = request.GET.get('agent')
+    
+    # Apply filters
+    if status_filter:
+        leads = leads.filter(status=status_filter)
+    
+    if date_from:
+        try:
+            from_date = datetime.strptime(date_from, "%Y-%m-%d").date()
+            leads = leads.filter(inquiry_date__gte=from_date)
+        except ValueError:
+            pass
+    
+    if date_to:
+        try:
+            to_date = datetime.strptime(date_to, "%Y-%m-%d").date()
+            leads = leads.filter(inquiry_date__lte=to_date)
+        except ValueError:
+            pass
+    
+    if agent_filter and user.role == "Admin":
+        leads = leads.filter(assigned_agent__id=agent_filter)
+    
+    # Status statistics
+    status_stats = {}
+    for status_choice in Lead.STATUS_CHOICES:
+        status_code, status_name = status_choice
+        count = leads.filter(status=status_code).count()
+        status_stats[status_code] = {
+            'name': status_name,
+            'count': count,
+            'percentage': round((count / leads.count() * 100) if leads.count() > 0 else 0, 1)
+        }
+    
+    # Agent statistics (for admins only)
+    agent_stats = {}
+    if user.role == "Admin":
+        agents = CustomUser.objects.filter(role='Agent')
+        for agent in agents:
+            agent_leads = leads.filter(assigned_agent=agent)
+            agent_status_counts = {}
+            for status_choice in Lead.STATUS_CHOICES:
+                status_code, status_name = status_choice
+                agent_status_counts[status_code] = agent_leads.filter(status=status_code).count()
+            
+            agent_stats[agent.id] = {
+                'name': agent.get_full_name() or agent.email or agent.mobile_number,
+                'total_leads': agent_leads.count(),
+                'status_counts': agent_status_counts
+            }
+    
+    # Recent leads by status
+    recent_leads = {}
+    for status_choice in Lead.STATUS_CHOICES:
+        status_code, status_name = status_choice
+        recent_leads[status_code] = leads.filter(status=status_code).order_by('-inquiry_date')[:5]
+    
+    # Date range statistics
+    today = now().date()
+    week_ago = today - timedelta(days=7)
+    month_ago = today - timedelta(days=30)
+    
+    weekly_stats = {}
+    monthly_stats = {}
+    
+    for status_choice in Lead.STATUS_CHOICES:
+        status_code, status_name = status_choice
+        weekly_stats[status_code] = leads.filter(
+            status=status_code,
+            inquiry_date__gte=week_ago
+        ).count()
+        monthly_stats[status_code] = leads.filter(
+            status=status_code,
+            inquiry_date__gte=month_ago
+        ).count()
+    
+    # Transfer statistics
+    transfer_stats = {
+        'total_transfers': leads.filter(transferred_to__isnull=False).count(),
+        'transfers_this_month': leads.filter(
+            transferred_to__isnull=False,
+            transfer_date__gte=month_ago
+        ).count(),
+        'most_transferred_status': leads.filter(
+            transferred_to__isnull=False
+        ).values('status').annotate(
+            count=Count('id')
+        ).order_by('-count').first()
+    }
+    
+    context = {
+        'status_stats': status_stats,
+        'agent_stats': agent_stats,
+        'recent_leads': recent_leads,
+        'weekly_stats': weekly_stats,
+        'monthly_stats': monthly_stats,
+        'transfer_stats': transfer_stats,
+        'total_leads': leads.count(),
+        'status_choices': Lead.STATUS_CHOICES,
+        'agents': CustomUser.objects.filter(role='Agent') if user.role == "Admin" else None,
+        'filters': {
+            'status': status_filter,
+            'date_from': date_from,
+            'date_to': date_to,
+            'agent': agent_filter
+        }
+    }
+    
+    return render(request, 'inquiries/lead_status_data.html', context)
+
+# ================================================================================================================================================================
+
+@login_required
+@user_passes_test(is_staff)
 def detailed_stats(request):
     user = request.user  # Get the logged-in user
     
