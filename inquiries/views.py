@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import CustomUser, Lead, CustomUser, LeadLogs
+from .models import CustomUser, Lead, CustomUser, LeadLogs, School
 from .forms import InquiryForm, UpdateLeadStatusForm, EditLeadForm, AgentUpdateLeadForm, CustomUserForm, UpdateUserForm, TransferLeadForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
@@ -225,6 +225,10 @@ def Filter_Inquiries(request):
     
     
     # Handle filters from the GET request
+    # If segment=schools and no school selected, return empty list
+    segment = query_params.get('segment')
+    if segment == 'schools' and not query_params.getlist('school_id[]'):
+        return Lead.objects.none()
     lead_ids = query_params.getlist('lead_id[]')  # returns a list of selected lead IDs
     # print("=================> lead_id in filter view = ",lead_ids)
     if lead_ids:
@@ -272,6 +276,15 @@ def Filter_Inquiries(request):
     admin_ids = query_params.getlist('admin_id[]')
     if admin_ids:
         inquiries = inquiries.filter(admin_assigned__id__in = [int(id) for id in admin_ids])
+
+    # Filter by school ids (new Schools segment)
+    school_ids = query_params.getlist('school_id[]')
+    if school_ids:
+        try:
+            school_ids = [int(i) for i in school_ids]
+            inquiries = inquiries.filter(school_id__in=school_ids)
+        except Exception:
+            pass
      
     inquiries = Filter_By_Date(inquiries, 'from', query_params.get('inquiry_date_from'), 'inquiry_date')
     inquiries = Filter_By_Date(inquiries, 'to', query_params.get('inquiry_date_to'), 'inquiry_date')
@@ -366,12 +379,77 @@ def inquiry_list(request):
             inquiry.latest_call_notes = None
             inquiry.latest_call_date = None
     
+    # Distinct list of schools (stored in student_name) for Schools segment
+    students = Lead.objects.values_list('student_name', flat=True).distinct()
+    selected_student_names = request.GET.getlist('student_name[]')
+    # Schools for segment
+    schools = School.objects.all().order_by('name')
+    selected_school_ids = request.GET.getlist('school_id[]')
+
     return render(request, 'inquiries/inquiry_list.html', {
         'heading': request.GET.get('heading', "Leads List"),
         'inquiries': inquiries,
         'actions': ['Update', 'Delete', 'View Logs'],
         'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
-        'base_url_name': reverse('inquiry_list')
+        'base_url_name': reverse('inquiry_list'),
+        'students': students,
+        'selected_student_names': selected_student_names,
+        'schools': schools,
+        'selected_school_ids': selected_school_ids,
+    })
+
+# ======================================================================================================
+
+@login_required
+@user_passes_test(is_admin)
+def school_list_create_view(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        address = request.POST.get('address', '').strip()
+        remarks = request.POST.get('remarks', '').strip()
+        if name:
+            school, created = School.objects.get_or_create(name=name, defaults={
+                'address': address,
+                'remarks': remarks,
+                'created_by': request.user
+            })
+            if created:
+                messages.success(request, f"School '{name}' created successfully.")
+            else:
+                messages.info(request, f"School '{name}' already exists.")
+        else:
+            messages.error(request, 'School name is required.')
+        return redirect('school_list_create')
+    schools = School.objects.all().order_by('name')
+    return render(request, 'inquiries/schools.html', {'schools': schools})
+
+
+@login_required
+@user_passes_test(is_admin)
+def assign_leads_to_school_view(request):
+    if request.method == 'POST':
+        school_id = request.POST.get('school_id')
+        lead_ids_json = request.POST.get('selected_lead_ids', '[]')
+        try:
+            lead_ids = json.loads(lead_ids_json)
+        except Exception:
+            lead_ids = []
+
+        school = School.objects.filter(id=school_id).first()
+        if not school:
+            messages.error(request, 'Invalid school selected.')
+            return redirect('school_list_create')
+
+        updated = Lead.objects.filter(id__in=lead_ids).update(school=school)
+        messages.success(request, f"Assigned {updated} lead(s) to '{school.name}'.")
+        return redirect('school_list_create')
+
+    # GET: show unassigned leads and schools
+    schools = School.objects.all().order_by('name')
+    leads = Lead.objects.all().order_by('-id')
+    return render(request, 'inquiries/assign_leads_to_school.html', {
+        'schools': schools,
+        'leads': leads,
     })
 
 # ======================================================================================================================================================================
@@ -2381,13 +2459,16 @@ def google_sheets_import_view(request):
         'error_message': None,
         'success_message': None,
         'import_result': None,
-        'available_agents': CustomUser.objects.filter(role='Agent').order_by('name')
+        'available_agents': CustomUser.objects.filter(role='Agent').order_by('name'),
+        'schools': School.objects.all().order_by('name')
     }
     
     if request.method == 'POST':
         spreadsheet_id = request.POST.get('spreadsheet_id', '').strip()
         range_name = request.POST.get('range_name', '').strip()
         agent_id = request.POST.get('agent_id', '').strip()
+        segment = request.POST.get('segment', 'cnb-leads')
+        school_id = request.POST.get('school_id', '').strip()
         
         if not spreadsheet_id:
             context['error_message'] = 'Please provide a valid Google Sheets ID'
@@ -2408,11 +2489,16 @@ def google_sheets_import_view(request):
                         return render(request, 'inquiries/google_sheets_import.html', context)
                 
                 # Import leads
+                selected_school = None
+                if segment == 'schools' and school_id:
+                    selected_school = School.objects.filter(id=school_id).first()
+
                 result = sheets_service.import_leads_from_sheet(
                     spreadsheet_id=spreadsheet_id,
                     range_name=range_name,
                     admin_user=request.user,
-                    selected_agent=selected_agent
+                    selected_agent=selected_agent,
+                    selected_school=selected_school
                 )
                 
                 context['import_result'] = result

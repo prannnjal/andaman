@@ -71,6 +71,29 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="segment_select">Segment</label>
+                                    <select class="form-control" id="segment_select" name="segment">
+                                        <option value="cnb-leads" {% if request.POST.segment == 'cnb-leads' or not request.POST.segment %}selected{% endif %}>CNB Leads</option>
+                                        <option value="schools" {% if request.POST.segment == 'schools' %}selected{% endif %}>Schools</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-8" id="school_select_wrapper" {% if request.POST.segment != 'schools' %}style="display:none"{% endif %}>
+                                <div class="form-group">
+                                    <label for="school_id">Select School (if Segment is Schools)</label>
+                                    <select class="form-control" id="school_id" name="school_id">
+                                        <option value="">-- Select School --</option>
+                                        {% for s in schools %}
+                                            <option value="{{ s.id }}" {% if request.POST.school_id == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">If you choose Schools segment and select a school, imported leads will be linked to that school.</small>
+                                </div>
+                            </div>
+                        </div>
                         <button type="submit" class="btn btn-success">
                             <i class="fas fa-download"></i> Import Leads
                         </button>
@@ -142,6 +165,15 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', function(){
+    const segmentSelect = document.getElementById('segment_select');
+    const wrapper = document.getElementById('school_select_wrapper');
+    if(segmentSelect && wrapper){
+        segmentSelect.addEventListener('change', function(){
+            wrapper.style.display = this.value === 'schools' ? '' : 'none';
+        });
+    }
+});
 // Auto-fill form fields from URL parameters if they exist
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);

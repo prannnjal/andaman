@@ -89,6 +89,30 @@
         {% include "inquiries/Modal.html" %}
         {% include "inquiries/Alerts.html" %}
         <h1>{{ heading }}</h1>
+        <div class="card-table mb-3" style="padding: 1rem;">
+            <form method="get" action="{{ base_url_name }}" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Segment</label>
+                    <select name="segment" class="form-select" onchange="this.form.submit()">
+                        <option value="cnb-leads" {% if request.GET.segment == 'cnb-leads' or not request.GET.segment %}selected{% endif %}>CNB Leads</option>
+                        <option value="schools" {% if request.GET.segment == 'schools' %}selected{% endif %}>Schools</option>
+                    </select>
+                </div>
+                {% if request.GET.segment == 'schools' %}
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Select School(s)</label>
+                    <select name="school_id[]" class="form-select" multiple size="6">
+                        {% for s in schools %}
+                            <option value="{{ s.id }}" {% if s.id|stringformat:"s" in selected_school_ids %}selected{% endif %}>{{ s.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Apply</button>
+                </div>
+                {% endif %}
+            </form>
+        </div>
         <!-- Date Filter Component -->
         {% include "inquiries/date_filter_component.html" %}
         <!-- Buttons to open modals -->

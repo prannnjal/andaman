@@ -8,7 +8,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from .models import Lead, CustomUser
+from .models import Lead, CustomUser, School
 from datetime import datetime
 import pandas as pd
 
@@ -99,13 +99,14 @@ class GoogleSheetsService:
             print(f"An error occurred: {error}")
             return None
     
-    def validate_lead_data(self, row_data, headers):
-        """Validate lead data from Google Sheets (allow empty optional fields)"""
+    def validate_lead_data(self, row_data, headers, required_fields=None):
+        """Validate lead data from Google Sheets (allow empty optional fields). Optionally override required fields."""
         # Pad row_data to match headers length (so missing optional fields are treated as empty)
         if len(row_data) < len(headers):
             row_data = row_data + [''] * (len(headers) - len(row_data))
         # Only check required fields
-        required_fields = ['student_name', 'parent_name', 'mobile_number', 'email', 'address']
+        if required_fields is None:
+            required_fields = ['student_name', 'parent_name', 'mobile_number', 'email', 'address']
         for field in required_fields:
             if field in headers:
                 field_index = headers.index(field)
@@ -140,7 +141,7 @@ class GoogleSheetsService:
         except:
             return None
     
-    def import_leads_from_sheet(self, spreadsheet_id, range_name, admin_user, selected_agent=None):
+    def import_leads_from_sheet(self, spreadsheet_id, range_name, admin_user, selected_agent=None, selected_school: School | None = None):
         """Import leads from Google Sheets"""
         try:
             # Read data from Google Sheet
@@ -179,10 +180,16 @@ class GoogleSheetsService:
             imported_count = 0
             errors = []
             
+            # Determine required fields set
+            if selected_school:
+                row_required_fields = ['student_name', 'parent_name', 'mobile_number']
+            else:
+                row_required_fields = ['student_name', 'parent_name', 'mobile_number', 'email', 'address']
+
             for row_index, row_data in enumerate(data_rows, start=2):  # Start from 2 because row 1 is headers
                 try:
                     # Validate row data
-                    is_valid, validation_message = self.validate_lead_data(row_data, headers)
+                    is_valid, validation_message = self.validate_lead_data(row_data, headers, required_fields=row_required_fields)
                     if not is_valid:
                         errors.append(f"Row {row_index}: {validation_message}")
                         continue
@@ -223,7 +230,8 @@ class GoogleSheetsService:
                         admission_confirmed_date=self.parse_date(lead_data.get('admission_confirmed_date')),
                         rejected_date=self.parse_date(lead_data.get('rejected_date')),
                         follow_up_date=self.parse_date(lead_data.get('follow_up_date')),
-                        admin_assigned=admin_user
+                        admin_assigned=admin_user,
+                        school=selected_school if selected_school else None
                     )
                     
                     # Handle agent assignment
@@ -243,9 +251,12 @@ class GoogleSheetsService:
             
             # Create appropriate message based on agent assignment method
             if selected_agent:
-                message = f'Successfully imported {imported_count} leads and assigned all to {selected_agent.name}'
+                assignment_msg = f"assigned all to {selected_agent.name}"
             else:
-                message = f'Successfully imported {imported_count} leads and distributed among agents based on workload'
+                assignment_msg = "distributed among agents based on workload"
+
+            school_msg = f" and linked to school '{selected_school.name}'" if selected_school else ""
+            message = f"Successfully imported {imported_count} leads, {assignment_msg}{school_msg}"
             
             return {
                 'success': True,

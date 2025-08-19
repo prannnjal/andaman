@@ -22,6 +22,11 @@ urlpatterns = [
     path('delete_inquiry/<int:id>/', views.delete_inquiry, name='delete_inquiry'),
     
     # ====================================================================================
+    # Schools management
+    path('schools/', views.school_list_create_view, name='school_list_create'),
+    path('schools/assign-leads/', views.assign_leads_to_school_view, name='assign_leads_to_school'),
+    
+    # ====================================================================================
     path('school_users_list/', views.school_users_list_view, name='school_users_list'),
     
     path('update_school_user/', views.update_school_user_view, name='update_school_user'),
