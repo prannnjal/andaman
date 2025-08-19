@@ -5,11 +5,10 @@ db.sqlite3
 sushant_crm_git
 sushant_crm_git.pub
 
-# Ignore all migrations in the "inquiries" app
-inquiries/migrations/
+# ✅ Allow migrations (keep them in Git), but ignore pycache inside them
+inquiries/migrations/__pycache__/
 
 # Ignore Python-related files
-# ignore all files with a .pyc extension
 *.pyc 
 __pycache__/
 
