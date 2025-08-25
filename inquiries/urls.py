@@ -66,6 +66,13 @@ urlpatterns = [
     
     path('transfer-lead/<int:lead_id>/', views.transfer_lead_view, name='transfer_lead'),
 
+    # Proposal sending
+    path('send-proposal/<int:inquiry_id>/', views.send_proposal_view, name='send_proposal'),
+    path('preview-proposal/<int:inquiry_id>/', views.preview_proposal_pdf, name='preview_proposal'),
+    path('realtime-preview/<int:inquiry_id>/', views.realtime_preview_html, name='realtime_preview'),
+    path('download-proposal-pdf/<int:inquiry_id>/', views.download_proposal_pdf, name='download_proposal_pdf'),
+    path('test-email/', views.test_email_config, name='test_email_config'),
+
     # Call Recording API endpoints
     path('api/lead/<int:lead_id>/recordings/', views.lead_recordings_api, name='lead_recordings_api'),
     path('api/recording/<int:recording_id>/delete/', views.delete_recording_api, name='delete_recording_api'),

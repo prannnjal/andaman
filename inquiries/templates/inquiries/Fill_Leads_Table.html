@@ -380,13 +380,18 @@
                     Status
                     <span class="sort-icon"></span>
                 </th>
+                
+                <th id="proposal_info" onclick="sortColumn(event,11,'string')">
+                    Proposal
+                    <span class="sort-icon"></span>
+                </th>
           
-                <th id="assigned_agent.name" onclick="sortColumn(event,11,'string')">
+                <th id="assigned_agent.name" onclick="sortColumn(event,12,'string')">
                     Agent
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="assigned_agent.email" onclick="sortColumn(event,12,'string')">
+                <th id="assigned_agent.email" onclick="sortColumn(event,13,'string')">
                     Agent Email
                     <span class="sort-icon"></span>
                 </th>
@@ -395,22 +400,22 @@
 
                 
 
-                <th id="admin_assigned.email" onclick="sortColumn(event,15,'string')">
+                <th id="admin_assigned.email" onclick="sortColumn(event,16,'string')">
                     Admin Email
                     <span class="sort-icon"></span>
                 </th>
                 
-                <th id="transfer_info" onclick="sortColumn(event,16,'string')">
+                <th id="transfer_info" onclick="sortColumn(event,17,'string')">
                     Transfer History
                     <span class="sort-icon"></span>
                 </th>
                 
-                <th id="call_recordings" onclick="sortColumn(event,17,'string')">
+                <th id="call_recordings" onclick="sortColumn(event,18,'string')">
                     Call Recordings
                     <span class="sort-icon"></span>
                 </th>
                 
-                <th id="call_duration_summary" onclick="sortColumn(event,18,'string')">
+                <th id="call_duration_summary" onclick="sortColumn(event,19,'string')">
                     Call Duration Summary
                     <span class="sort-icon"></span>
                 </th>                                                                             
@@ -462,6 +467,21 @@
                                 <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
                             {% endif %}
                             
+                            {% if "Proposal" in actions %}
+                                <div style="display: flex; gap: 10px;">
+                                    <a class="proposal" href="{% url 'preview_proposal' inquiry.id %}" 
+                                       style="color: #17a2b8; text-decoration: none; font-weight: 500;"
+                                       title="Preview proposal">
+                                        <i class="fas fa-eye"></i> Preview
+                                    </a>
+                                    <a class="proposal" href="{% url 'send_proposal' inquiry.id %}" 
+                                       style="color: #28a745; text-decoration: none; font-weight: 500;"
+                                       title="Send proposal via email and WhatsApp">
+                                        <i class="fas fa-file-contract"></i> Send
+                                    </a>
+                                </div>
+                            {% endif %}
+                            
                             {% if user.role == "Agent" or user.role == "Admin" %}
                                 {% if inquiry.assigned_agent == user or user.role == "Admin" %}
                                     <a class="transfer" href="{% url 'transfer_lead' inquiry.id %}" 
@@ -498,6 +518,34 @@
                         </span>
                     {% else %}
                         {{ inquiry.status }}
+                    {% endif %}
+                </td>
+                
+                <td>
+                    {% if inquiry.proposal_sent_date %}
+                        <div style="font-size: 12px; color: #17a2b8;">
+                            <strong>Sent:</strong> {{ inquiry.proposal_sent_date|date:"M d, Y H:i" }}<br>
+                            <strong>By:</strong> {{ inquiry.proposal_sent_by.name|default:"Unknown" }}<br>
+                            <div style="margin-top: 5px;">
+                                <a href="{% url 'preview_proposal' inquiry.id %}" 
+                                   style="color: #17a2b8; text-decoration: none; font-weight: 500; margin-right: 10px;"
+                                   title="Preview proposal">
+                                    <i class="fas fa-eye"></i> Preview
+                                </a>
+                                <a href="{% url 'send_proposal' inquiry.id %}" 
+                                   style="color: #28a745; text-decoration: none; font-weight: 500; margin-right: 10px;"
+                                   title="Send another proposal">
+                                    <i class="fas fa-paper-plane"></i> Resend
+                                </a>
+                                <a href="{% url 'download_proposal_pdf' inquiry.id %}" 
+                                   style="color: #dc3545; text-decoration: none; font-weight: 500;"
+                                   title="Download PDF proposal">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <span style="color: #999; font-size: 12px;">No proposal sent</span>
                     {% endif %}
                 </td>
                 <td>

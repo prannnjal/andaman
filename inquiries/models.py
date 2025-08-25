@@ -177,6 +177,17 @@ class Lead(models.Model):
     last_follow_up_updation = models.DateField(null=True, blank=True)
     last_inquiry_updation = models.DateField(null=True, blank=True)
     
+    # Proposal tracking
+    proposal_sent_date = models.DateTimeField(null=True, blank=True, help_text='When the last proposal was sent')
+    proposal_sent_by = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='proposals_sent',
+        help_text='User who sent the last proposal'
+    )
+    
 
     
     school = models.ForeignKey(
@@ -310,3 +321,36 @@ class CallRecording(models.Model):
             else:
                 return f"{minutes:02d}:{seconds:02d}"
         return "Unknown"
+
+
+class CompanySettings(models.Model):
+    """Model to store company information for proposals"""
+    name = models.CharField(max_length=200, default='Your Educational Institution')
+    address = models.TextField(default='Your Institution Address, City, State - PIN')
+    phone = models.CharField(max_length=20, default='+91-XXXXXXXXXX')
+    email = models.EmailField(default='info@yourinstitution.com')
+    website = models.URLField(default='www.yourinstitution.com')
+    logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = "Company Settings"
+    
+    def __str__(self):
+        return f"Company Settings - {self.name}"
+    
+    @classmethod
+    def get_settings(cls):
+        """Get the first (and should be only) company settings instance"""
+        settings, created = cls.objects.get_or_create(
+            id=1,
+            defaults={
+                'name': 'Your Educational Institution',
+                'address': 'Your Institution Address, City, State - PIN',
+                'phone': '+91-XXXXXXXXXX',
+                'email': 'info@yourinstitution.com',
+                'website': 'www.yourinstitution.com'
+            }
+        )
+        return settings

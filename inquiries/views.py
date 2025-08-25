@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import CustomUser, Lead, CustomUser, LeadLogs, School
+from .models import CustomUser, Lead, CustomUser, LeadLogs, School, CompanySettings
 from .forms import InquiryForm, UpdateLeadStatusForm, EditLeadForm, AgentUpdateLeadForm, CustomUserForm, UpdateUserForm, TransferLeadForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
@@ -9,7 +9,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.http import HttpResponse
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from django.utils import timezone
 from django.utils.timezone import now
 from django.contrib import messages
@@ -38,6 +38,7 @@ from urllib.parse import urlencode
 from django.db.models.functions import Round
 import os
 from django.db.models import Avg, Sum
+from .proposal_generator import ProposalGenerator
 
 # ======================================================================================================================================================================
 def is_authentic(user):
@@ -389,7 +390,7 @@ def inquiry_list(request):
     return render(request, 'inquiries/inquiry_list.html', {
         'heading': request.GET.get('heading', "Leads List"),
         'inquiries': inquiries,
-        'actions': ['Update', 'Delete', 'View Logs'],
+        'actions': ['Update', 'Delete', 'View Logs', 'Proposal'],
         'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
         'base_url_name': reverse('inquiry_list'),
         'students': students,
@@ -2783,3 +2784,613 @@ def agent_call_details_view(request):
         
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+def send_proposal_view(request, inquiry_id):
+    """Send proposal via email and WhatsApp with PDF attachment"""
+    try:
+        inquiry = Lead.objects.get(id=inquiry_id)
+        
+        if request.method == 'POST':
+            proposal_type = request.POST.get('proposal_type')  # 'email', 'whatsapp', or 'both'
+            custom_message = request.POST.get('custom_message', '')
+            
+            success_messages = []
+            error_messages = []
+            pdf_filepath = None
+            pdf_filename = None
+            
+            # Generate PDF proposal
+            try:
+                # Get company information from settings
+                company_settings = CompanySettings.get_settings()
+                company_info = {
+                    'name': company_settings.name,
+                    'address': company_settings.address,
+                    'phone': company_settings.phone,
+                    'email': company_settings.email,
+                    'website': company_settings.website
+                }
+                
+                # Generate PDF
+                proposal_generator = ProposalGenerator()
+                pdf_filepath, pdf_filename = proposal_generator.generate_proposal_pdf(
+                    inquiry, custom_message, company_info
+                )
+                
+                success_messages.append("Professional PDF proposal generated successfully")
+                
+            except Exception as e:
+                error_messages.append(f"Failed to generate PDF: {str(e)}")
+                return redirect('inquiry_list')
+            
+            # Email proposal with PDF attachment
+            if proposal_type in ['email', 'both'] and inquiry.email:
+                try:
+                    # Check email configuration first
+                    if not settings.EMAIL_HOST_USER:
+                        error_messages.append("Email configuration error: EMAIL_HOST_USER not set. Please contact admin.")
+                        print("EMAIL CONFIGURATION ERROR: EMAIL_HOST_USER is not set in environment variables")
+                    elif not settings.EMAIL_HOST_PASSWORD:
+                        error_messages.append("Email configuration error: EMAIL_HOST_PASSWORD not set. Please contact admin.")
+                        print("EMAIL CONFIGURATION ERROR: EMAIL_HOST_PASSWORD is not set in environment variables")
+                    else:
+                        subject = f"Educational Proposal for {inquiry.student_name} - {inquiry.student_class}"
+                        print(f"Attempting to send email to: {inquiry.email}")
+                        print(f"From email: {settings.EMAIL_HOST_USER}")
+                        print(f"Subject: {subject}")
+                        
+                        # Create HTML message
+                        html_message = f"""
+                    <html>
+                    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                            <h2 style="color: #6366f1; border-bottom: 2px solid #6366f1; padding-bottom: 10px;">
+                                Educational Proposal
+                            </h2>
+                            
+                            <p>Dear <strong>{inquiry.parent_name}</strong>,</p>
+                            
+                            <p>Thank you for your interest in our educational services for <strong>{inquiry.student_name}</strong>.</p>
+                            
+                            {f'<p style="background: #f8f9fa; padding: 15px; border-left: 4px solid #6366f1; margin: 20px 0;">{custom_message}</p>' if custom_message else ''}
+                            
+                            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                <h3 style="color: #6366f1; margin-top: 0;">Proposal Details</h3>
+                                <p><strong>Student Name:</strong> {inquiry.student_name}</p>
+                                <p><strong>Class:</strong> {inquiry.student_class}</p>
+                                <p><strong>Inquiry Source:</strong> {inquiry.inquiry_source}</p>
+                            </div>
+                            
+                            <p>Please find attached our detailed professional proposal for {inquiry.student_name} studying in {inquiry.student_class}.</p>
+                            
+                            <p>The proposal includes:</p>
+                            <ul>
+                                <li>Complete fee structure</li>
+                                <li>Educational services offered</li>
+                                <li>Terms and conditions</li>
+                                <li>Contact information</li>
+                            </ul>
+                            
+                            <p>Please review the proposal and contact us for any questions or to proceed with admission.</p>
+                            
+                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                                <p style="margin: 0;"><strong>Best regards,</strong><br>
+                                Your Education Team</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>
+                    """
+                        
+                        # Plain text version
+                        plain_message = f"""
+Dear {inquiry.parent_name},
+
+Thank you for your interest in our educational services for {inquiry.student_name}.
+
+{custom_message if custom_message else ''}
+
+Please find attached our detailed professional proposal for {inquiry.student_name} studying in {inquiry.student_class}.
+
+The proposal includes:
+- Complete fee structure
+- Educational services offered
+- Terms and conditions
+- Contact information
+
+Please review the proposal and contact us for any questions or to proceed with admission.
+
+Best regards,
+Your Education Team
+                        """.strip()
+                        
+                        # Send email with PDF attachment
+                        email = EmailMessage(
+                            subject=subject,
+                            body=plain_message,
+                            from_email=settings.EMAIL_HOST_USER,
+                            to=[inquiry.email]
+                        )
+                        email.content_subtype = "html"
+                        email.attach_file(pdf_filepath)
+                        email.send()
+                        
+                        success_messages.append(f"Email proposal with PDF sent to {inquiry.email}")
+                        print(f"Email sent successfully to: {inquiry.email}")
+                    
+                except Exception as e:
+                    error_message = f"Failed to send email: {str(e)}"
+                    error_messages.append(error_message)
+                    print(f"EMAIL SENDING ERROR: {error_message}")
+                    print(f"Full error details: {repr(e)}")
+            
+            # WhatsApp proposal with PDF link
+            if proposal_type in ['whatsapp', 'both'] and inquiry.mobile_number:
+                try:
+                    # Create WhatsApp message with PDF download link
+                    whatsapp_message = f"""
+*Educational Proposal for {inquiry.student_name}*
+
+Dear {inquiry.parent_name},
+
+Thank you for your interest in our educational services for {inquiry.student_name}.
+
+{custom_message if custom_message else ''}
+
+*Proposal Details:*
+• Student: {inquiry.student_name}
+• Class: {inquiry.student_class}
+• Source: {inquiry.inquiry_source}
+
+We have prepared a detailed professional proposal for {inquiry.student_name} studying in {inquiry.student_class}.
+
+*The proposal includes:*
+• Complete fee structure
+• Educational services offered
+• Terms and conditions
+• Contact information
+
+Please review the proposal and contact us for any questions or to proceed with admission.
+
+Best regards,
+Your Education Team
+                    """.strip()
+                    
+                    # Generate WhatsApp link
+                    whatsapp_link = f"https://wa.me/{inquiry.mobile_number}?text={whatsapp_message.replace(' ', '%20').replace(chr(10), '%0A')}"
+                    
+                    success_messages.append(f"WhatsApp proposal link generated for {inquiry.mobile_number}")
+                    
+                    # Store the WhatsApp link and PDF info in session
+                    request.session['whatsapp_link'] = whatsapp_link
+                    request.session['pdf_filename'] = pdf_filename
+                    
+                except Exception as e:
+                    error_messages.append(f"Failed to generate WhatsApp link: {str(e)}")
+            
+            # Log the proposal sending activity
+            if success_messages:
+                # Update proposal tracking fields
+                inquiry.proposal_sent_date = timezone.now()
+                inquiry.proposal_sent_by = request.user
+                inquiry.save()
+                
+                # Create a log entry for proposal sending
+                proposal_data = {
+                    'proposal_type': proposal_type,
+                    'custom_message': custom_message,
+                    'pdf_filename': pdf_filename,
+                    'success_messages': success_messages,
+                    'error_messages': error_messages,
+                    'sent_at': timezone.now().isoformat()
+                }
+                
+                LeadLogs.objects.create(
+                    lead=inquiry,
+                    changed_by=request.user,
+                    changed_at=timezone.now(),
+                    previous_data={},  # No previous data for new proposal
+                    new_data=proposal_data
+                )
+            
+            # Add success/error messages
+            for msg in success_messages:
+                messages.success(request, msg)
+            for msg in error_messages:
+                messages.error(request, msg)
+            
+            # Redirect back to inquiry list
+            return redirect('inquiry_list')
+        
+        # GET request - show proposal form
+        return render(request, 'inquiries/send_proposal.html', {
+            'inquiry': inquiry,
+            'whatsapp_link': request.session.get('whatsapp_link', ''),
+            'pdf_filename': request.session.get('pdf_filename', '')
+        })
+        
+    except Lead.DoesNotExist:
+        messages.error(request, 'Lead not found.')
+        return redirect('inquiry_list')
+
+@login_required
+def download_proposal_pdf(request, inquiry_id):
+    """Download the generated PDF proposal"""
+    try:
+        inquiry = Lead.objects.get(id=inquiry_id)
+        
+        # Get the latest proposal log for this lead
+        latest_proposal_log = LeadLogs.objects.filter(
+            lead=inquiry,
+            new_data__has_key='pdf_filename'
+        ).order_by('-changed_at').first()
+        
+        if not latest_proposal_log:
+            messages.error(request, 'No proposal PDF found for this lead.')
+            return redirect('inquiry_list')
+        
+        pdf_filename = latest_proposal_log.new_data.get('pdf_filename')
+        if not pdf_filename:
+            messages.error(request, 'PDF filename not found.')
+            return redirect('inquiry_list')
+        
+        # Construct file path
+        pdf_filepath = os.path.join(settings.MEDIA_ROOT, 'proposals', pdf_filename)
+        
+        if not os.path.exists(pdf_filepath):
+            messages.error(request, 'PDF file not found on server.')
+            return redirect('inquiry_list')
+        
+        # Serve the file for download
+        with open(pdf_filepath, 'rb') as pdf_file:
+            response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{pdf_filename}"'
+            return response
+            
+    except Lead.DoesNotExist:
+        messages.error(request, 'Lead not found.')
+        return redirect('inquiry_list')
+    except Exception as e:
+        messages.error(request, f'Error downloading PDF: {str(e)}')
+        return redirect('inquiry_list')
+
+@login_required
+def preview_proposal_pdf(request, inquiry_id):
+    """Preview the proposal PDF before sending"""
+    try:
+        inquiry = Lead.objects.get(id=inquiry_id)
+        
+        # Check if this is a PDF generation request (GET with custom_message parameter)
+        custom_message = request.GET.get('custom_message', '')
+        
+        print(f"Preview request - inquiry_id: {inquiry_id}, custom_message: {custom_message}, method: {request.method}")
+        
+        if custom_message or request.method == 'POST':
+            # Generate PDF for preview
+            if request.method == 'POST':
+                custom_message = request.POST.get('custom_message', '')
+            
+            try:
+                # Get company information from settings
+                try:
+                    company_settings = CompanySettings.get_settings()
+                    company_info = {
+                        'name': company_settings.name,
+                        'address': company_settings.address,
+                        'phone': company_settings.phone,
+                        'email': company_settings.email,
+                        'website': company_settings.website
+                    }
+                except:
+                    # Fallback to default company info if settings don't exist
+                    company_info = {
+                        'name': 'Your Educational Institution',
+                        'address': 'Your Institution Address, City, State - PIN',
+                        'phone': '+91-XXXXXXXXXX',
+                        'email': 'info@yourinstitution.com',
+                        'website': 'www.yourinstitution.com'
+                    }
+                
+                # Generate PDF for preview
+                proposal_generator = ProposalGenerator()
+                pdf_filepath, pdf_filename = proposal_generator.generate_proposal_pdf(
+                    inquiry, custom_message, company_info
+                )
+                
+                # Check if this is a direct download request
+                if request.GET.get('download') == 'true':
+                    # Serve the PDF for download
+                    with open(pdf_filepath, 'rb') as pdf_file:
+                        response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+                        response['Content-Disposition'] = f'attachment; filename="{pdf_filename}"'
+                        return response
+                else:
+                    # Serve the PDF for preview
+                    with open(pdf_filepath, 'rb') as pdf_file:
+                        response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+                        response['Content-Disposition'] = f'inline; filename="{pdf_filename}"'
+                        return response
+                    
+            except Exception as pdf_error:
+                # Return error message as HTML for iframe
+                error_html = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; padding: 20px; text-align: center;">
+                    <h3 style="color: #dc3545;">Error Generating Preview</h3>
+                    <p style="color: #666;">{str(pdf_error)}</p>
+                    <p style="color: #666;">Please check your company settings and try again.</p>
+                    <br>
+                    <a href="/inquiries/preview-proposal/{inquiry.id}/?custom_message={custom_message}&download=true" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Download PDF Instead</a>
+                </body>
+                </html>
+                """
+                return HttpResponse(error_html, content_type='text/html')
+        else:
+            # Show preview form
+            return render(request, 'inquiries/preview_proposal.html', {
+                'inquiry': inquiry
+            })
+            
+    except Lead.DoesNotExist:
+        messages.error(request, 'Lead not found.')
+        return redirect('inquiry_list')
+    except Exception as e:
+        messages.error(request, f'Error generating preview: {str(e)}')
+        return redirect('inquiry_list')
+
+@login_required
+def test_email_config(request):
+    """Test email configuration"""
+    if request.method == 'POST':
+        try:
+            test_email = request.POST.get('test_email')
+            if not test_email:
+                messages.error(request, "Please provide a test email address")
+                return redirect('inquiry_list')
+            
+            # Check email configuration
+            if not settings.EMAIL_HOST_USER:
+                messages.error(request, "Email configuration error: EMAIL_HOST_USER not set")
+                return redirect('inquiry_list')
+            if not settings.EMAIL_HOST_PASSWORD:
+                messages.error(request, "Email configuration error: EMAIL_HOST_PASSWORD not set")
+                return redirect('inquiry_list')
+            
+            # Send test email
+            subject = "Test Email from CRM System"
+            message = f"""
+Hello,
+
+This is a test email to verify that your email configuration is working correctly.
+
+Email sent from: {settings.EMAIL_HOST_USER}
+Test email sent to: {test_email}
+Timestamp: {timezone.now()}
+
+If you received this email, your email configuration is working properly!
+
+Best regards,
+CRM System
+            """
+            
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[test_email],
+                fail_silently=False
+            )
+            
+            messages.success(request, f"Test email sent successfully to {test_email}")
+            print(f"Test email sent successfully to {test_email}")
+            
+        except Exception as e:
+            error_msg = f"Failed to send test email: {str(e)}"
+            messages.error(request, error_msg)
+            print(f"Test email error: {error_msg}")
+            
+        return redirect('inquiry_list')
+    
+    return redirect('inquiry_list')
+
+@login_required
+def realtime_preview_html(request, inquiry_id):
+    """Generate real-time HTML preview of the proposal"""
+    try:
+        inquiry = Lead.objects.get(id=inquiry_id)
+        custom_message = request.GET.get('custom_message', '')
+        
+        # Get company information from settings
+        try:
+            company_settings = CompanySettings.get_settings()
+            company_info = {
+                'name': company_settings.name,
+                'address': company_settings.address,
+                'phone': company_settings.phone,
+                'email': company_settings.email,
+                'website': company_settings.website
+            }
+        except:
+            # Fallback to default company info if settings don't exist
+            company_info = {
+                'name': 'Your Educational Institution',
+                'address': 'Your Institution Address, City, State - PIN',
+                'phone': '+91-XXXXXXXXXX',
+                'email': 'info@yourinstitution.com',
+                'website': 'www.yourinstitution.com'
+            }
+        
+        # Calculate fees based on class
+        fee_structure = {
+            'Play School': 3000, 'Nursery': 3500, 'LKG': 4000, 'UKG': 4500,
+            'Grade 1': 5000, 'Grade 2': 5500, 'Grade 3': 6000, 'Grade 4': 6500,
+            'Grade 5': 7000, 'Grade 6': 7500, 'Grade 7': 8000, 'Grade 8': 8500,
+            'Grade 9': 9000, 'Grade 10': 9500, 'Grade 11': 10000, 'Grade 12': 10500,
+        }
+        base_fee = fee_structure.get(inquiry.student_class, 5000)
+        
+        # Generate HTML preview
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Proposal Preview</title>
+            <style>
+                body {{ font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }}
+                .header {{ text-align: center; margin-bottom: 30px; }}
+                .title {{ color: #6366f1; font-size: 24px; margin-bottom: 10px; }}
+                .company-info {{ background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }}
+                .section {{ margin-bottom: 25px; }}
+                .section-title {{ color: #4f46e5; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #6366f1; padding-bottom: 5px; }}
+                .info-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+                .info-table td {{ padding: 8px; border: 1px solid #ddd; }}
+                .info-table td:first-child {{ background: #f3f4f6; font-weight: bold; width: 30%; }}
+                .services-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+                .services-table th, .services-table td {{ padding: 10px; border: 1px solid #ddd; text-align: left; }}
+                .services-table th {{ background: #6366f1; color: white; }}
+                .pricing-table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+                .pricing-table th, .pricing-table td {{ padding: 10px; border: 1px solid #ddd; text-align: left; }}
+                .pricing-table th {{ background: #059669; color: white; }}
+                .total-row {{ background: #fef3c7; font-weight: bold; }}
+                .custom-message {{ background: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0; }}
+                .footer {{ text-align: center; margin-top: 40px; color: #6b7280; font-size: 14px; }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div class="title">Educational Proposal for {inquiry.student_name}</div>
+                <div>Date: {timezone.now().strftime('%B %d, %Y')}</div>
+            </div>
+            
+            <div class="company-info">
+                <strong>{company_info['name']}</strong><br>
+                {company_info['address']}<br>
+                Phone: {company_info['phone']} | Email: {company_info['email']}<br>
+                Website: {company_info['website']}
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Student Information</div>
+                <table class="info-table">
+                    <tr><td>Student Name</td><td>{inquiry.student_name}</td></tr>
+                    <tr><td>Class</td><td>{inquiry.student_class}</td></tr>
+                    <tr><td>Parent Name</td><td>{inquiry.parent_name}</td></tr>
+                    <tr><td>Contact Number</td><td>{inquiry.mobile_number or 'Not provided'}</td></tr>
+                    <tr><td>Email Address</td><td>{inquiry.email or 'Not provided'}</td></tr>
+                    <tr><td>Address</td><td>{inquiry.address or 'Not provided'}</td></tr>
+                    <tr><td>Inquiry Source</td><td>{inquiry.inquiry_source}</td></tr>
+                </table>
+            </div>
+            
+            {f'<div class="custom-message"><strong>Personal Message:</strong><br>{custom_message}</div>' if custom_message else ''}
+            
+            <div class="section">
+                <div class="section-title">Our Educational Services</div>
+                <table class="services-table">
+                    <tr>
+                        <th>Service</th>
+                        <th>Description</th>
+                        <th>Benefits</th>
+                    </tr>
+                    <tr>
+                        <td>Academic Excellence</td>
+                        <td>Comprehensive curriculum designed for holistic development</td>
+                        <td>Strong foundation for future success</td>
+                    </tr>
+                    <tr>
+                        <td>Experienced Faculty</td>
+                        <td>Qualified and experienced teachers</td>
+                        <td>Quality education and mentorship</td>
+                    </tr>
+                    <tr>
+                        <td>Modern Infrastructure</td>
+                        <td>State-of-the-art facilities and technology</td>
+                        <td>Enhanced learning experience</td>
+                    </tr>
+                    <tr>
+                        <td>Individual Attention</td>
+                        <td>Personalized attention to each student</td>
+                        <td>Better understanding and growth</td>
+                    </tr>
+                    <tr>
+                        <td>Extracurricular Activities</td>
+                        <td>Sports, arts, and cultural programs</td>
+                        <td>Overall personality development</td>
+                    </tr>
+                    <tr>
+                        <td>Career Guidance</td>
+                        <td>Professional career counseling and guidance</td>
+                        <td>Clear career path and goals</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Investment Details</div>
+                <table class="pricing-table">
+                    <tr>
+                        <th>Fee Component</th>
+                        <th>Amount (₹)</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td>Tuition Fee</td>
+                        <td>₹{base_fee:,}</td>
+                        <td>Monthly tuition fee</td>
+                    </tr>
+                    <tr>
+                        <td>Admission Fee</td>
+                        <td>₹5,000</td>
+                        <td>One-time admission fee</td>
+                    </tr>
+                    <tr>
+                        <td>Development Fee</td>
+                        <td>₹2,000</td>
+                        <td>Annual development fee</td>
+                    </tr>
+                    <tr>
+                        <td>Transportation</td>
+                        <td>₹1,500</td>
+                        <td>Monthly transportation (optional)</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Total Monthly</td>
+                        <td>₹{base_fee + 1500:,}</td>
+                        <td>Including transportation</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td>Total Annual</td>
+                        <td>₹{(base_fee + 1500) * 12 + 7000:,}</td>
+                        <td>Including all fees</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Terms & Conditions</div>
+                <ul>
+                    <li>Fees are payable monthly in advance by the 5th of each month</li>
+                    <li>Late payment may incur additional charges</li>
+                    <li>30 days notice is required for withdrawal</li>
+                    <li>The institution reserves the right to modify fee structure with prior notice</li>
+                    <li>All disputes are subject to local jurisdiction</li>
+                    <li>This proposal is valid for 30 days from the date of issue</li>
+                </ul>
+            </div>
+            
+            <div class="footer">
+                Thank you for considering our educational services. We look forward to partnering in your child's educational journey.
+            </div>
+        </body>
+        </html>
+        """
+        
+        return HttpResponse(html_content, content_type='text/html')
+        
+    except Lead.DoesNotExist:
+        return HttpResponse("Lead not found", content_type='text/plain')
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}", content_type='text/plain')
+
