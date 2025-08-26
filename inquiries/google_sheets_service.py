@@ -1,5 +1,6 @@
 import os
 import json
+from typing import Optional
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -141,7 +142,7 @@ class GoogleSheetsService:
         except:
             return None
     
-    def import_leads_from_sheet(self, spreadsheet_id, range_name, admin_user, selected_agent=None, selected_school: School | None = None):
+    def import_leads_from_sheet(self, spreadsheet_id, range_name, admin_user, selected_agent=None, selected_school: Optional[School] = None):
         """Import leads from Google Sheets"""
         try:
             # Read data from Google Sheet
