@@ -24,30 +24,47 @@ class GoogleSheetsService:
     
     def _authenticate(self):
         """Authenticate with Google Sheets API using Service Account or OAuth2"""
+        print("Starting Google Sheets authentication...")
+        
         # First try Service Account (preferred method)
         service_account_path = os.path.join(settings.BASE_DIR, 'service-account-key.json')
         
         if os.path.exists(service_account_path):
             try:
+                print("Attempting service account authentication...")
                 self.creds = service_account.Credentials.from_service_account_file(
                     service_account_path, scopes=SCOPES
                 )
                 self.service = build('sheets', 'v4', credentials=self.creds)
+                print("Service account authentication successful!")
                 return
             except Exception as e:
                 print(f"Service account authentication failed: {e}")
+                print("Falling back to OAuth2 authentication...")
+        else:
+            print("No service account key found, using OAuth2 authentication...")
         
         # Fallback to OAuth2
         token_path = os.path.join(settings.BASE_DIR, 'token.json')
-        credentials_path = os.path.join(settings.BASE_DIR, 'credentials.json')
+        # Fix: Use the correct credentials filename (credentialss.json)
+        credentials_path = os.path.join(settings.BASE_DIR, 'credentialss.json')
+        
+        print(f"Looking for credentials file: {credentials_path}")
+        print(f"Looking for token file: {token_path}")
         
         if os.path.exists(token_path):
             try:
+                print("Found existing token, attempting to use it...")
                 self.creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+                print("Token loaded successfully!")
             except Exception as e:
+                print(f"Token loading failed: {e}")
                 # If token is corrupted, delete it and start fresh
                 os.remove(token_path)
                 self.creds = None
+                print("Corrupted token removed, will create new one...")
+        else:
+            print("No existing token found...")
         
         # If there are no (valid) credentials available, let the user log in.
         if not self.creds or not self.creds.valid:
@@ -63,12 +80,33 @@ class GoogleSheetsService:
             if not self.creds:
                 if not os.path.exists(credentials_path):
                     raise FileNotFoundError(
-                        "credentials.json file not found. Please download it from Google Cloud Console "
-                        "and place it in the project root directory. For better reliability, consider using a service account."
+                        "credentialss.json file not found. Please ensure it's in the project root directory. "
+                        "For better reliability, consider using a service account."
                     )
                 try:
                     flow = InstalledAppFlow.from_client_secrets_file(credentials_path, SCOPES)
-                    self.creds = flow.run_local_server(port=0)
+                    
+                    # Enhanced AWS/headless environment handling
+                    # Check for various AWS and headless environment indicators
+                    is_aws_or_headless = (
+                        os.environ.get('AWS_EXECUTION_ENV') or  # AWS Lambda
+                        os.environ.get('AWS_EC2_INSTANCE_ID') or  # AWS EC2
+                        os.environ.get('DISPLAY') is None or  # No display
+                        os.environ.get('SSH_CONNECTION') or  # SSH connection (remote server)
+                        os.environ.get('TERM') == 'dumb'  # Dumb terminal
+                    )
+                    
+                    if is_aws_or_headless:
+                        # AWS or headless environment - use console flow
+                        print("Running in AWS/headless environment. Please follow the authentication steps:")
+                        print("1. Copy the URL below and paste it in your browser")
+                        print("2. Complete the Google authentication")
+                        print("3. Copy the authorization code and paste it here")
+                        self.creds = flow.run_console()
+                    else:
+                        # Has display - use local server
+                        self.creds = flow.run_local_server(port=0, open_browser=False)
+                        
                 except Exception as e:
                     raise Exception(f"Authentication failed: {str(e)}")
             
@@ -81,8 +119,11 @@ class GoogleSheetsService:
                 pass
         
         try:
+            print("Building Google Sheets service...")
             self.service = build('sheets', 'v4', credentials=self.creds)
+            print("Google Sheets service built successfully!")
         except Exception as e:
+            print(f"Failed to build Google Sheets service: {str(e)}")
             raise Exception(f"Failed to build Google Sheets service: {str(e)}")
     
     def read_sheet(self, spreadsheet_id, range_name):
