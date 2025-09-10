@@ -97,12 +97,13 @@ class GoogleSheetsService:
                     )
                     
                     if is_aws_or_headless:
-                        # AWS or headless environment - use console flow
+                        # AWS or headless environment - use local server with manual URL
                         print("Running in AWS/headless environment. Please follow the authentication steps:")
-                        print("1. Copy the URL below and paste it in your browser")
-                        print("2. Complete the Google authentication")
-                        print("3. Copy the authorization code and paste it here")
-                        self.creds = flow.run_console()
+                        print("1. A browser window will open for authentication")
+                        print("2. Complete the Google authentication in the browser")
+                        print("3. The authentication will complete automatically")
+                        # Use local server but don't open browser automatically
+                        self.creds = flow.run_local_server(port=0, open_browser=False)
                     else:
                         # Has display - use local server
                         self.creds = flow.run_local_server(port=0, open_browser=False)
