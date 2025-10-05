@@ -336,18 +336,18 @@
 
                 <th id="actions" style="cursor: default">Actions</th>
 
-                <th id="student_name" onclick="sortColumn(event,2,'string')">
-                                            School Name
+                <th id="customer_name" onclick="sortColumn(event,2,'string')">
+                    Customer Name
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="email" onclick="sortColumn(event,3,'string')">
-                    Lead Email
+                <th id="destination" onclick="sortColumn(event,3,'string')">
+                    Destination
                     <span class="sort-icon"></span>
                 </th>     
                 
-                <th id="parent_name" onclick="sortColumn(event,4,'string')">
-                                            Concerned Person
+                <th id="travel_type" onclick="sortColumn(event,4,'string')">
+                    Travel Type
                     <span class="sort-icon"></span>
                 </th>
 
@@ -356,18 +356,18 @@
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="address" onclick="sortColumn(event,6,'string')">
-                    Address
+                <th id="pax" onclick="sortColumn(event,6,'string')">
+                    PAX
                     <span class="sort-icon"></span>
                 </th>
 
-                <th id="inquiry_source" onclick="sortColumn(event,7,'string')">
+                <th id="budget" onclick="sortColumn(event,7,'string')">
+                    Budget
+                    <span class="sort-icon"></span>
+                </th>
+
+                <th id="inquiry_source" onclick="sortColumn(event,8,'string')">
                     Inquiry Source
-                    <span class="sort-icon"></span>
-                </th>
-
-                <th id="student_class" onclick="sortColumn(event,8,'class')">
-                    Student Class 
                     <span class="sort-icon"></span>
                 </th>
 
@@ -499,23 +499,23 @@
                             {% endif %}                        
                         </div>
                 </td>
-                <td>{{ inquiry.student_name }}</td>
-                <td>{{ inquiry.email }}</td>
-                <td>{{ inquiry.parent_name }}</td>
+                <td>{{ inquiry.customer_name }}</td>
+                <td>{{ inquiry.destination }}</td>
+                <td>{{ inquiry.travel_type }}</td>
                 <td>
                     <div class="flex-td">
                         <a href="tel:{{ inquiry.mobile_number }}" 
                            style="color: #007bff; text-decoration: none; font-weight: 500;"
                            title="Click to call {{ inquiry.mobile_number }}"
-                           onclick="logCall('{{ inquiry.student_name }}', '{{ inquiry.mobile_number }}')">
+                           onclick="logCall('{{ inquiry.customer_name }}', '{{ inquiry.mobile_number }}')">
                             {{ inquiry.mobile_number }}
                             <i class="fas fa-phone" style="margin-left: 5px; color: #28a745;"></i>
                         </a>   
                     </div>                      
                 </td>
-                <td>{{ inquiry.address }}</td>
+                <td>{{ inquiry.number_of_travelers }}</td>
+                <td>{% if inquiry.budget %}₹{{ inquiry.budget|floatformat:0 }}{% else %}-{% endif %}</td>
                 <td>{{ inquiry.inquiry_source }}</td>
-                <td>{{ inquiry.student_class }}</td>
                 <td>{{ inquiry.follow_up_date }}</td>
                 <td>
                     {% if inquiry.status == 'Viewer' %}
