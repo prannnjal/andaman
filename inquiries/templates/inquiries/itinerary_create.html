@@ -1,0 +1,271 @@
+{% extends "inquiries/modern_base.html" %}
+
+{% block title %}Create Itinerary | Travel CRM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: var(--spacing-sm);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .lead-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-xl);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .lead-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: var(--spacing-md);
+        margin-top: var(--spacing-md);
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+    
+    .info-item i {
+        font-size: 1.5rem;
+    }
+    
+    .package-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .package-card {
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .package-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .package-label {
+        background: white;
+        border: 3px solid #e0e0e0;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-lg);
+        transition: all 0.3s ease;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .package-card:hover .package-label {
+        border-color: var(--primary);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .package-card input:checked + .package-label {
+        border-color: var(--primary);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .package-name {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .package-duration {
+        font-size: 1.1rem;
+        margin-bottom: var(--spacing-md);
+        opacity: 0.9;
+    }
+    
+    .package-destination {
+        font-size: 0.95rem;
+        margin-top: auto;
+    }
+    
+    .input-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--spacing-lg);
+    }
+    
+    @media (max-width: 768px) {
+        .input-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .package-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-map"></i> Create Itinerary
+    </h1>
+    <p class="page-subtitle" style="color: rgba(255,255,255,0.9);">
+        Build a custom travel itinerary for your customer
+    </p>
+</div>
+
+<!-- Lead Information -->
+<div class="lead-info-card">
+    <h3 style="margin-bottom: var(--spacing-md);">
+        <i class="bi bi-person-circle"></i> Customer: {{ lead.customer_name }}
+    </h3>
+    <div class="lead-info-grid">
+        <div class="info-item">
+            <i class="bi bi-telephone-fill"></i>
+            <span>{{ lead.mobile_number }}</span>
+        </div>
+        <div class="info-item">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span>{{ lead.destination }}</span>
+        </div>
+        <div class="info-item">
+            <i class="bi bi-suitcase-lg-fill"></i>
+            <span>{{ lead.travel_type }}</span>
+        </div>
+        <div class="info-item">
+            <i class="bi bi-people-fill"></i>
+            <span>{{ lead.number_of_travelers }} Travelers</span>
+        </div>
+        {% if lead.budget %}
+        <div class="info-item">
+            <i class="bi bi-wallet2"></i>
+            <span>Budget: ₹{{ lead.budget|floatformat:0 }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<form method="POST" action="{% url 'itinerary_create' lead.id %}">
+    {% csrf_token %}
+    
+    <!-- Package Selection -->
+    <div class="form-section">
+        <div class="section-title">
+            <i class="bi bi-box-seam"></i>
+            Select Package Template
+        </div>
+        
+        {% if packages %}
+        <div class="package-grid">
+            {% for package in packages %}
+            <div class="package-card">
+                <input type="radio" name="package" id="package_{{ package.id }}" value="{{ package.id }}" required>
+                <label for="package_{{ package.id }}" class="package-label">
+                    <div class="package-name">
+                        <i class="bi bi-box-seam"></i> {{ package.name }}
+                    </div>
+                    <div class="package-duration">
+                        <i class="bi bi-clock"></i> {{ package.duration_days }}D / {{ package.duration_nights }}N
+                    </div>
+                    <div class="package-destination">
+                        <i class="bi bi-geo-alt"></i> {{ package.destination }}
+                    </div>
+                    <div style="margin-top: var(--spacing-sm); font-size: 0.9rem; opacity: 0.8;">
+                        {{ package.package_days.count }} days planned
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-box-seam"></i></div>
+            <div class="empty-text">No packages available</div>
+            <a href="/admin/inquiries/package/add/" class="btn-modern btn-primary-modern mt-2">
+                <i class="bi bi-plus-circle"></i> Create Package Template
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Itinerary Details -->
+    <div class="form-section">
+        <div class="section-title">
+            <i class="bi bi-sliders"></i>
+            Itinerary Details
+        </div>
+        
+        <div class="input-grid">
+            <div class="modern-form-group">
+                <label class="modern-label">
+                    <i class="bi bi-people-fill"></i>
+                    Number of Travelers (PAX) <span class="required">*</span>
+                </label>
+                <input type="number" name="pax" class="modern-input" value="{{ lead.number_of_travelers }}" min="1" required>
+                <p class="helper-text">Total number of people traveling</p>
+            </div>
+            
+            <div class="modern-form-group">
+                <label class="modern-label">
+                    <i class="bi bi-truck"></i>
+                    Number of Cabs <span class="required">*</span>
+                </label>
+                <input type="number" name="num_cabs" class="modern-input" value="1" min="1" required>
+                <p class="helper-text">Cabs/vehicles needed for transportation</p>
+            </div>
+            
+            <div class="modern-form-group">
+                <label class="modern-label">
+                    <i class="bi bi-calendar-range"></i>
+                    Duration (Days) <span class="required">*</span>
+                </label>
+                <input type="number" name="duration_days" class="modern-input" value="{{ lead.duration_days }}" min="1" required>
+                <p class="helper-text">Total days of the trip</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="submit-section">
+        <button type="submit" class="btn-submit-modern">
+            <i class="bi bi-magic"></i>
+            Generate Itinerary
+        </button>
+        <br>
+        <a href="{% url 'update_status' lead.id %}" class="btn-modern btn-secondary-modern mt-2">
+            <i class="bi bi-arrow-left"></i>
+            Back to Lead
+        </a>
+    </div>
+</form>
+
+<!-- How It Works -->
+<div class="modern-card mt-3">
+    <h4><i class="bi bi-lightbulb"></i> How It Works</h4>
+    <ol style="line-height: 2;">
+        <li>Select a <strong>package template</strong> above</li>
+        <li>Enter <strong>PAX</strong> (number of travelers)</li>
+        <li>Enter <strong>number of cabs</strong> needed</li>
+        <li>Click <strong>"Generate Itinerary"</strong></li>
+        <li>System will auto-create all days from the package template</li>
+        <li>Then customize each day with hotels and pricing</li>
+        <li>Apply markup and get final quotation!</li>
+    </ol>
+</div>
+{% endblock %}

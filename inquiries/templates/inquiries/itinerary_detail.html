@@ -1,0 +1,105 @@
+{% extends "inquiries/modern_base.html" %}
+{% block title %}Itinerary Builder | Travel CRM{% endblock %}
+{% block extra_css %}
+<style>
+.page-header{text-align:center;margin-bottom:var(--spacing-xl)}
+.page-title{font-size:2.5rem;font-weight:800;color:white;margin-bottom:var(--spacing-sm);text-shadow:2px 2px 4px rgba(0,0,0,0.2)}
+.pricing-summary{background:linear-gradient(135deg,#66BB6A 0%,#4CAF50 100%);color:white;border-radius:var(--radius-lg);padding:var(--spacing-xl);margin-bottom:var(--spacing-xl);box-shadow:var(--shadow-lg)}
+.price-row{display:flex;justify-content:space-between;align-items:center;padding:var(--spacing-sm) 0;border-bottom:1px solid rgba(255,255,255,0.2)}
+.price-row:last-child{border-bottom:none;font-size:1.5rem;font-weight:700;padding-top:var(--spacing-md)}
+.day-card{background:white;border-radius:var(--radius-lg);padding:var(--spacing-xl);margin-bottom:var(--spacing-lg);box-shadow:var(--shadow-md);border-left:4px solid var(--primary)}
+.day-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:var(--spacing-md)}
+.day-title{font-size:1.5rem;font-weight:700;color:var(--primary)}
+.day-form{display:none;margin-top:var(--spacing-md);padding-top:var(--spacing-md);border-top:2px solid var(--light)}
+.day-form.active{display:block}
+.cost-breakdown{background:var(--light);padding:var(--spacing-md);border-radius:var(--radius-sm);margin-top:var(--spacing-md)}
+.cost-item{display:flex;justify-content:space-between;padding:var(--spacing-xs) 0}
+.markup-section{background:white;border-radius:var(--radius-lg);padding:var(--spacing-xl);box-shadow:var(--shadow-md)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+<h1 class="page-title"><i class="bi bi-map-fill"></i> Itinerary Builder</h1>
+<p class="page-subtitle" style="color:rgba(255,255,255,0.9)">Customize your travel package day by day</p>
+</div>
+<div class="lead-info-card">
+<h3><i class="bi bi-person-circle"></i> {{ lead.customer_name }}</h3>
+<div class="lead-info-grid">
+<div class="info-item"><i class="bi bi-telephone"></i><span>{{ lead.mobile_number }}</span></div>
+<div class="info-item"><i class="bi bi-geo-alt"></i><span>{{ lead.destination }}</span></div>
+<div class="info-item"><i class="bi bi-people"></i><span>{{ itinerary.pax }} Travelers</span></div>
+<div class="info-item"><i class="bi bi-truck"></i><span>{{ itinerary.number_of_cabs }} Cab(s)</span></div>
+</div>
+</div>
+<div class="pricing-summary">
+<h3 style="margin-bottom:var(--spacing-md)"><i class="bi bi-calculator"></i> Pricing Summary</h3>
+<div class="price-row"><span>Base Price</span><span>₹{{ itinerary.base_price|floatformat:0 }}</span></div>
+<div class="price-row"><span>Markup ({{ itinerary.markup_percentage }}%)</span><span>₹{{ itinerary.markup_amount|floatformat:0 }}</span></div>
+<div class="price-row"><span>Total Price</span><span>₹{{ itinerary.total_price|floatformat:0 }}</span></div>
+</div>
+<form method="POST" action="{% url 'itinerary_update_markup' itinerary.id %}" class="markup-section mb-3">
+{% csrf_token %}
+<h4><i class="bi bi-percent"></i> Apply Markup</h4>
+<div class="d-flex gap-2 align-center mt-2">
+<input type="number" name="markup_percentage" class="modern-input" value="{{ itinerary.markup_percentage }}" min="0" max="100" step="0.01" style="max-width:150px">
+<button type="submit" class="btn-modern btn-primary-modern"><i class="bi bi-check"></i> Update Markup</button>
+</div>
+</form>
+{% for day in itinerary_days %}
+<div class="day-card">
+<div class="day-header">
+<div class="day-title"><i class="bi bi-calendar-day"></i> Day {{ day.day_number }}: {{ day.title }}</div>
+<button type="button" class="btn-modern btn-primary-modern" onclick="toggleDayForm({{ day.id }})"><i class="bi bi-pencil"></i> Customize</button>
+</div>
+<p>{{ day.description }}</p>
+{% if day.hotel %}<div class="mt-2"><strong><i class="bi bi-building"></i> Hotel:</strong> {{ day.hotel.name }} - {{ day.room_category.room_type }} ({{ day.number_of_rooms }} room(s){% if day.extra_mattress %}, {{ day.extra_mattress }} extra mattress{% endif %})</div>{% endif %}
+<div class="cost-breakdown">
+<div class="cost-item"><span><i class="bi bi-building"></i> Hotel Cost:</span><span>₹{{ day.get_hotel_cost|floatformat:0 }}</span></div>
+<div class="cost-item"><span><i class="bi bi-truck"></i> Transport:</span><span>₹{{ day.get_transport_cost|floatformat:0 }}</span></div>
+<div class="cost-item"><span><i class="bi bi-ticket"></i> Entry Tickets:</span><span>₹{{ day.entry_tickets|floatformat:0 }}</span></div>
+{% if day.additional_charges > 0 %}<div class="cost-item"><span><i class="bi bi-plus-circle"></i> Additional:</span><span>₹{{ day.additional_charges|floatformat:0 }}</span></div>{% endif %}
+<div class="cost-item" style="font-weight:700;border-top:2px solid #ccc;margin-top:var(--spacing-sm);padding-top:var(--spacing-sm)"><span>Day Total:</span><span>₹{{ day.get_total_cost|floatformat:0 }}</span></div>
+</div>
+<form method="POST" action="{% url 'itinerary_day_update' day.id %}" class="day-form" id="form_{{ day.id }}">
+{% csrf_token %}
+<h5><i class="bi bi-building"></i> Hotel Selection</h5>
+<div class="form-grid mb-3">
+<div><label class="modern-label">Hotel</label><select name="hotel" class="modern-input" onchange="loadRoomCategories(this.value, {{ day.id }})">
+<option value="">Select Hotel</option>
+{% for hotel in hotels %}<option value="{{ hotel.id }}" {% if day.hotel and day.hotel.id == hotel.id %}selected{% endif %}>{{ hotel.name }} - {{ hotel.city }}</option>{% endfor %}
+</select></div>
+<div><label class="modern-label">Room Category</label><select name="room_category" class="modern-input" id="room_select_{{ day.id }}">
+<option value="">Select Room</option>
+{% if day.hotel %}{% for room in day.hotel.room_categories.all %}<option value="{{ room.id }}" {% if day.room_category and day.room_category.id == room.id %}selected{% endif %}>{{ room.room_type }} - ₹{{ room.price_per_night }}/night</option>{% endfor %}{% endif %}
+</select></div>
+<div><label class="modern-label">Number of Rooms</label><input type="number" name="number_of_rooms" class="modern-input" value="{{ day.number_of_rooms }}" min="1"></div>
+<div><label class="modern-label">Extra Mattress</label><input type="number" name="extra_mattress" class="modern-input" value="{{ day.extra_mattress }}" min="0"></div>
+</div>
+<h5><i class="bi bi-truck"></i> Transportation</h5>
+<div class="form-grid mb-3">
+<div><label class="modern-label">Cab Price</label><input type="number" name="cab_price" class="modern-input" value="{{ day.cab_price }}" step="0.01"></div>
+<div><label class="modern-label">Ferry Price</label><input type="number" name="ferry_price" class="modern-input" value="{{ day.ferry_price }}" step="0.01"></div>
+<div><label class="modern-label">Speedboat Price</label><input type="number" name="speedboat_price" class="modern-input" value="{{ day.speedboat_price }}" step="0.01"></div>
+</div>
+<h5><i class="bi bi-ticket"></i> Entry Tickets & Charges</h5>
+<div class="form-grid mb-3">
+<div><label class="modern-label">Entry Tickets</label><input type="number" name="entry_tickets" class="modern-input" value="{{ day.entry_tickets }}" step="0.01"></div>
+<div><label class="modern-label">Additional Charges</label><input type="number" name="additional_charges" class="modern-input" value="{{ day.additional_charges }}" step="0.01"></div>
+<div class="form-grid-full"><label class="modern-label">Charges Description</label><input type="text" name="additional_charges_description" class="modern-input" value="{{ day.additional_charges_description }}" placeholder="e.g., Guide fees, special permits"></div>
+</div>
+<button type="submit" class="btn-modern btn-success-modern"><i class="bi bi-check-circle"></i> Save Day {{ day.day_number }}</button>
+<button type="button" class="btn-modern btn-secondary-modern" onclick="toggleDayForm({{ day.id }})"><i class="bi bi-x"></i> Cancel</button>
+</form>
+</div>
+{% endfor %}
+<div class="submit-section">
+<a href="{% url 'update_status' lead.id %}" class="btn-modern btn-primary-modern"><i class="bi bi-check-circle-fill"></i> Finalize & Back to Lead</a>
+<a href="{% url 'itinerary_delete' itinerary.id %}" class="btn-modern btn-danger-modern" onclick="return confirm('Delete this itinerary?')"><i class="bi bi-trash"></i> Delete Itinerary</a>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleDayForm(dayId){const form=document.getElementById('form_'+dayId);form.classList.toggle('active')}
+function loadRoomCategories(hotelId,dayId){if(!hotelId){document.getElementById('room_select_'+dayId).innerHTML='<option value="">Select Room</option>';return}fetch('/inquiries/api/hotel/'+hotelId+'/rooms/').then(r=>r.json()).then(data=>{let options='<option value="">Select Room</option>';data.room_categories.forEach(room=>{options+=`<option value="${room.id}">${room.room_type} - ₹${room.price_per_night}/night</option>`});document.getElementById('room_select_'+dayId).innerHTML=options})}
+</script>
+{% endblock %}

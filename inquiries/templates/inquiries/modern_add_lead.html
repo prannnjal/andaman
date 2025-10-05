@@ -1,0 +1,554 @@
+{% extends "inquiries/modern_base.html" %}
+
+{% block title %}Add Travel Lead | Travel CRM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: var(--spacing-sm);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-lg);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid var(--light);
+    }
+    
+    /* Travel Type Cards */
+    .travel-type-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .travel-type-card {
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .travel-type-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+    }
+    
+    .travel-type-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--spacing-lg);
+        border: 2px solid #e0e0e0;
+        border-radius: var(--radius-md);
+        background: white;
+        transition: all 0.3s ease;
+        min-height: 120px;
+    }
+    
+    .travel-type-card:hover .travel-type-label {
+        border-color: var(--primary);
+        background: rgba(30, 136, 229, 0.05);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .travel-type-card input:checked + .travel-type-label {
+        border-color: var(--primary);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        box-shadow: var(--shadow-md);
+    }
+    
+    .travel-type-icon {
+        font-size: 2.5rem;
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .travel-type-card input:checked + .travel-type-label .travel-type-icon {
+        transform: scale(1.1);
+    }
+    
+    .travel-type-name {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+        .travel-type-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .travel-type-label {
+            min-height: 100px;
+            padding: var(--spacing-md);
+        }
+        
+        .travel-type-icon {
+            font-size: 2rem;
+        }
+    }
+    
+    /* Form Grid */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-lg);
+    }
+    
+    .form-grid-full {
+        grid-column: 1 / -1;
+    }
+    
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Form Control */
+    .form-control-modern {
+        width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: 2px solid #e0e0e0;
+        border-radius: var(--radius-sm);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .form-control-modern:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+    }
+    
+    .form-label-modern {
+        display: block;
+        font-weight: 600;
+        margin-bottom: var(--spacing-sm);
+        color: var(--dark);
+        font-size: 0.95rem;
+    }
+    
+    .form-label-modern i {
+        color: var(--primary);
+        margin-right: var(--spacing-xs);
+    }
+    
+    .required {
+        color: var(--danger);
+        margin-left: 2px;
+    }
+    
+    /* Submit Button */
+    .submit-section {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+    }
+    
+    .btn-submit-modern {
+        padding: var(--spacing-md) var(--spacing-xl);
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: var(--radius-md);
+        border: none;
+        background: linear-gradient(135deg, var(--success) 0%, #4CAF50 100%);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+        min-width: 200px;
+    }
+    
+    .btn-submit-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    }
+    
+    .btn-submit-modern i {
+        margin-right: var(--spacing-sm);
+    }
+    
+    /* Helper Text */
+    .helper-text {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: var(--spacing-xs);
+    }
+    
+    /* Highlighted Section */
+    .highlight-section {
+        background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(30, 136, 229, 0.05) 100%);
+        border-left: 4px solid var(--primary);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-plus-circle-fill"></i> Add New Travel Lead
+    </h1>
+    <p class="page-subtitle" style="color: rgba(255,255,255,0.9);">
+        Create a new travel inquiry with customer details
+    </p>
+</div>
+
+<div class="form-container">
+    <form method="POST" action="{% url 'add_inquiry' %}">
+        {% csrf_token %}
+        
+        <!-- Travel Type Selection (Prominent) -->
+        <div class="form-section highlight-section">
+            <div class="section-title">
+                <i class="bi bi-compass"></i>
+                Select Travel Type <span class="required">*</span>
+            </div>
+            
+            <div class="travel-type-grid">
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_honeymoon" value="Honeymoon" required>
+                    <label for="type_honeymoon" class="travel-type-label">
+                        <div class="travel-type-icon">🌸</div>
+                        <div class="travel-type-name">Honeymoon</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_family" value="Family" checked>
+                    <label for="type_family" class="travel-type-label">
+                        <div class="travel-type-icon">👨‍👩‍👧‍👦</div>
+                        <div class="travel-type-name">Family</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_solo" value="Solo">
+                    <label for="type_solo" class="travel-type-label">
+                        <div class="travel-type-icon">🎒</div>
+                        <div class="travel-type-name">Solo</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_group" value="Group">
+                    <label for="type_group" class="travel-type-label">
+                        <div class="travel-type-icon">👥</div>
+                        <div class="travel-type-name">Group</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_corporate" value="Corporate">
+                    <label for="type_corporate" class="travel-type-label">
+                        <div class="travel-type-icon">💼</div>
+                        <div class="travel-type-name">Corporate</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_adventure" value="Adventure">
+                    <label for="type_adventure" class="travel-type-label">
+                        <div class="travel-type-icon">🏔️</div>
+                        <div class="travel-type-name">Adventure</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_pilgrimage" value="Pilgrimage">
+                    <label for="type_pilgrimage" class="travel-type-label">
+                        <div class="travel-type-icon">🙏</div>
+                        <div class="travel-type-name">Pilgrimage</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_beach" value="Beach">
+                    <label for="type_beach" class="travel-type-label">
+                        <div class="travel-type-icon">🏖️</div>
+                        <div class="travel-type-name">Beach</div>
+                    </label>
+                </div>
+                
+                <div class="travel-type-card">
+                    <input type="radio" name="travel_type" id="type_hill" value="Hill Station">
+                    <label for="type_hill" class="travel-type-label">
+                        <div class="travel-type-icon">⛰️</div>
+                        <div class="travel-type-name">Hill Station</div>
+                    </label>
+                </div>
+            </div>
+            <p class="helper-text">
+                <i class="bi bi-info-circle"></i> Select the type of travel your customer is interested in
+            </p>
+        </div>
+        
+        <!-- Customer Information -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="bi bi-person"></i>
+                Customer Information
+            </div>
+            
+            <div class="form-grid">
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-person-fill"></i>
+                        Customer Name <span class="required">*</span>
+                    </label>
+                    {{ form.customer_name }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-telephone-fill"></i>
+                        Mobile Number <span class="required">*</span>
+                    </label>
+                    {{ form.mobile_number }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-envelope-fill"></i>
+                        Email
+                    </label>
+                    {{ form.email }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-building"></i>
+                        City
+                    </label>
+                    {{ form.city }}
+                </div>
+                
+                <div class="form-grid-full">
+                    <label class="form-label-modern">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        Address
+                    </label>
+                    {{ form.address }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Travel Details -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="bi bi-map"></i>
+                Travel Details
+            </div>
+            
+            <div class="form-grid">
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-geo-alt"></i>
+                        Destination <span class="required">*</span>
+                    </label>
+                    {{ form.destination }}
+                    <p class="helper-text">Where does the customer want to travel?</p>
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-people-fill"></i>
+                        Number of Travelers (PAX) <span class="required">*</span>
+                    </label>
+                    {{ form.number_of_travelers }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-calendar-event"></i>
+                        Travel Start Date
+                    </label>
+                    {{ form.travel_start_date }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-calendar-check"></i>
+                        Travel End Date
+                    </label>
+                    {{ form.travel_end_date }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-clock"></i>
+                        Duration (Days)
+                    </label>
+                    {{ form.duration_days }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Budget & Pricing -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="bi bi-currency-rupee"></i>
+                Budget & Pricing
+            </div>
+            
+            <div class="form-grid">
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-wallet2"></i>
+                        Customer Budget
+                    </label>
+                    {{ form.budget }}
+                    <p class="helper-text">Customer's expected budget in ₹</p>
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-tag"></i>
+                        Quoted Price
+                    </label>
+                    {{ form.quoted_price }}
+                    <p class="helper-text">Price quoted to customer in ₹</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Lead Management -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="bi bi-gear"></i>
+                Lead Management
+            </div>
+            
+            <div class="form-grid">
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-list-check"></i>
+                        Status <span class="required">*</span>
+                    </label>
+                    {{ form.status }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-inbox"></i>
+                        Inquiry Source <span class="required">*</span>
+                    </label>
+                    {{ form.inquiry_source }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-calendar-date"></i>
+                        Inquiry Date
+                    </label>
+                    {{ form.inquiry_date }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-calendar-plus"></i>
+                        Follow-up Date
+                    </label>
+                    {{ form.follow_up_date }}
+                </div>
+                
+                {% if user.role == "Admin" %}
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-person-badge"></i>
+                        Assign to Admin
+                    </label>
+                    {{ form.admin_assigned }}
+                </div>
+                {% endif %}
+                
+                <div class="form-grid-full">
+                    <label class="form-label-modern">
+                        <i class="bi bi-chat-left-text"></i>
+                        Remarks / Notes
+                    </label>
+                    {{ form.remarks }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="submit-section">
+            <button type="submit" class="btn-submit-modern">
+                <i class="bi bi-check-circle-fill"></i>
+                Create Travel Lead
+            </button>
+            <br>
+            <a href="{% url 'inquiry_list' %}" class="btn-modern btn-secondary-modern mt-2">
+                <i class="bi bi-x-circle"></i>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Add custom styling to form fields -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add modern-input class to all form fields
+        const inputs = document.querySelectorAll('input[type="text"], input[type="email"], input[type="number"], input[type="date"], select, textarea');
+        inputs.forEach(input => {
+            input.classList.add('form-control-modern');
+        });
+        
+        // Calculate duration when dates change
+        const startDate = document.querySelector('input[name="travel_start_date"]');
+        const endDate = document.querySelector('input[name="travel_end_date"]');
+        const duration = document.querySelector('input[name="duration_days"]');
+        
+        function calculateDuration() {
+            if (startDate.value && endDate.value) {
+                const start = new Date(startDate.value);
+                const end = new Date(endDate.value);
+                const diffTime = Math.abs(end - start);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (duration) {
+                    duration.value = diffDays + 1;
+                }
+            }
+        }
+        
+        if (startDate && endDate) {
+            startDate.addEventListener('change', calculateDuration);
+            endDate.addEventListener('change', calculateDuration);
+        }
+    });
+</script>
+{% endblock %}

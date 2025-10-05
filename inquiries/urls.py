@@ -89,6 +89,16 @@ urlpatterns = [
     path('google-sheets/setup/', views.google_sheets_setup_view, name='google_sheets_setup'),
     path('google-sheets/preview/', views.google_sheets_preview_view, name='google_sheets_preview'),
     path('google-sheets/import/', views.google_sheets_import_view, name='google_sheets_import'),
+    
+    # ====================================================================================
+    # Itinerary Builder URLs
+    # ====================================================================================
+    path('lead/<int:lead_id>/itinerary/create/', views.itinerary_create, name='itinerary_create'),
+    path('itinerary/<int:itinerary_id>/', views.itinerary_detail, name='itinerary_detail'),
+    path('itinerary/day/<int:day_id>/update/', views.itinerary_day_update, name='itinerary_day_update'),
+    path('itinerary/<int:itinerary_id>/markup/update/', views.itinerary_update_markup, name='itinerary_update_markup'),
+    path('itinerary/<int:itinerary_id>/delete/', views.itinerary_delete, name='itinerary_delete'),
+    path('api/hotel/<int:hotel_id>/rooms/', views.get_room_categories_ajax, name='get_room_categories'),
 
 ]
 urlpatterns += [

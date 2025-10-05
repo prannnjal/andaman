@@ -637,7 +637,7 @@ def add_inquiry(request):
     else:       # For GET request
         form = UpdateLeadStatusForm()
         
-    return render(request, 'inquiries/add_update_lead.html', {'form': form, 'title': 'Add new Inquiry'})
+    return render(request, 'inquiries/modern_add_lead.html', {'form': form, 'title': 'Add New Travel Lead'})
 
 # ================================================================================================================================================================
             
@@ -766,7 +766,204 @@ def manage_lead_status(request, inquiry_id):
         else:
             form = AgentUpdateLeadForm(instance=inquiry)
 
-    return render(request, 'inquiries/add_update_lead.html', {'form': form, 'title': 'Update Lead Status'})
+    # Get existing itineraries for this lead
+    existing_itineraries = ItineraryBuilder.objects.filter(lead=inquiry).order_by('-created_at')
+    
+    return render(request, 'inquiries/add_update_lead.html', {
+        'form': form, 
+        'title': 'Update Lead Status',
+        'lead': inquiry,
+        'existing_itineraries': existing_itineraries
+    })
+
+# ======================== ITINERARY BUILDER VIEWS ========================
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def itinerary_create(request, lead_id):
+    """Create new itinerary for a lead"""
+    lead = get_object_or_404(Lead, id=lead_id)
+    
+    # Check permission
+    if request.user.role == 'Agent' and lead.assigned_agent != request.user:
+        messages.error(request, "You can only create itineraries for leads assigned to you.")
+        return redirect('inquiry_list')
+    
+    if request.method == 'POST':
+        package_id = request.POST.get('package')
+        pax = request.POST.get('pax')
+        num_cabs = request.POST.get('num_cabs', 1)
+        duration = request.POST.get('duration_days')
+        
+        if not all([package_id, pax, duration]):
+            messages.error(request, "Please fill all required fields.")
+            return redirect('itinerary_create', lead_id=lead_id)
+        
+        package = get_object_or_404(Package, id=package_id)
+        
+        # Create itinerary
+        itinerary = ItineraryBuilder.objects.create(
+            lead=lead,
+            package=package,
+            pax=int(pax),
+            number_of_cabs=int(num_cabs),
+            duration_days=int(duration),
+            created_by=request.user
+        )
+        
+        # Auto-generate itinerary days from package template
+        for package_day in package.package_days.all():
+            ItineraryDay.objects.create(
+                itinerary=itinerary,
+                day_number=package_day.day_number,
+                title=package_day.title,
+                description=package_day.description,
+                cab_price=package_day.cab_price * int(num_cabs),
+                ferry_price=package_day.ferry_price * int(pax),
+                speedboat_price=package_day.speedboat_price * int(pax),
+                entry_tickets=package_day.entry_tickets * int(pax),
+                activities=package_day.activities
+            )
+        
+        # Calculate initial pricing
+        itinerary.calculate_total()
+        itinerary.save()
+        
+        messages.success(request, f"Itinerary created successfully! {itinerary.itinerary_days.count()} days generated.")
+        return redirect('itinerary_detail', itinerary_id=itinerary.id)
+    
+    # GET request - show form
+    packages = Package.objects.filter(is_active=True).order_by('name')
+    
+    return render(request, 'inquiries/itinerary_create.html', {
+        'lead': lead,
+        'packages': packages
+    })
+
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def itinerary_detail(request, itinerary_id):
+    """View and customize itinerary"""
+    itinerary = get_object_or_404(ItineraryBuilder, id=itinerary_id)
+    
+    # Check permission
+    if request.user.role == 'Agent' and itinerary.lead.assigned_agent != request.user:
+        messages.error(request, "You can only view itineraries for your assigned leads.")
+        return redirect('inquiry_list')
+    
+    # Get all hotels for customization
+    hotels = Hotel.objects.filter(is_active=True).order_by('name')
+    
+    # Get itinerary days
+    itinerary_days = itinerary.itinerary_days.all().order_by('day_number')
+    
+    return render(request, 'inquiries/itinerary_detail.html', {
+        'itinerary': itinerary,
+        'lead': itinerary.lead,
+        'itinerary_days': itinerary_days,
+        'hotels': hotels
+    })
+
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def itinerary_day_update(request, day_id):
+    """Update a specific itinerary day with hotel and pricing"""
+    day = get_object_or_404(ItineraryDay, id=day_id)
+    
+    # Check permission
+    if request.user.role == 'Agent' and day.itinerary.lead.assigned_agent != request.user:
+        messages.error(request, "You can only edit itineraries for your assigned leads.")
+        return redirect('inquiry_list')
+    
+    if request.method == 'POST':
+        # Update hotel and room
+        hotel_id = request.POST.get('hotel')
+        room_category_id = request.POST.get('room_category')
+        
+        if hotel_id:
+            day.hotel = Hotel.objects.get(id=hotel_id)
+        if room_category_id:
+            day.room_category = RoomCategory.objects.get(id=room_category_id)
+        
+        # Update room details
+        day.number_of_rooms = int(request.POST.get('number_of_rooms', 1))
+        day.extra_mattress = int(request.POST.get('extra_mattress', 0))
+        
+        # Update transportation
+        day.cab_price = float(request.POST.get('cab_price', 0))
+        day.ferry_price = float(request.POST.get('ferry_price', 0))
+        day.speedboat_price = float(request.POST.get('speedboat_price', 0))
+        day.entry_tickets = float(request.POST.get('entry_tickets', 0))
+        
+        # Update additional charges
+        day.additional_charges = float(request.POST.get('additional_charges', 0))
+        day.additional_charges_description = request.POST.get('additional_charges_description', '')
+        
+        day.save()
+        
+        # Recalculate itinerary total
+        day.itinerary.calculate_total()
+        day.itinerary.save()
+        
+        messages.success(request, f"Day {day.day_number} updated successfully! Total price recalculated.")
+        return redirect('itinerary_detail', itinerary_id=day.itinerary.id)
+    
+    return redirect('itinerary_detail', itinerary_id=day.itinerary.id)
+
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def itinerary_update_markup(request, itinerary_id):
+    """Update markup percentage for itinerary"""
+    itinerary = get_object_or_404(ItineraryBuilder, id=itinerary_id)
+    
+    if request.method == 'POST':
+        markup = float(request.POST.get('markup_percentage', 0))
+        itinerary.markup_percentage = markup
+        itinerary.calculate_total()
+        itinerary.save()
+        
+        messages.success(request, f"Markup updated to {markup}%. Total price: ₹{itinerary.total_price:,.0f}")
+        return redirect('itinerary_detail', itinerary_id=itinerary.id)
+    
+    return redirect('itinerary_detail', itinerary_id=itinerary.id)
+
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def itinerary_delete(request, itinerary_id):
+    """Delete an itinerary"""
+    itinerary = get_object_or_404(ItineraryBuilder, id=itinerary_id)
+    lead_id = itinerary.lead.id
+    
+    # Check permission
+    if request.user.role == 'Agent' and itinerary.lead.assigned_agent != request.user:
+        messages.error(request, "You can only delete itineraries for your assigned leads.")
+        return redirect('inquiry_list')
+    
+    itinerary.delete()
+    messages.success(request, "Itinerary deleted successfully.")
+    return redirect('update_status', inquiry_id=lead_id)
+
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def get_room_categories_ajax(request, hotel_id):
+    """AJAX endpoint to get room categories for a hotel"""
+    hotel = get_object_or_404(Hotel, id=hotel_id)
+    room_categories = hotel.room_categories.filter(is_available=True)
+    
+    data = [{
+        'id': room.id,
+        'room_type': room.room_type,
+        'price_per_night': str(room.price_per_night),
+        'extra_mattress_price': str(room.extra_mattress_price),
+        'max_occupancy': room.max_occupancy
+    } for room in room_categories]
+    
+    return JsonResponse({'room_categories': data})
 
 # ================================================================================================================================================================
 @login_required

@@ -416,6 +416,66 @@
             <button type="submit" class="btn-submit">Submit</button>
         </form>
 
+        <!-- Itinerary Builder Section (Only show when editing existing lead) -->
+        {% if lead and lead.id %}
+        <div class="itinerary-section" style="margin-top: 3rem; padding: 2rem; background: linear-gradient(135deg, #f0f7ff 0%, #e0f2f7 100%); border-radius: 12px; border: 2px solid #1E88E5;">
+            <h2 style="color: #1E88E5; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <i class="bi bi-map" style="font-size: 2rem;"></i>
+                Itinerary Builder
+            </h2>
+            
+            {% if existing_itineraries %}
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">Existing Itineraries ({{ existing_itineraries.count }})</h3>
+            {% for itinerary in existing_itineraries %}
+            <div style="background: white; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h4 style="margin: 0 0 0.5rem 0; color: #1E88E5;">
+                            <i class="bi bi-box-seam"></i> {{ itinerary.package.name }}
+                        </h4>
+                        <div style="display: grid; gap: 0.5rem; font-size: 0.95rem; color: #666;">
+                            <div><i class="bi bi-people"></i> {{ itinerary.pax }} Travelers | <i class="bi bi-truck"></i> {{ itinerary.number_of_cabs }} Cab(s)</div>
+                            <div><i class="bi bi-calendar"></i> {{ itinerary.duration_days }} Days</div>
+                            <div><i class="bi bi-clock"></i> Created {{ itinerary.created_at|date:"d M, Y" }}</div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.8rem; font-weight: 700; color: #4CAF50;">
+                            ₹{{ itinerary.total_price|floatformat:0 }}
+                        </div>
+                        <div style="font-size: 0.85rem; color: #666;">
+                            Base: ₹{{ itinerary.base_price|floatformat:0 }} + {{ itinerary.markup_percentage }}%
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <a href="{% url 'itinerary_detail' itinerary.id %}" style="all: unset; cursor: pointer; padding: 0.5rem 1rem; background: #1E88E5; color: white; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem; transition: all 0.3s;">
+                        <i class="bi bi-pencil"></i> Customize
+                    </a>
+                    <a href="{% url 'itinerary_detail' itinerary.id %}" style="all: unset; cursor: pointer; padding: 0.5rem 1rem; background: #66BB6A; color: white; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                        <i class="bi bi-eye"></i> View
+                    </a>
+                    <a href="{% url 'itinerary_delete' itinerary.id %}" onclick="return confirm('Delete this itinerary?')" style="all: unset; cursor: pointer; padding: 0.5rem 1rem; background: #EF5350; color: white; border-radius: 6px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="text-align: center; padding: 2rem; background: white; border-radius: 8px;">
+                <i class="bi bi-map" style="font-size: 3rem; color: #ccc; display: block; margin-bottom: 1rem;"></i>
+                <p style="color: #666; margin-bottom: 1.5rem;">No itineraries created yet for this lead</p>
+            </div>
+            {% endif %}
+            
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="{% url 'itinerary_create' lead.id %}" style="all: unset; cursor: pointer; padding: 1rem 2rem; background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%); color: white; border-radius: 8px; font-size: 1.1rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(30,136,229,0.3); transition: all 0.3s;">
+                    <i class="bi bi-plus-circle-fill"></i> Create New Itinerary
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Navigation Link -->
         <div class="navigation">
             <a href="{% url 'dashboard' %}" class="add_new_agent">Back to Dashboard</a>

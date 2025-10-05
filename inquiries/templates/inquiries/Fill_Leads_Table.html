@@ -467,6 +467,12 @@
                                 <a class="log" href="{% url 'view-lead-logs' inquiry.id %}">View Logs</a>
                             {% endif %}
                             
+                            {% if "Itinerary" in actions %}
+                                <a class="itinerary" href="{% url 'itinerary_create' inquiry.id %}" style="all: unset; cursor: pointer; color: #9C27B0; font-weight: 600;">
+                                    <i class="bi bi-map"></i> Itinerary
+                                </a>
+                            {% endif %}
+                            
                             {% if "Proposal" in actions %}
                                 <div style="display: flex; gap: 10px;">
                                     <a class="proposal" href="{% url 'preview_proposal' inquiry.id %}" 
