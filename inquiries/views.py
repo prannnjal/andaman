@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import CustomUser, Lead, CustomUser, LeadLogs, School, CompanySettings
+from .models import CustomUser, Lead, CustomUser, LeadLogs, Hotel, CompanySettings, Package, PackageDay, RoomCategory, ItineraryBuilder, ItineraryDay
 from .forms import InquiryForm, UpdateLeadStatusForm, EditLeadForm, AgentUpdateLeadForm, CustomUserForm, UpdateUserForm, TransferLeadForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
@@ -237,18 +237,18 @@ def Filter_Inquiries(request):
         lead_ids = [int(i) for i in lead_ids if str(i).isdigit()]
         inquiries = inquiries.filter(id__in=lead_ids)
         
-    student_classes = query_params.getlist('student_class[]')
-    if student_classes:
-        inquiries = inquiries.filter(student_class__in=student_classes)
+    travel_types = query_params.getlist('travel_type[]')
+    if travel_types:
+        inquiries = inquiries.filter(travel_type__in=travel_types)
    
         
-    student_names = query_params.getlist('student_name[]')
-    if student_names:
-        inquiries = inquiries.filter(student_name__in=student_names)
+    customer_names = query_params.getlist('customer_name[]')
+    if customer_names:
+        inquiries = inquiries.filter(customer_name__in=customer_names)
         
-    parent_names = query_params.getlist('parent_name[]')
-    if parent_names:
-        inquiries = inquiries.filter(parent_name__in=parent_names)
+    destinations = query_params.getlist('destination[]')
+    if destinations:
+        inquiries = inquiries.filter(destination__in=destinations)
         
     lead_emails = query_params.getlist('lead_email[]')
     if lead_emails:
@@ -380,78 +380,57 @@ def inquiry_list(request):
             inquiry.latest_call_notes = None
             inquiry.latest_call_date = None
     
-    # Distinct list of schools (stored in student_name) for Schools segment
-    students = Lead.objects.values_list('student_name', flat=True).distinct()
-    selected_student_names = request.GET.getlist('student_name[]')
-    # Schools for segment
-    schools = School.objects.all().order_by('name')
-    selected_school_ids = request.GET.getlist('school_id[]')
+    # Distinct lists for filters - Travel CRM
+    customers = Lead.objects.values_list('customer_name', flat=True).distinct()
+    destinations = Lead.objects.values_list('destination', flat=True).distinct()
+    travel_types = Lead.objects.values_list('travel_type', flat=True).distinct()
 
     return render(request, 'inquiries/inquiry_list.html', {
-        'heading': request.GET.get('heading', "Leads List"),
+        'heading': request.GET.get('heading', "Travel Leads"),
         'inquiries': inquiries,
-        'actions': ['Update', 'Delete', 'View Logs', 'Proposal'],
-        'dashboard_buttons': ["Add Inquiry", "Open Filters", "View / Hide Columns", "Dashboard"],
+        'actions': ['Update', 'Delete', 'View Logs', 'Itinerary'],
+        'dashboard_buttons': ["Add Lead", "Open Filters", "View / Hide Columns", "Dashboard"],
         'base_url_name': reverse('inquiry_list'),
-        'students': students,
-        'selected_student_names': selected_student_names,
-        'schools': schools,
-        'selected_school_ids': selected_school_ids,
+        'customers': customers,
+        'destinations': destinations,
+        'travel_types': travel_types,
     })
 
 # ======================================================================================================
 
 @login_required
 @user_passes_test(is_admin)
-def school_list_create_view(request):
+def hotel_list_create_view(request):
+    """Hotel management view - uses admin panel for now"""
     if request.method == 'POST':
         name = request.POST.get('name', '').strip()
         address = request.POST.get('address', '').strip()
-        remarks = request.POST.get('remarks', '').strip()
+        city = request.POST.get('city', '').strip()
         if name:
-            school, created = School.objects.get_or_create(name=name, defaults={
+            hotel, created = Hotel.objects.get_or_create(name=name, defaults={
                 'address': address,
-                'remarks': remarks,
+                'city': city,
+                'state': 'India',
+                'contact_number': '0000000000',
                 'created_by': request.user
             })
             if created:
-                messages.success(request, f"School '{name}' created successfully.")
+                messages.success(request, f"Hotel '{name}' created successfully.")
             else:
-                messages.info(request, f"School '{name}' already exists.")
+                messages.info(request, f"Hotel '{name}' already exists.")
         else:
-            messages.error(request, 'School name is required.')
-        return redirect('school_list_create')
-    schools = School.objects.all().order_by('name')
-    return render(request, 'inquiries/schools.html', {'schools': schools})
+            messages.error(request, 'Hotel name is required.')
+        return redirect('hotel_list_create')
+    hotels = Hotel.objects.all().order_by('name')
+    return render(request, 'inquiries/hotels.html', {'hotels': hotels})
 
 
 @login_required
 @user_passes_test(is_admin)
-def assign_leads_to_school_view(request):
-    if request.method == 'POST':
-        school_id = request.POST.get('school_id')
-        lead_ids_json = request.POST.get('selected_lead_ids', '[]')
-        try:
-            lead_ids = json.loads(lead_ids_json)
-        except Exception:
-            lead_ids = []
-
-        school = School.objects.filter(id=school_id).first()
-        if not school:
-            messages.error(request, 'Invalid school selected.')
-            return redirect('school_list_create')
-
-        updated = Lead.objects.filter(id__in=lead_ids).update(school=school)
-        messages.success(request, f"Assigned {updated} lead(s) to '{school.name}'.")
-        return redirect('school_list_create')
-
-    # GET: show unassigned leads and schools
-    schools = School.objects.all().order_by('name')
-    leads = Lead.objects.all().order_by('-id')
-    return render(request, 'inquiries/assign_leads_to_school.html', {
-        'schools': schools,
-        'leads': leads,
-    })
+def assign_leads_to_hotel_view(request):
+    """Placeholder for hotel assignment - not currently used in Travel CRM"""
+    messages.info(request, 'Hotel assignment feature coming soon. Use admin panel for now.')
+    return redirect('dashboard')
 
 # ======================================================================================================================================================================
 
@@ -558,30 +537,30 @@ def follow_up_management(request):
     
     agents = CustomUser.objects.filter(role="Agent")
     lead_ids = Lead.objects.values_list('id', flat=True)
-    students = Lead.objects.values_list('student_name', flat=True).distinct() 
-    parents = Lead.objects.values_list('parent_name', flat=True).distinct() 
+    customers = Lead.objects.values_list('customer_name', flat=True).distinct() 
+    destinations = Lead.objects.values_list('destination', flat=True).distinct() 
 
     lead_emails = Lead.objects.values_list('email', flat=True).exclude(email__isnull=True).distinct()
     mobile_numbers = Lead.objects.values_list('mobile_number', flat=True).distinct()
-    blocks = Lead.objects.values_list('block', flat=True).distinct()
+    cities = Lead.objects.values_list('city', flat=True).distinct()
     inquiry_sources = Lead.objects.values_list('inquiry_source', flat=True).distinct()
     statuses = Lead.objects.values_list('status', flat=True).distinct()
-    student_classes = Lead.objects.values_list('student_class', flat=True).distinct()
+    travel_types = Lead.objects.values_list('travel_type', flat=True).distinct()
     admins = CustomUser.objects.filter(role = "Admin")
     
     return render(request, 'inquiries/follow_up_management.html', {
             'lead_ids': lead_ids,
-            'students': students,
-            'parents': parents,            
+            'customers': customers,
+            'destinations': destinations,            
             'follow_up_data':follow_up_data,            
             'Len_dict': len(follow_up_data),
             'agents': agents,
             'lead_emails': lead_emails,
             'mobile_numbers': mobile_numbers,
-            'blocks': blocks,
+            'cities': cities,
             'inquiry_sources': inquiry_sources,
             'statuses': statuses,
-            'student_classes': student_classes,
+            'travel_types': travel_types,
             'admins': admins,
             'follow_up_direction': follow_up_direction,
             'actions': ['Update', 'Delete', 'View Logs'],
@@ -819,36 +798,31 @@ def dashboard(request):
     else:
         inquiries = Lead.objects.filter(assigned_agent=user)  # Agent sees only their assigned inquiries
 
-    # Overall Counts
-    total_inquiries = inquiries.filter(status='Inquiry').count()
-    total_registrations = inquiries.filter(status='Registration').count()
-    total_tests = inquiries.filter(status='Admission Test').count()
-    total_admissions_offered = inquiries.filter(status='Admission Offered').count()
-    total_admissions_confirmed = inquiries.filter(status='Admission Confirmed').count()
-    rejected = inquiries.filter(status='Rejected').count()
+    # Overall Counts - Travel CRM
+    new_leads = inquiries.filter(status='New Lead').count()
+    itinerary_sent = inquiries.filter(status='Itinerary Sent').count()
+    bookings_confirmed = inquiries.filter(status='Booking Confirmed').count()
+    trips_completed = inquiries.filter(status='Trip Completed').count()
+    rejected = inquiries.filter(status='Not interested').count()
     
-    # New Status Type Counts
+    # Status Type Counts
     dnp_count = inquiries.filter(status='DNP').count()
     not_interested_count = inquiries.filter(status='Not interested').count()
     interested_count = inquiries.filter(status='Interested').count()
     follow_up_count = inquiries.filter(status='Follow Up').count()
-    low_budget_count = inquiries.filter(status='Low Budget').count()
-    meeting_count = inquiries.filter(status='Meeting').count()
-    proposal_count = inquiries.filter(status='Proposal').count()
+    budget_discussion_count = inquiries.filter(status='Budget Discussion').count()
+    negotiation_count = inquiries.filter(status='Negotiation').count()
     
     # Total Leads Count
     total_leads = inquiries.count()
         
     # Today's Counts
     today = now().date()
-    # print("===============================> today date in dashboard = ", today)
     
-    inquiries_today = inquiries.filter(status='Inquiry', inquiry_date=today).count()
-    registrations_today = inquiries.filter(status='Registration', registration_date=today).count()
-    tests_today = inquiries.filter(status='Admission Test', admission_test_date=today).count()
-    admissions_offered_today = inquiries.filter(status='Admission Offered', admission_offered_date=today).count()
-    admissions_confirmed_today = inquiries.filter(status='Admission Confirmed', admission_confirmed_date=today).count()
-    rejected_today = inquiries.filter(status='Rejected', rejected_date=today).count()
+    inquiries_today = inquiries.filter(status='New Lead', inquiry_date=today).count()
+    itinerary_sent_today = inquiries.filter(status='Itinerary Sent', itinerary_sent_date__date=today).count()
+    bookings_today = inquiries.filter(status='Booking Confirmed', booking_date=today).count()
+    trips_completed_today = inquiries.filter(status='Trip Completed').count()  # No specific date for this
     
     # Call Recording Statistics (for admins only)
     call_recording_stats = {}
@@ -936,32 +910,28 @@ def dashboard(request):
     '''    
 
     context = {
-        # Overall Stats
+        # Overall Stats - Travel CRM
         'todays_date': now().date().strftime('%Y-%m-%d'),
-        'total_inquiries': total_inquiries,
-        'total_registrations': total_registrations,
-        'total_tests': total_tests,
-        'total_admissions_offered': total_admissions_offered,
-        'total_admissions_confirmed': total_admissions_confirmed,
+        'new_leads': new_leads,
+        'itinerary_sent': itinerary_sent,
+        'bookings_confirmed': bookings_confirmed,
+        'trips_completed': trips_completed,
         'rejected': rejected,
         
-        # New Status Type Stats
+        # Status Type Stats
         'dnp_count': dnp_count,
         'not_interested_count': not_interested_count,
         'interested_count': interested_count,
         'follow_up_count': follow_up_count,
-        'low_budget_count': low_budget_count,
-        'meeting_count': meeting_count,
-        'proposal_count': proposal_count,
+        'budget_discussion_count': budget_discussion_count,
+        'negotiation_count': negotiation_count,
         'total_leads': total_leads,
 
         # Today's Stats
         'inquiries_today': inquiries_today,
-        'registrations_today': registrations_today,
-        'tests_today': tests_today,
-        'admissions_offered_today': admissions_offered_today,
-        'admissions_confirmed_today': admissions_confirmed_today,
-        'rejected_today': rejected_today,
+        'itinerary_sent_today': itinerary_sent_today,
+        'bookings_today': bookings_today,
+        'trips_completed_today': trips_completed_today,
         
         # Call Recording Stats (for admins)
         'call_recording_stats': call_recording_stats,
@@ -1131,32 +1101,29 @@ def detailed_stats(request):
         except ValueError:
             pass
 
-    # Overall Counts
-    total_inquiries = inquiries.filter(status='Inquiry').count()
-    total_registrations = inquiries.filter(status='Registration').count()
-    total_tests = inquiries.filter(status='Admission Test').count()
-    total_admissions_offered = inquiries.filter(status='Admission Offered').count()
-    total_admissions_confirmed = inquiries.filter(status='Admission Confirmed').count()
-    rejected = inquiries.filter(status='Rejected').count()
+    # Overall Counts - Travel CRM
+    new_leads = inquiries.filter(status='New Lead').count()
+    itinerary_sent = inquiries.filter(status='Itinerary Sent').count()
+    bookings_confirmed = inquiries.filter(status='Booking Confirmed').count()
+    trips_completed = inquiries.filter(status='Trip Completed').count()
+    rejected = inquiries.filter(status='Not interested').count()
         
     # Today's Counts
     today = now().date()
-    inquiries_today = inquiries.filter(status='Inquiry', inquiry_date=today).count()
-    registrations_today = inquiries.filter(status='Registration', registration_date=today).count()
-    tests_today = inquiries.filter(status='Admission Test', admission_test_date=today).count()
-    admissions_offered_today = inquiries.filter(status='Admission Offered', admission_offered_date=today).count()
-    admissions_confirmed_today = inquiries.filter(status='Admission Confirmed', admission_confirmed_date=today).count()
-    rejected_today = inquiries.filter(status='Rejected', rejected_date=today).count()
+    inquiries_today = inquiries.filter(status='New Lead', inquiry_date=today).count()
+    itinerary_sent_today = inquiries.filter(status='Itinerary Sent', itinerary_sent_date__date=today).count()
+    bookings_today = inquiries.filter(status='Booking Confirmed', booking_date=today).count()
+    trips_completed_today = inquiries.filter(status='Trip Completed').count()
 
-    # Counts by Student Class
+    # Counts by Travel Type
     '''
-        1) values('student_class'): Groups the data by student_class.
+        1) values('travel_type'): Groups the data by travel_type.
         
-        2) annotate(total=Count('id')): annotate allows you to perform aggregations (like SUM, COUNT, AVG, etc.) on groups of data.This query counts the number of inquiries for each student_class. The result will include a new field total, which stores the count.
+        2) annotate(total=Count('id')): annotate allows you to perform aggregations (like SUM, COUNT, AVG, etc.) on groups of data.This query counts the number of inquiries for each travel_type. The result will include a new field total, which stores the count.
         
-        3) order_by('-total'): Sorts the results in descending order, so classes with the most inquiries appear first.
+        3) order_by('-total'): Sorts the results in descending order, so types with the most inquiries appear first.
     '''
-    inquiries_by_class = inquiries.values('student_class').annotate(total=Count('id')).order_by('-total')
+    inquiries_by_travel_type = inquiries.values('travel_type').annotate(total=Count('id')).order_by('-total')
 
     # Counts by Inquiry Source
     inquiries_by_source = inquiries.values('inquiry_source').annotate(total=Count('id')).order_by('-total')
@@ -1187,24 +1154,21 @@ def detailed_stats(request):
     recent_inquiries = inquiries.order_by('-inquiry_date')[:5]
 
     context = {
-        # Overall Stats       
-        'total_inquiries': total_inquiries,
-        'total_registrations': total_registrations,
-        'total_tests': total_tests,
-        'total_admissions_offered': total_admissions_offered,
-        'total_admissions_confirmed': total_admissions_confirmed,
+        # Overall Stats - Travel CRM
+        'new_leads': new_leads,
+        'itinerary_sent': itinerary_sent,
+        'bookings_confirmed': bookings_confirmed,
+        'trips_completed': trips_completed,
         'rejected': rejected,
 
         # Today's Stats
         'inquiries_today': inquiries_today,
-        'registrations_today': registrations_today,
-        'tests_today': tests_today,
-        'admissions_offered_today': admissions_offered_today,
-        'admissions_confirmed_today': admissions_confirmed_today,
-        'rejected_today': rejected_today,
+        'itinerary_sent_today': itinerary_sent_today,
+        'bookings_today': bookings_today,
+        'trips_completed_today': trips_completed_today,
 
         # Detailed Stats
-        'inquiries_by_class': inquiries_by_class,
+        'inquiries_by_travel_type': inquiries_by_travel_type,
         'inquiries_by_source': inquiries_by_source,
 
 

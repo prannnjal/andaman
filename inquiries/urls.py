@@ -22,9 +22,9 @@ urlpatterns = [
     path('delete_inquiry/<int:id>/', views.delete_inquiry, name='delete_inquiry'),
     
     # ====================================================================================
-    # Schools management
-    path('schools/', views.school_list_create_view, name='school_list_create'),
-    path('schools/assign-leads/', views.assign_leads_to_school_view, name='assign_leads_to_school'),
+    # Hotels management (Travel CRM)
+    path('hotels/', views.hotel_list_create_view, name='hotel_list_create'),
+    path('hotels/assign-leads/', views.assign_leads_to_hotel_view, name='assign_leads_to_hotel'),
     
     # ====================================================================================
     path('school_users_list/', views.school_users_list_view, name='school_users_list'),

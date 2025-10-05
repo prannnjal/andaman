@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inquiry List</title>
+    <title>Travel Leads List</title>
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -92,10 +92,14 @@
         <div class="card-table mb-3" style="padding: 1rem;">
             <form method="get" action="{{ base_url_name }}" class="row g-2 align-items-end">
                 <div class="col-md-4">
-                    <label class="form-label fw-semibold">Segment</label>
-                    <select name="segment" class="form-select" onchange="this.form.submit()">
-                        <option value="cnb-leads" {% if request.GET.segment == 'cnb-leads' or not request.GET.segment %}selected{% endif %}>CNB Leads</option>
-                        <option value="schools" {% if request.GET.segment == 'schools' %}selected{% endif %}>Schools</option>
+                    <label class="form-label fw-semibold">Travel Type</label>
+                    <select name="travel_type" class="form-select" onchange="this.form.submit()">
+                        <option value="" {% if not request.GET.travel_type %}selected{% endif %}>All Types</option>
+                        <option value="Honeymoon" {% if request.GET.travel_type == 'Honeymoon' %}selected{% endif %}>Honeymoon</option>
+                        <option value="Family" {% if request.GET.travel_type == 'Family' %}selected{% endif %}>Family</option>
+                        <option value="Group" {% if request.GET.travel_type == 'Group' %}selected{% endif %}>Group</option>
+                        <option value="Corporate" {% if request.GET.travel_type == 'Corporate' %}selected{% endif %}>Corporate</option>
+                        <option value="Adventure" {% if request.GET.travel_type == 'Adventure' %}selected{% endif %}>Adventure</option>
                     </select>
                 </div>
                 {% if request.GET.segment == 'schools' %}

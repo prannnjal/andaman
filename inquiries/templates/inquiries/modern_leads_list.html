@@ -1,0 +1,446 @@
+{% extends "inquiries/modern_base.html" %}
+
+{% block title %}Travel Leads | Travel CRM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: var(--spacing-sm);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .page-subtitle {
+        color: rgba(255,255,255,0.9);
+        font-size: 1.1rem;
+    }
+    
+    /* Filter Card */
+    .filter-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        box-shadow: var(--shadow-lg);
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .filter-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+    
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: var(--spacing-md);
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+        margin-bottom: var(--spacing-lg);
+    }
+    
+    .action-btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--radius-sm);
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .action-btn i {
+        font-size: 1.1rem;
+    }
+    
+    /* Lead Card (Mobile View) */
+    .lead-card {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: var(--spacing-lg);
+        box-shadow: var(--shadow-sm);
+        margin-bottom: var(--spacing-md);
+        display: none;
+    }
+    
+    .lead-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .lead-name {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .lead-info {
+        display: grid;
+        gap: var(--spacing-sm);
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .info-row {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+    
+    .info-label {
+        font-weight: 600;
+        color: #666;
+        min-width: 100px;
+    }
+    
+    .info-value {
+        color: var(--dark);
+    }
+    
+    .lead-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+    }
+    
+    /* Responsive Table/Card Toggle */
+    @media (max-width: 992px) {
+        .modern-table-wrapper {
+            display: none;
+        }
+        
+        .lead-card {
+            display: block;
+        }
+    }
+    
+    /* Status Colors */
+    .status-new-lead { background: #64B5F6; color: white; }
+    .status-interested { background: #4FC3F7; color: white; }
+    .status-follow-up { background: #FFB74D; color: white; }
+    .status-budget { background: #FFD54F; color: var(--dark); }
+    .status-itinerary { background: #9575CD; color: white; }
+    .status-negotiation { background: #F06292; color: white; }
+    .status-confirmed { background: #81C784; color: white; }
+    .status-completed { background: #4CAF50; color: white; }
+    .status-not-interested { background: #EF5350; color: white; }
+    .status-dnp { background: #BDBDBD; color: white; }
+    
+    /* Action Icon Buttons */
+    .icon-btn {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border: none;
+        border-radius: var(--radius-sm);
+        background: var(--light);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1.1rem;
+    }
+    
+    .icon-btn:hover {
+        transform: translateY(-2px);
+    }
+    
+    .icon-btn-edit { color: #1E88E5; }
+    .icon-btn-edit:hover { background: #E3F2FD; }
+    
+    .icon-btn-delete { color: #EF5350; }
+    .icon-btn-delete:hover { background: #FFEBEE; }
+    
+    .icon-btn-view { color: #66BB6A; }
+    .icon-btn-view:hover { background: #E8F5E9; }
+    
+    .icon-btn-transfer { color: #FFA726; }
+    .icon-btn-transfer:hover { background: #FFF3E0; }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: var(--spacing-xl);
+        background: white;
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .empty-icon {
+        font-size: 4rem;
+        color: #BDBDBD;
+        margin-bottom: var(--spacing-md);
+    }
+    
+    .empty-text {
+        font-size: 1.2rem;
+        color: #666;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-suitcase-lg"></i> Travel Leads
+    </h1>
+    <p class="page-subtitle">Manage your travel inquiries and bookings</p>
+</div>
+
+<!-- Filter Card -->
+<div class="filter-card">
+    <div class="filter-title">
+        <i class="bi bi-funnel"></i>
+        Filters
+    </div>
+    
+    <form method="get" action="{% url 'inquiry_list' %}">
+        <div class="filter-grid">
+            <div class="modern-form-group">
+                <label class="modern-label">Travel Type</label>
+                <select name="travel_type" class="modern-input" onchange="this.form.submit()">
+                    <option value="">All Types</option>
+                    <option value="Honeymoon" {% if request.GET.travel_type == 'Honeymoon' %}selected{% endif %}>🌸 Honeymoon</option>
+                    <option value="Family" {% if request.GET.travel_type == 'Family' %}selected{% endif %}>👨‍👩‍👧‍👦 Family</option>
+                    <option value="Solo" {% if request.GET.travel_type == 'Solo' %}selected{% endif %}>🎒 Solo</option>
+                    <option value="Group" {% if request.GET.travel_type == 'Group' %}selected{% endif %}>👥 Group</option>
+                    <option value="Corporate" {% if request.GET.travel_type == 'Corporate' %}selected{% endif %}>💼 Corporate</option>
+                    <option value="Adventure" {% if request.GET.travel_type == 'Adventure' %}selected{% endif %}>🏔️ Adventure</option>
+                </select>
+            </div>
+            
+            <div class="modern-form-group">
+                <label class="modern-label">Status</label>
+                <select name="status" class="modern-input" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="New Lead" {% if request.GET.status == 'New Lead' %}selected{% endif %}>New Lead</option>
+                    <option value="Interested" {% if request.GET.status == 'Interested' %}selected{% endif %}>Interested</option>
+                    <option value="Follow Up" {% if request.GET.status == 'Follow Up' %}selected{% endif %}>Follow Up</option>
+                    <option value="Budget Discussion" {% if request.GET.status == 'Budget Discussion' %}selected{% endif %}>Budget Discussion</option>
+                    <option value="Itinerary Sent" {% if request.GET.status == 'Itinerary Sent' %}selected{% endif %}>Itinerary Sent</option>
+                    <option value="Negotiation" {% if request.GET.status == 'Negotiation' %}selected{% endif %}>Negotiation</option>
+                    <option value="Booking Confirmed" {% if request.GET.status == 'Booking Confirmed' %}selected{% endif %}>Booking Confirmed</option>
+                    <option value="Trip Completed" {% if request.GET.status == 'Trip Completed' %}selected{% endif %}>Trip Completed</option>
+                    <option value="Not interested" {% if request.GET.status == 'Not interested' %}selected{% endif %}>Not Interested</option>
+                </select>
+            </div>
+            
+            <div class="modern-form-group">
+                <label class="modern-label">From Date</label>
+                <input type="date" name="date_from" class="modern-input" value="{{ request.GET.date_from }}">
+            </div>
+            
+            <div class="modern-form-group">
+                <label class="modern-label">To Date</label>
+                <input type="date" name="date_to" class="modern-input" value="{{ request.GET.date_to }}">
+            </div>
+        </div>
+        
+        <div class="action-buttons mt-3">
+            <button type="submit" class="action-btn btn-primary-modern">
+                <i class="bi bi-search"></i>
+                Apply Filters
+            </button>
+            <a href="{% url 'inquiry_list' %}" class="action-btn btn-secondary-modern">
+                <i class="bi bi-x-circle"></i>
+                Clear Filters
+            </a>
+            <a href="{% url 'add_inquiry' %}" class="action-btn btn-success-modern">
+                <i class="bi bi-plus-circle"></i>
+                Add New Lead
+            </a>
+            <a href="#" class="action-btn btn-secondary-modern">
+                <i class="bi bi-download"></i>
+                Export
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Desktop Table View -->
+<div class="modern-card">
+    <div class="modern-table-wrapper">
+        <table class="modern-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Destination</th>
+                    <th>Travel Type</th>
+                    <th>PAX</th>
+                    <th class="mobile-hide">Budget</th>
+                    <th>Status</th>
+                    <th class="mobile-hide">Inquiry Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lead in leads %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ lead.customer_name }}</div>
+                        <div style="font-size: 0.85rem; color: #666;">
+                            <i class="bi bi-telephone"></i> {{ lead.mobile_number }}
+                        </div>
+                    </td>
+                    <td>
+                        <i class="bi bi-geo-alt"></i> {{ lead.destination }}
+                    </td>
+                    <td>
+                        <span class="modern-badge badge-info">{{ lead.travel_type }}</span>
+                    </td>
+                    <td>
+                        <i class="bi bi-people"></i> {{ lead.number_of_travelers }}
+                    </td>
+                    <td class="mobile-hide">
+                        {% if lead.budget %}
+                            ₹{{ lead.budget|floatformat:0 }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="modern-badge status-{{ lead.status|lower|cut:' '|cut:'_' }}">
+                            {{ lead.status }}
+                        </span>
+                    </td>
+                    <td class="mobile-hide">
+                        {{ lead.inquiry_date|date:"d M, Y" }}
+                    </td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="{% url 'edit_lead' lead.id %}" class="icon-btn icon-btn-edit" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="#" class="icon-btn icon-btn-view" title="View">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'transfer_lead' lead.id %}" class="icon-btn icon-btn-transfer" title="Transfer">
+                                <i class="bi bi-arrow-left-right"></i>
+                            </a>
+                            <a href="{% url 'delete_lead' lead.id %}" class="icon-btn icon-btn-delete" title="Delete"
+                               onclick="return confirm('Are you sure you want to delete this lead?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: var(--spacing-xl);">
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="bi bi-inbox"></i>
+                            </div>
+                            <div class="empty-text">No leads found</div>
+                            <a href="{% url 'add_inquiry' %}" class="btn-primary-modern mt-2">
+                                <i class="bi bi-plus-circle"></i>
+                                Add Your First Lead
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Mobile Card View -->
+{% for lead in leads %}
+<div class="lead-card">
+    <div class="lead-card-header">
+        <div class="lead-name">{{ lead.customer_name }}</div>
+        <span class="modern-badge status-{{ lead.status|lower|cut:' '|cut:'_' }}">
+            {{ lead.status }}
+        </span>
+    </div>
+    
+    <div class="lead-info">
+        <div class="info-row">
+            <span class="info-label"><i class="bi bi-telephone"></i> Phone:</span>
+            <span class="info-value">{{ lead.mobile_number }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label"><i class="bi bi-geo-alt"></i> Destination:</span>
+            <span class="info-value">{{ lead.destination }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label"><i class="bi bi-suitcase"></i> Type:</span>
+            <span class="info-value">{{ lead.travel_type }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label"><i class="bi bi-people"></i> PAX:</span>
+            <span class="info-value">{{ lead.number_of_travelers }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label"><i class="bi bi-calendar"></i> Date:</span>
+            <span class="info-value">{{ lead.inquiry_date|date:"d M, Y" }}</span>
+        </div>
+        {% if lead.budget %}
+        <div class="info-row">
+            <span class="info-label"><i class="bi bi-currency-rupee"></i> Budget:</span>
+            <span class="info-value">₹{{ lead.budget|floatformat:0 }}</span>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="lead-actions">
+        <a href="{% url 'edit_lead' lead.id %}" class="action-btn btn-primary-modern">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+        <a href="#" class="action-btn btn-success-modern">
+            <i class="bi bi-eye"></i> View
+        </a>
+        <a href="{% url 'transfer_lead' lead.id %}" class="action-btn btn-secondary-modern">
+            <i class="bi bi-arrow-left-right"></i> Transfer
+        </a>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Pagination -->
+{% if leads.has_other_pages %}
+<div class="modern-card">
+    <div class="d-flex justify-center align-center gap-2">
+        {% if leads.has_previous %}
+            <a href="?page=1" class="action-btn btn-secondary-modern">
+                <i class="bi bi-chevron-double-left"></i>
+            </a>
+            <a href="?page={{ leads.previous_page_number }}" class="action-btn btn-secondary-modern">
+                <i class="bi bi-chevron-left"></i>
+            </a>
+        {% endif %}
+        
+        <span class="action-btn btn-primary-modern">
+            Page {{ leads.number }} of {{ leads.paginator.num_pages }}
+        </span>
+        
+        {% if leads.has_next %}
+            <a href="?page={{ leads.next_page_number }}" class="action-btn btn-secondary-modern">
+                <i class="bi bi-chevron-right"></i>
+            </a>
+            <a href="?page={{ leads.paginator.num_pages }}" class="action-btn btn-secondary-modern">
+                <i class="bi bi-chevron-double-right"></i>
+            </a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+

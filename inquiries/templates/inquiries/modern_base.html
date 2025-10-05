@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#1E88E5">
+    <title>{% block title %}Travel CRM{% endblock %}</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Travel CRM Color Scheme */
+            --primary: #1E88E5;
+            --primary-dark: #1565C0;
+            --secondary: #FFA726;
+            --success: #66BB6A;
+            --danger: #EF5350;
+            --warning: #FFCA28;
+            --info: #29B6F6;
+            --light: #F5F7FA;
+            --dark: #263238;
+            
+            /* Spacing */
+            --spacing-xs: 0.25rem;
+            --spacing-sm: 0.5rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 20px rgba(0,0,0,0.15);
+            
+            /* Border Radius */
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 1rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        /* Modern Container */
+        .modern-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--spacing-lg);
+        }
+        
+        @media (max-width: 768px) {
+            .modern-container {
+                padding: var(--spacing-md);
+            }
+        }
+        
+        /* Modern Card */
+        .modern-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .modern-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .modern-card {
+                padding: var(--spacing-lg);
+                border-radius: var(--radius-md);
+            }
+        }
+        
+        /* Modern Header */
+        .modern-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-lg) 0;
+            margin-bottom: var(--spacing-xl);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .logo i {
+            font-size: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .logo-text {
+                display: none;
+            }
+            
+            .logo i {
+                font-size: 1.75rem;
+            }
+        }
+        
+        /* Modern Navigation */
+        .modern-nav {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--light);
+            color: var(--dark);
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .nav-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-1px);
+        }
+        
+        .nav-btn i {
+            font-size: 1.1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-btn-text {
+                display: none;
+            }
+            
+            .nav-btn {
+                padding: var(--spacing-sm);
+            }
+        }
+        
+        /* Modern Button */
+        .btn-modern {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: var(--radius-sm);
+            border: none;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .btn-primary-modern {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary-modern:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-success-modern {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger-modern {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-secondary-modern {
+            background: var(--light);
+            color: var(--dark);
+        }
+        
+        /* Modern Table */
+        .modern-table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+        }
+        
+        .modern-table thead {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+        
+        .modern-table th {
+            padding: var(--spacing-md);
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+        }
+        
+        .modern-table td {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modern-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        
+        .modern-table tbody tr:hover {
+            background: var(--light);
+        }
+        
+        @media (max-width: 768px) {
+            .modern-table th,
+            .modern-table td {
+                padding: var(--spacing-sm);
+                font-size: 0.9rem;
+            }
+            
+            .mobile-hide {
+                display: none;
+            }
+        }
+        
+        /* Modern Badge */
+        .modern-badge {
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .badge-primary { background: var(--primary); color: white; }
+        .badge-success { background: var(--success); color: white; }
+        .badge-danger { background: var(--danger); color: white; }
+        .badge-warning { background: var(--warning); color: var(--dark); }
+        .badge-info { background: var(--info); color: white; }
+        .badge-secondary { background: var(--light); color: var(--dark); }
+        
+        /* Modern Alert */
+        .modern-alert {
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .alert-success {
+            background: #E8F5E9;
+            border-left: 4px solid var(--success);
+            color: #2E7D32;
+        }
+        
+        .alert-danger {
+            background: #FFEBEE;
+            border-left: 4px solid var(--danger);
+            color: #C62828;
+        }
+        
+        .alert-info {
+            background: #E3F2FD;
+            border-left: 4px solid var(--info);
+            color: #1565C0;
+        }
+        
+        .alert-warning {
+            background: #FFF9C4;
+            border-left: 4px solid var(--warning);
+            color: #F57F17;
+        }
+        
+        /* Modern Form */
+        .modern-form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .modern-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: var(--spacing-xs);
+            color: var(--dark);
+        }
+        
+        .modern-input {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: 2px solid #e0e0e0;
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .modern-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+        }
+        
+        /* Responsive Grid */
+        .modern-grid {
+            display: grid;
+            gap: var(--spacing-lg);
+        }
+        
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        
+        @media (max-width: 1024px) {
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Stat Card */
+        .stat-card {
+            background: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: var(--spacing-xs);
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid var(--light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: var(--spacing-xl) auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Utility Classes */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-1 { margin-top: var(--spacing-sm); }
+        .mt-2 { margin-top: var(--spacing-md); }
+        .mt-3 { margin-top: var(--spacing-lg); }
+        .mb-1 { margin-bottom: var(--spacing-sm); }
+        .mb-2 { margin-bottom: var(--spacing-md); }
+        .mb-3 { margin-bottom: var(--spacing-lg); }
+        .p-1 { padding: var(--spacing-sm); }
+        .p-2 { padding: var(--spacing-md); }
+        .p-3 { padding: var(--spacing-lg); }
+        
+        .d-flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .gap-1 { gap: var(--spacing-sm); }
+        .gap-2 { gap: var(--spacing-md); }
+        .gap-3 { gap: var(--spacing-lg); }
+        .align-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+            
+            .modern-nav {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                padding: var(--spacing-md);
+                box-shadow: var(--shadow-md);
+            }
+            
+            .modern-nav.active {
+                display: flex;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Modern Header -->
+    <header class="modern-header">
+        <div class="header-content">
+            <a href="{% url 'dashboard' %}" class="logo">
+                <i class="bi bi-airplane"></i>
+                <span class="logo-text">Travel CRM</span>
+            </a>
+            
+            <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                <i class="bi bi-list"></i>
+            </button>
+            
+            <nav class="modern-nav" id="mobileNav">
+                <a href="{% url 'dashboard' %}" class="nav-btn">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="nav-btn-text">Dashboard</span>
+                </a>
+                <a href="{% url 'inquiry_list' %}" class="nav-btn">
+                    <i class="bi bi-list-task"></i>
+                    <span class="nav-btn-text">Leads</span>
+                </a>
+                <a href="{% url 'add_inquiry' %}" class="nav-btn">
+                    <i class="bi bi-plus-circle"></i>
+                    <span class="nav-btn-text">Add Lead</span>
+                </a>
+                {% if user.role == "Admin" %}
+                <a href="#" class="nav-btn">
+                    <i class="bi bi-building"></i>
+                    <span class="nav-btn-text">Hotels</span>
+                </a>
+                <a href="#" class="nav-btn">
+                    <i class="bi bi-box-seam"></i>
+                    <span class="nav-btn-text">Packages</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'logout' %}" class="nav-btn">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="nav-btn-text">Logout</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="modern-container">
+        {% include "inquiries/Alerts.html" %}
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('mobileNav');
+            nav.classList.toggle('active');
+        }
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const nav = document.getElementById('mobileNav');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!nav.contains(event.target) && !toggle.contains(event.target)) {
+                nav.classList.remove('active');
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

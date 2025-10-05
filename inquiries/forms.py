@@ -1,7 +1,7 @@
 # All these forms would be interated into their respective views in views.py file !!!
 
 from django import forms
-from .models import Lead, CustomUser, CallRecording, School     # what model a form would be integrated with so that when you submit that form, the changes are made to that model.
+from .models import Lead, CustomUser, CallRecording, Hotel, Package, RoomCategory, ItineraryBuilder, ItineraryDay     # what model a form would be integrated with so that when you submit that form, the changes are made to that model.
 from django.contrib.auth.models import User
 from datetime import date
 from django.forms.widgets import DateTimeInput
@@ -18,84 +18,41 @@ df = pd.read_excel(file_path)
 # ====================================================================================
 
 class InquiryForm(forms.ModelForm):
+    """Form for creating and managing travel inquiry leads"""
     class Meta:
         model = Lead
-        fields = ['student_name','parent_name','mobile_number','email','address','inquiry_source','student_class','status','remarks','inquiry_date','follow_up_date','registration_date','admission_test_date','admission_offered_date','admission_confirmed_date','rejected_date','admin_assigned','school']      # what fields from Lead model to be included in this form (assigned_agent removed for auto-assignment)
+        fields = ['customer_name', 'mobile_number', 'email', 'address', 'city', 'state',
+                  'destination', 'travel_type', 'number_of_travelers', 'travel_start_date', 'travel_end_date',
+                  'duration_days', 'budget', 'quoted_price', 'inquiry_source', 'status', 'remarks',
+                  'inquiry_date', 'follow_up_date', 'booking_date', 'payment_date', 'admin_assigned']
         
         labels = {
-            'student_name': 'School Name',
-            'parent_name': 'Concerned Person',
-            'inquiry_source': 'Select Inquiry Source',
-            'student_class': 'Select Student Class',
+            'customer_name': 'Customer Name',
+            'number_of_travelers': 'Number of Travelers (Pax)',
+            'travel_type': 'Type of Travel',
+            'inquiry_source': 'Inquiry Source',
+            'travel_start_date': 'Travel Start Date',
+            'travel_end_date': 'Travel End Date',
+            'duration_days': 'Duration (Days)',
         }
         
-    def __init__(self, *args, **kwargs):        # constructor
-      
-        super().__init__(*args, **kwargs)       # calling parent class constructor
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         
         if not self.instance or not self.instance.pk:
             self.fields['inquiry_date'].initial = timezone.localdate()
         
-        # Restrict status choices to only the new statuses
-        self.fields['status'].choices = [
-            ('DNP', 'DNP'),
-            ('Not interested', 'Not interested'),
-            ('Interested', 'Interested'),
-            ('Follow Up', 'Follow Up'),
-            ('Low Budget', 'Low Budget'),
-            ('Meeting', 'Meeting'),
-            ('Proposal', 'Proposal'),
-        ]
-        
         # Assign the 'date' widget to the date fields individually
-        date_fields = [
-            'inquiry_date', 'follow_up_date', 'registration_date', 
-            'admission_test_date', 'admission_offered_date', 
-            'admission_confirmed_date', 'rejected_date'
-        ]
+        date_fields = ['inquiry_date', 'follow_up_date', 'booking_date', 'payment_date', 'travel_start_date', 'travel_end_date']
         for field in date_fields:
-            self.fields[field].widget = forms.DateInput(attrs={'type': 'date'})                                        
-        
-        # Set placeholders for select fields
-        # inquiry_source and student_class have choices, so we can set Select widgets
-        self.fields['inquiry_source'].widget = forms.Select(choices=[('', 'Select Inquiry Source')] + list(self.fields['inquiry_source'].choices)[1:])
-        
-        self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Student Class')] + list(self.fields['student_class'].choices)[1:])
+            self.fields[field].widget = forms.DateInput(attrs={'type': 'date'})
         
         # Set admin_assigned field
         self.fields['admin_assigned'] = forms.ModelChoiceField(
             queryset=CustomUser.objects.filter(role="Admin"),
-            required=False,  # 👈 Make it optional
-            empty_label="Select the Admin"  # Replaces the default "--------" option
-        )
-        # School selection (optional)
-        self.fields['school'] = forms.ModelChoiceField(
-            queryset=School.objects.all(),
             required=False,
-            empty_label="Select School (optional)"
+            empty_label="Select the Admin"
         )
-
-        # If school segment is used (school selected), enforce mandatory fields for Schools: student_name, parent_name, mobile_number
-        school_selected = False
-        if self.is_bound:
-            school_selected = bool(self.data.get('school'))
-        elif getattr(self.instance, 'school_id', None):
-            school_selected = True
-
-        if school_selected:
-            for field_name in ['student_name', 'parent_name', 'mobile_number']:
-                if field_name in self.fields:
-                    self.fields[field_name].required = True
-                    self.fields[field_name].widget.attrs['required'] = 'required'
-
-    def clean(self):
-        cleaned_data = super().clean()
-        school = cleaned_data.get('school')
-        if school:
-            missing = [f for f in ['student_name', 'parent_name', 'mobile_number'] if not cleaned_data.get(f)]
-            if missing:
-                raise forms.ValidationError("For Schools, Student Name, Parent Name, and Mobile Number are mandatory.")
-        return cleaned_data
         
         # Assign label_from_instance separately
         self.fields['admin_assigned'].label_from_instance = lambda admin: f"Id: {admin.id}, Name: {admin.name}, Phone: {admin.mobile_number}"
@@ -123,36 +80,24 @@ class AgentUpdateLeadForm(forms.ModelForm):
     class Meta:
         model = Lead
         fields = [
-            'student_name', 'parent_name', 'mobile_number', 'email', 'address', 'school',
-            'inquiry_source', 'student_class', 'status', 'remarks',
-            'inquiry_date', 'follow_up_date', 'registration_date', 
-            'admission_test_date', 'admission_offered_date', 
-            'admission_confirmed_date', 'rejected_date', 'admin_assigned', 'assigned_agent'
+            'customer_name', 'mobile_number', 'email', 'address', 'city', 'state',
+            'destination', 'travel_type', 'number_of_travelers', 'travel_start_date', 'travel_end_date',
+            'duration_days', 'budget', 'quoted_price', 'inquiry_source', 'status', 'remarks',
+            'inquiry_date', 'follow_up_date', 'booking_date', 'payment_date', 
+            'admin_assigned', 'assigned_agent'
         ]
         
         labels = {
-            'student_name': 'School Name',
-            'parent_name': 'Concerned Person',
-            'inquiry_source': 'Select Inquiry Source',
-            'student_class': 'Select Student Class',
+            'customer_name': 'Customer Name',
+            'number_of_travelers': 'Number of Travelers (Pax)',
+            'travel_type': 'Type of Travel',
         }
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Set placeholders for select fields
-        # student_class has choices, so we can set Select widget
-        self.fields['student_class'].widget = forms.Select(choices=[('', 'Select Student Class')] + list(self.fields['student_class'].choices)[1:])
-        self.fields['school'] = forms.ModelChoiceField(
-            queryset=School.objects.all(), required=False, empty_label="Select School (optional)"
-        )
-        
         # Assign the 'date' widget to the date fields individually
-        date_fields = [
-            'inquiry_date', 'follow_up_date', 'registration_date', 
-            'admission_test_date', 'admission_offered_date', 
-            'admission_confirmed_date', 'rejected_date'
-        ]
+        date_fields = ['inquiry_date', 'follow_up_date', 'booking_date', 'payment_date', 'travel_start_date', 'travel_end_date']
         for field in date_fields:
             self.fields[field].widget = forms.DateInput(attrs={'type': 'date'})
         
@@ -169,28 +114,6 @@ class AgentUpdateLeadForm(forms.ModelForm):
                 if hasattr(self.fields[field_name], 'label'):
                     self.fields[field_name].label = f"{self.fields[field_name].label} (Read-only)"
 
-        # Enforce Schools mandatory fields when a school is selected
-        school_selected = False
-        if self.is_bound:
-            school_selected = bool(self.data.get('school'))
-        elif getattr(self.instance, 'school_id', None):
-            school_selected = True
-
-        if school_selected:
-            for field_name in ['student_name', 'parent_name', 'mobile_number']:
-                if field_name in self.fields:
-                    self.fields[field_name].required = True
-                    self.fields[field_name].widget.attrs['required'] = 'required'
-
-    def clean(self):
-        cleaned_data = super().clean()
-        school = cleaned_data.get('school')
-        if school:
-            missing = [f for f in ['student_name', 'parent_name', 'mobile_number'] if not cleaned_data.get(f)]
-            if missing:
-                raise forms.ValidationError("For Schools, Student Name, Parent Name, and Mobile Number are mandatory.")
-        return cleaned_data
-
 # ====================================================================================
 
 class EditLeadForm(InquiryForm):
@@ -206,35 +129,9 @@ class EditLeadForm(InquiryForm):
             required=False,
             empty_label="Select the Agent"
         )
-        # Allow selecting school in edit form
-        self.fields['school'] = forms.ModelChoiceField(
-            queryset=School.objects.all(), required=False, empty_label="Select School (optional)"
-        )
         
         # Assign label_from_instance for assigned_agent
         self.fields['assigned_agent'].label_from_instance = lambda agent: f"Id: {agent.id}, Name: {agent.name}, Phone: {agent.mobile_number}"
-
-        # Enforce Schools mandatory fields when a school is selected
-        school_selected = False
-        if self.is_bound:
-            school_selected = bool(self.data.get('school'))
-        elif getattr(self.instance, 'school_id', None):
-            school_selected = True
-
-        if school_selected:
-            for field_name in ['student_name', 'parent_name', 'mobile_number']:
-                if field_name in self.fields:
-                    self.fields[field_name].required = True
-                    self.fields[field_name].widget.attrs['required'] = 'required'
-
-    def clean(self):
-        cleaned_data = super().clean()
-        school = cleaned_data.get('school')
-        if school:
-            missing = [f for f in ['student_name', 'parent_name', 'mobile_number'] if not cleaned_data.get(f)]
-            if missing:
-                raise forms.ValidationError("For Schools, Student Name, Parent Name, and Mobile Number are mandatory.")
-        return cleaned_data
         
 # ====================================================================================  
 

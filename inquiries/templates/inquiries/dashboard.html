@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="format-detection" content="telephone=no">
-    <title>Dashboard - CRM School</title>
+    <title>Dashboard - Travel CRM</title>
     
     <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -1213,8 +1213,8 @@
         <nav class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <a href="#" class="sidebar-brand" id="sidebarBrand">
-                    <i class="bi bi-graduation-cap"></i>
-                    <span class="nav-text">CRM School</span>
+                    <i class="bi bi-airplane"></i>
+                    <span class="nav-text">Travel CRM</span>
                 </a>
             </div>
             
@@ -1229,14 +1229,14 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'inquiry_list' %}">
                             <i class="bi bi-list-task"></i>
-                            <span class="nav-text">Inquiries</span>
+                            <span class="nav-text">Travel Leads</span>
                             </a>
                         </li>
                         {% if user.role == "Admin" or user.role == "Agent" %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'add_inquiry' %}">
                             <i class="bi bi-plus-circle"></i>
-                            <span class="nav-text">Add Inquiry</span>
+                            <span class="nav-text">Add Lead</span>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -1254,9 +1254,15 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'school_list_create' %}">
+                            <a class="nav-link" href="{% url 'hotel_list_create' %}">
                             <i class="bi bi-building"></i>
-                            <span class="nav-text">Schools</span>
+                            <span class="nav-text">Hotels</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/admin/inquiries/package/">
+                            <i class="bi bi-box-seam"></i>
+                            <span class="nav-text">Packages</span>
                             </a>
                         </li>
                         <li class="nav-item">
@@ -1496,49 +1502,57 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=New Lead">
                         <td>
-                            <span class="status-badge status-inquiry">📝 Inquiries</span>
+                            <span class="status-badge status-inquiry">📝 New Leads</span>
                         </td>
-                        <td>{{ total_inquiries }}</td>
-                        <td>{% widthratio total_inquiries total_leads 100 %}%</td>
+                        <td>{{ new_leads }}</td>
+                        <td>{% widthratio new_leads total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Itinerary Sent">
                         <td>
-                            <span class="status-badge status-registration">📋 Registrations</span>
+                            <span class="status-badge status-registration">🗺️ Itineraries Sent</span>
                         </td>
-                        <td>{{ total_registrations }}</td>
-                        <td>{% widthratio total_registrations total_leads 100 %}%</td>
+                        <td>{{ itinerary_sent }}</td>
+                        <td>{% widthratio itinerary_sent total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Budget Discussion">
                         <td>
-                            <span class="status-badge status-test">✍️ Admission Tests</span>
+                            <span class="status-badge status-test">💰 Budget Discussion</span>
                         </td>
-                        <td>{{ total_tests }}</td>
-                        <td>{% widthratio total_tests total_leads 100 %}%</td>
+                        <td>{{ budget_discussion_count }}</td>
+                        <td>{% widthratio budget_discussion_count total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Negotiation">
                         <td>
-                            <span class="status-badge status-offered">🎓 Admissions Offered</span>
+                            <span class="status-badge status-offered">🤝 Negotiation</span>
                         </td>
-                        <td>{{ total_admissions_offered }}</td>
-                        <td>{% widthratio total_admissions_offered total_leads 100 %}%</td>
+                        <td>{{ negotiation_count }}</td>
+                        <td>{% widthratio negotiation_count total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Booking Confirmed">
                         <td>
-                            <span class="status-badge status-confirmed">✅ Admissions Confirmed</span>
+                            <span class="status-badge status-confirmed">✅ Bookings Confirmed</span>
                         </td>
-                        <td>{{ total_admissions_confirmed }}</td>
-                        <td>{% widthratio total_admissions_confirmed total_leads 100 %}%</td>
+                        <td>{{ bookings_confirmed }}</td>
+                        <td>{% widthratio bookings_confirmed total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Trip Completed">
                         <td>
-                            <span class="status-badge status-rejected">❌ Rejected</span>
+                            <span class="status-badge status-confirmed">✈️ Trips Completed</span>
+                        </td>
+                        <td>{{ trips_completed }}</td>
+                        <td>{% widthratio trips_completed total_leads 100 %}%</td>
+                        <td><span class="trend-up">↗️</span></td>
+                        </tr>
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Not interested">
+                        <td>
+                            <span class="status-badge status-rejected">❌ Not Interested</span>
                         </td>
                         <td>{{ rejected }}</td>
                         <td>{% widthratio rejected total_leads 100 %}%</td>
@@ -1566,53 +1580,37 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Inquiry&inquiry_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=New Lead&inquiry_date_from={{todays_date}}">
                         <td>
-                            <span class="status-badge status-inquiry">📝 Inquiries</span>
+                            <span class="status-badge status-inquiry">📝 New Leads</span>
                         </td>
                         <td>{{ inquiries_today }}</td>
                         <td>{% widthratio inquiries_today total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Registration&registration_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Itinerary Sent">
                         <td>
-                            <span class="status-badge status-registration">📋 Registrations</span>
+                            <span class="status-badge status-registration">🗺️ Itineraries Sent</span>
                         </td>
-                        <td>{{ registrations_today }}</td>
-                        <td>{% widthratio registrations_today total_leads 100 %}%</td>
+                        <td>{{ itinerary_sent_today }}</td>
+                        <td>{% widthratio itinerary_sent_today total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Test&admission_test_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Booking Confirmed&booking_date_from={{todays_date}}">
                         <td>
-                            <span class="status-badge status-test">✍️ Admission Tests</span>
+                            <span class="status-badge status-confirmed">✅ Bookings Confirmed</span>
                         </td>
-                        <td>{{ tests_today }}</td>
-                        <td>{% widthratio tests_today total_leads 100 %}%</td>
+                        <td>{{ bookings_today }}</td>
+                        <td>{% widthratio bookings_today total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
                         </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Offered&admission_offered_date_from={{todays_date}}">
+                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Trip Completed">
                         <td>
-                            <span class="status-badge status-offered">🎓 Admissions Offered</span>
+                            <span class="status-badge status-confirmed">✈️ Trips Completed</span>
                         </td>
-                        <td>{{ admissions_offered_today }}</td>
-                        <td>{% widthratio admissions_offered_today total_leads 100 %}%</td>
+                        <td>{{ trips_completed_today }}</td>
+                        <td>{% widthratio trips_completed_today total_leads 100 %}%</td>
                         <td><span class="trend-up">↗️</span></td>
-                        </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Admission Confirmed&admission_confirmed_date_from={{todays_date}}">
-                        <td>
-                            <span class="status-badge status-confirmed">✅ Admissions Confirmed</span>
-                        </td>
-                        <td>{{ admissions_confirmed_today }}</td>
-                        <td>{% widthratio admissions_confirmed_today total_leads 100 %}%</td>
-                        <td><span class="trend-up">↗️</span></td>
-                        </tr>
-                        <tr class="clickable-row" data-href="{% url 'inquiry_list' %}?status[]=Rejected&rejected_date_from={{todays_date}}">
-                        <td>
-                            <span class="status-badge status-rejected">❌ Rejected</span>
-                        </td>
-                        <td>{{ rejected_today }}</td>
-                        <td>{% widthratio rejected_today total_leads 100 %}%</td>
-                        <td><span class="trend-down">↘️</span></td>
                         </tr>
                         </tbody>
                         </table>

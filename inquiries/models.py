@@ -82,6 +82,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     location_panchayat = models.CharField(max_length=100, blank=True, null=True)
     date_joined = models.DateTimeField(default=now)
     
+    # Django admin requires these fields
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    
     # To let admin grant permission to a user:
     expiration_time = models.DateTimeField(default=timezone.make_aware(datetime(9999, 12, 31, 23, 59, 59)))  # Make it timezone-aware    
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='Viewer')
@@ -103,99 +107,188 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         else:
             return f"Mobile Number: {self.mobile_number},\nEmail: {self.email} (User)"
     
+    def save(self, *args, **kwargs):
+        # Auto-set is_staff based on role
+        if self.role == 'Admin':
+            self.is_staff = True
+        super().save(*args, **kwargs)
+    
     
 
-class School(models.Model):
-    name = models.CharField(max_length=150, unique=True)
-    address = models.TextField(blank=True, null=True)
+# ======================== TRAVEL CRM MODELS ========================
+
+class Hotel(models.Model):
+    """Hotel management with room categories and pricing"""
+    name = models.CharField(max_length=200, unique=True)
+    address = models.TextField()
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    contact_number = models.CharField(max_length=15)
+    email = models.EmailField(blank=True, null=True)
+    star_rating = models.IntegerField(choices=[(i, f"{i} Star") for i in range(1, 6)], default=3)
+    amenities = models.TextField(blank=True, null=True, help_text="List amenities separated by commas")
     remarks = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.city}"
+
+    class Meta:
+        ordering = ['name']
+
+
+class RoomCategory(models.Model):
+    """Room categories for hotels with pricing"""
+    ROOM_TYPE_CHOICES = [
+        ('Standard', 'Standard'),
+        ('Deluxe', 'Deluxe'),
+        ('Suite', 'Suite'),
+        ('Presidential', 'Presidential'),
+        ('Economy', 'Economy'),
+    ]
+    
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE, related_name='room_categories')
+    room_type = models.CharField(max_length=50, choices=ROOM_TYPE_CHOICES)
+    price_per_night = models.DecimalField(max_digits=10, decimal_places=2)
+    extra_mattress_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    max_occupancy = models.IntegerField(default=2)
+    description = models.TextField(blank=True, null=True)
+    is_available = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.hotel.name} - {self.room_type} (₹{self.price_per_night}/night)"
+
+    class Meta:
+        unique_together = ['hotel', 'room_type']
+        ordering = ['hotel', 'price_per_night']
+
+
+class Package(models.Model):
+    """Master package templates with day-wise details"""
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    duration_days = models.IntegerField(help_text="Number of days")
+    duration_nights = models.IntegerField(help_text="Number of nights")
+    destination = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.duration_days}D/{self.duration_nights}N)"
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class PackageDay(models.Model):
+    """Day-wise breakdown of package with costs"""
+    package = models.ForeignKey(Package, on_delete=models.CASCADE, related_name='package_days')
+    day_number = models.IntegerField()
+    title = models.CharField(max_length=200, help_text="e.g., 'Port Blair Arrival'")
+    description = models.TextField()
+    
+    # Transportation costs
+    cab_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    ferry_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    speedboat_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Entry tickets
+    entry_tickets = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Total entry ticket cost")
+    
+    # Activities
+    activities = models.TextField(blank=True, null=True, help_text="Comma-separated list of activities")
+    
+    def __str__(self):
+        return f"{self.package.name} - Day {self.day_number}: {self.title}"
+
+    class Meta:
+        ordering = ['package', 'day_number']
+        unique_together = ['package', 'day_number']
 
 
 class Lead(models.Model):
-    STUDENT_CHOICES = [
-        ('Play School', 'Play School'),
-        ('Nursery', 'Nursery'),
-        ('LKG', 'LKG'),
-        ('UKG', 'UKG'),
-        ('Grade 1', 'Grade 1'),
-        ('Grade 2', 'Grade 2'),
-        ('Grade 3', 'Grade 3'),
-        ('Grade 4', 'Grade 4'),
-        ('Grade 5', 'Grade 5'),
-        ('Grade 6', 'Grade 6'),
-        ('Grade 7', 'Grade 7'),
-        ('Grade 8', 'Grade 8'),
-        ('Grade 9', 'Grade 9'),
-        ('Grade 10', 'Grade 10'),
-        ('Grade 11', 'Grade 11'),
-        ('Grade 12', 'Grade 12'),
+    """Travel inquiry leads with itinerary builder"""
+    
+    TRAVEL_TYPE_CHOICES = [
+        ('Honeymoon', 'Honeymoon'),
+        ('Family', 'Family'),
+        ('Solo', 'Solo'),
+        ('Group', 'Group'),
+        ('Corporate', 'Corporate'),
+        ('Adventure', 'Adventure'),
+        ('Pilgrimage', 'Pilgrimage'),
+        ('Beach', 'Beach'),
+        ('Hill Station', 'Hill Station'),
     ]
 
     INQUIRY_CHOICES = [
-        ('Advertisement', 'Advertisement'),
+        ('Website', 'Website'),
         ('Walk-in', 'Walk-in'),
-        ('Online Form', 'Online Form'),  
+        ('Social Media', 'Social Media'),  
         ('Referral', 'Referral'),
+        ('Advertisement', 'Advertisement'),
+        ('Phone Call', 'Phone Call'),
     ]
 
     STATUS_CHOICES = [
+        ('New Lead', 'New Lead'),
         ('DNP', 'DNP'),
         ('Not interested', 'Not interested'),
         ('Interested', 'Interested'),
         ('Follow Up', 'Follow Up'),
-        ('Low Budget', 'Low Budget'),
-        ('Meeting', 'Meeting'),
-        ('Proposal', 'Proposal'),
+        ('Budget Discussion', 'Budget Discussion'),
+        ('Itinerary Sent', 'Itinerary Sent'),
+        ('Negotiation', 'Negotiation'),
+        ('Booking Confirmed', 'Booking Confirmed'),
+        ('Trip Completed', 'Trip Completed'),
     ]
 
-    student_name = models.CharField(max_length=100)
-    parent_name = models.CharField(max_length=100)
-    mobile_number = models.CharField(max_length=15, blank=True, null=True)
+    # Customer Information
+    customer_name = models.CharField(max_length=100, default='Unknown')
+    mobile_number = models.CharField(max_length=15, default='0000000000')
     email = models.EmailField(max_length=100, blank=True, null=True)
-    # no need to enforce unique constraint because the same person can ask more than 1 inquiries for his multiple children
     address = models.TextField(null=True, blank=True)
-    block = models.CharField(choices=get_block_choices(), max_length=100, blank=False, null=False)
-    location_panchayat = models.CharField(max_length=100, blank=False, null=False)
-    inquiry_source = models.CharField(choices = INQUIRY_CHOICES, max_length=100)  # e.g., Advertisement, Walk-in, Online
-    student_class = models.CharField(choices=STUDENT_CHOICES, max_length=30)
-    status = models.CharField(choices=STATUS_CHOICES, max_length=100, default='Inquiry')  # Inquiry, Follow-up, Visit, etc.    
+    city = models.CharField(max_length=100, blank=True, null=True)
+    state = models.CharField(max_length=100, blank=True, null=True)
+    
+    # Travel Details
+    destination = models.CharField(max_length=200, default='To Be Determined', help_text="Preferred destination")
+    travel_type = models.CharField(choices=TRAVEL_TYPE_CHOICES, max_length=50, default='Family')
+    number_of_travelers = models.IntegerField(default=1, help_text="Number of people traveling (Pax)")
+    travel_start_date = models.DateField(null=True, blank=True, help_text="Preferred travel start date")
+    travel_end_date = models.DateField(null=True, blank=True, help_text="Preferred travel end date")
+    duration_days = models.IntegerField(null=True, blank=True, help_text="Trip duration in days")
+    
+    # Budget
+    budget = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Customer's budget")
+    quoted_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, help_text="Price quoted to customer")
+    
+    # Lead Management
+    inquiry_source = models.CharField(choices=INQUIRY_CHOICES, max_length=100)
+    status = models.CharField(choices=STATUS_CHOICES, max_length=100, default='New Lead')
     remarks = models.TextField(blank=True, null=True)
     
+    # Important Dates
     inquiry_date = models.DateField(null=True, blank=True)    
-    registration_date = models.DateField(null=True, blank=True)
-    admission_test_date = models.DateField(null=True, blank=True)
-    admission_offered_date = models.DateField(null=True, blank=True)
-    admission_confirmed_date = models.DateField(null=True, blank=True)
-    rejected_date = models.DateField(null=True, blank=True)
     follow_up_date = models.DateField(null=True, blank=True)
+    booking_date = models.DateField(null=True, blank=True)
+    payment_date = models.DateField(null=True, blank=True)
     
     last_follow_up_updation = models.DateField(null=True, blank=True)
     last_inquiry_updation = models.DateField(null=True, blank=True)
     
-    # Proposal tracking
-    proposal_sent_date = models.DateTimeField(null=True, blank=True, help_text='When the last proposal was sent')
-    proposal_sent_by = models.ForeignKey(
+    # Itinerary/Proposal tracking
+    itinerary_sent_date = models.DateTimeField(null=True, blank=True, help_text='When the last itinerary was sent')
+    itinerary_sent_by = models.ForeignKey(
         CustomUser,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='proposals_sent',
-        help_text='User who sent the last proposal'
-    )
-    
-
-    
-    school = models.ForeignKey(
-        School,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='leads'
+        related_name='itineraries_sent',
+        help_text='User who sent the last itinerary'
     )
     
     assigned_agent = models.ForeignKey(
@@ -244,7 +337,7 @@ class Lead(models.Model):
     transfer_reason = models.TextField(blank=True, null=True, help_text='Reason for transferring the lead')
     
     def __str__(self):
-        return f"Name: {self.student_name},\nParent Name: {self.parent_name},Email:{self.email},Student Class:{self.student_class},\nmobile_number:{self.mobile_number},\nAddress:{self.address},\nBlock:{self.block},\nLocation:{self.location_panchayat},\nInquiry Source:{self.inquiry_source},\nStatus:{self.status}"
+        return f"{self.customer_name} - {self.destination} ({self.travel_type}) - {self.status}"
     
     @classmethod
     def get_agent_with_least_leads(cls):
@@ -287,7 +380,101 @@ class LeadLogs(models.Model):
     new_data = models.JSONField(default=dict)   # Stores updated values
     
     def __str__(self):
-        return f"Lead: {self.lead.student_name} - Changed by: {self.changed_by.name if self.changed_by else 'Unknown'} at {self.changed_at}"
+        return f"Lead: {self.lead.customer_name} - Changed by: {self.changed_by.name if self.changed_by else 'Unknown'} at {self.changed_at}"
+
+# ======================= ITINERARY BUILDER =======================
+
+class ItineraryBuilder(models.Model):
+    """Custom itinerary created for a specific lead"""
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='itineraries')
+    package = models.ForeignKey(Package, on_delete=models.SET_NULL, null=True, help_text="Base package template")
+    
+    # Package inputs
+    pax = models.IntegerField(help_text="Number of travelers")
+    number_of_cabs = models.IntegerField(default=1)
+    duration_days = models.IntegerField()
+    
+    # Pricing
+    base_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Auto-calculated base price")
+    markup_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Markup percentage on overall package")
+    markup_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Markup amount")
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Final price with markup")
+    
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_finalized = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"Itinerary for {self.lead.customer_name} - {self.package.name if self.package else 'Custom'}"
+    
+    def calculate_total(self):
+        """Calculate total price based on day-wise itineraries and markup"""
+        base_total = sum(day.get_total_cost() for day in self.itinerary_days.all())
+        self.base_price = base_total
+        self.markup_amount = (base_total * self.markup_percentage) / 100
+        self.total_price = base_total + self.markup_amount
+        return self.total_price
+    
+    class Meta:
+        ordering = ['-created_at']
+
+
+class ItineraryDay(models.Model):
+    """Day-wise customizable itinerary for a lead"""
+    itinerary = models.ForeignKey(ItineraryBuilder, on_delete=models.CASCADE, related_name='itinerary_days')
+    day_number = models.IntegerField()
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    
+    # Hotel Selection
+    hotel = models.ForeignKey(Hotel, on_delete=models.SET_NULL, null=True, blank=True)
+    room_category = models.ForeignKey(RoomCategory, on_delete=models.SET_NULL, null=True, blank=True)
+    number_of_rooms = models.IntegerField(default=1)
+    extra_mattress = models.IntegerField(default=0, help_text="Number of extra mattresses")
+    
+    # Transportation (inherited from PackageDay but customizable)
+    cab_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    ferry_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    speedboat_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    entry_tickets = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # Additional charges
+    additional_charges = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Any extra charges for this day")
+    additional_charges_description = models.TextField(blank=True, null=True)
+    
+    # Activities
+    activities = models.TextField(blank=True, null=True)
+    
+    def get_hotel_cost(self):
+        """Calculate hotel cost for this day"""
+        hotel_cost = 0
+        if self.room_category:
+            hotel_cost = (self.room_category.price_per_night * self.number_of_rooms)
+            if self.extra_mattress > 0:
+                hotel_cost += (self.room_category.extra_mattress_price * self.extra_mattress)
+        return hotel_cost
+    
+    def get_transport_cost(self):
+        """Calculate total transport cost"""
+        return self.cab_price + self.ferry_price + self.speedboat_price
+    
+    def get_total_cost(self):
+        """Calculate total cost for this day"""
+        return (
+            self.get_hotel_cost() + 
+            self.get_transport_cost() + 
+            self.entry_tickets + 
+            self.additional_charges
+        )
+    
+    def __str__(self):
+        return f"Day {self.day_number} - {self.title}"
+    
+    class Meta:
+        ordering = ['day_number']
+        unique_together = ['itinerary', 'day_number']
 
 # ====================================================================================
 
@@ -324,13 +511,19 @@ class CallRecording(models.Model):
 
 
 class CompanySettings(models.Model):
-    """Model to store company information for proposals"""
-    name = models.CharField(max_length=200, default='Your Educational Institution')
-    address = models.TextField(default='Your Institution Address, City, State - PIN')
+    """Model to store travel company information for itineraries/proposals"""
+    name = models.CharField(max_length=200, default='Your Travel Company')
+    address = models.TextField(default='Your Company Address, City, State - PIN')
     phone = models.CharField(max_length=20, default='+91-XXXXXXXXXX')
-    email = models.EmailField(default='info@yourinstitution.com')
-    website = models.URLField(default='www.yourinstitution.com')
+    email = models.EmailField(default='info@yourtravelcompany.com')
+    website = models.URLField(default='www.yourtravelcompany.com')
     logo = models.ImageField(upload_to='company_logos/', null=True, blank=True)
+    
+    # Travel-specific settings
+    gst_number = models.CharField(max_length=50, blank=True, null=True, help_text="GST Registration Number")
+    pan_number = models.CharField(max_length=20, blank=True, null=True, help_text="PAN Number")
+    tourism_license = models.CharField(max_length=100, blank=True, null=True, help_text="Tourism License Number")
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
@@ -346,11 +539,11 @@ class CompanySettings(models.Model):
         settings, created = cls.objects.get_or_create(
             id=1,
             defaults={
-                'name': 'Your Educational Institution',
-                'address': 'Your Institution Address, City, State - PIN',
+                'name': 'Your Travel Company',
+                'address': 'Your Company Address, City, State - PIN',
                 'phone': '+91-XXXXXXXXXX',
-                'email': 'info@yourinstitution.com',
-                'website': 'www.yourinstitution.com'
+                'email': 'info@yourtravelcompany.com',
+                'website': 'www.yourtravelcompany.com'
             }
         )
         return settings
