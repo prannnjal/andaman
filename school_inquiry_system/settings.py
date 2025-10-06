@@ -198,3 +198,23 @@ If you define multiple backends, Django will try them one by one.
 AUTH_USER_MODEL = 'inquiries.CustomUser'        # It means I don't want to use the default User model of Django, rather I want to use my own Cutom User model (where I can enforce unique constraint to the email of users which is not there in default User model)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# settings.py
+
+DEBUG = True  # Keep True while testing; set False in production
+
+ALLOWED_HOSTS = [
+    '127.0.0.1',        # localhost
+    'localhost',
+    '13.200.243.22',    # your EC2 public IP
+    'dejawoo.site',     # if you have a domain pointing to this server
+    'www.dejawoo.site', # optional domain
+    '54.226.177.168',   # any other IPs you want to allow
+    '43.205.137.221',
+    '192.168.0.159',
+    'crm.dejawoo.site',
+]
+
+# If you want to allow any host for testing (not recommended in production):
+# ALLOWED_HOSTS = ['*']

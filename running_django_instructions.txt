@@ -1,0 +1,29 @@
+======================================================================
+1) Connect: ssh -i "C:/Users/Sushant Singh/Downloads/CRM_School.pem" ec2-user@43.205.137.221
+
+2) cd CRM_School
+
+3) 	eval "$(ssh-agent -s)"
+	ssh-add sushant_crm_git
+	git pull origin main
+	
+5) python3 manage.py collectstatic
+7) python3 manage.py makemigrations inquiries
+8) python3 manage.py migrate
+
+10)	      sudo systemctl daemon-reload
+	      sudo systemctl restart crm_school.service
+	      sudo systemctl status crm_school.service
+
+
+Gmail: uncertain30@gmail.com
+Username: Admin@2025
+Password: School@2025
+======================================================================
+How to download .sql database:
+
+1) Run in ubuntu: mysqldump -u root -p inquiries_testing_4 | gzip > CRM_Lead_Management.sql.gz
+
+2) Run in windows: scp -i "C:/Users/Sushant Singh/Downloads/CRM_School.pem" ec2-user@43.205.137.221:/home/ec2-user/CRM_School/CRM_Lead_Management.sql.gz "C:\Users\Sushant Singh\Downloads"
+
+======================================================================
