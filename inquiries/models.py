@@ -428,11 +428,17 @@ class ItineraryDay(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
     
+    # Date and Time
+    travel_date = models.DateField(null=True, blank=True, help_text="Actual travel date for this day")
+    check_in_date = models.DateField(null=True, blank=True, help_text="Hotel check-in date")
+    check_out_date = models.DateField(null=True, blank=True, help_text="Hotel check-out date")
+    
     # Hotel Selection
     hotel = models.ForeignKey(Hotel, on_delete=models.SET_NULL, null=True, blank=True)
     room_category = models.ForeignKey(RoomCategory, on_delete=models.SET_NULL, null=True, blank=True)
     number_of_rooms = models.IntegerField(default=1)
     extra_mattress = models.IntegerField(default=0, help_text="Number of extra mattresses")
+    is_hotel_booked = models.BooleanField(default=False, help_text="Mark as booked to block dates")
     
     # Transportation (inherited from PackageDay but customizable)
     cab_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -508,6 +514,55 @@ class CallRecording(models.Model):
             else:
                 return f"{minutes:02d}:{seconds:02d}"
         return "Unknown"
+
+
+class EventPlace(models.Model):
+    """Event places and activities for itineraries"""
+    name = models.CharField(max_length=200, unique=True)
+    location = models.CharField(max_length=200)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+    event_type = models.CharField(max_length=100, help_text="e.g., Museum, Temple, Beach, Adventure Activity")
+    entry_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Entry fee per person")
+    description = models.TextField(blank=True, null=True)
+    contact_number = models.CharField(max_length=15, blank=True, null=True)
+    operating_hours = models.CharField(max_length=100, blank=True, null=True, help_text="e.g., 9 AM - 6 PM")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey('CustomUser', on_delete=models.SET_NULL, null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.name} - {self.city}"
+    
+    class Meta:
+        ordering = ['name']
+
+
+class HotelBooking(models.Model):
+    """Track hotel bookings and availability"""
+    itinerary_day = models.ForeignKey(ItineraryDay, on_delete=models.CASCADE, related_name='bookings')
+    hotel = models.ForeignKey(Hotel, on_delete=models.CASCADE)
+    room_category = models.ForeignKey(RoomCategory, on_delete=models.CASCADE)
+    check_in_date = models.DateField()
+    check_out_date = models.DateField()
+    number_of_rooms = models.IntegerField(default=1)
+    extra_mattress = models.IntegerField(default=0)
+    booking_status = models.CharField(max_length=20, choices=[
+        ('Pending', 'Pending'),
+        ('Confirmed', 'Confirmed'),
+        ('Cancelled', 'Cancelled'),
+    ], default='Pending')
+    booking_reference = models.CharField(max_length=100, blank=True, null=True)
+    notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.hotel.name} - {self.check_in_date} to {self.check_out_date}"
+    
+    class Meta:
+        ordering = ['check_in_date']
+        unique_together = ['hotel', 'room_category', 'check_in_date', 'check_out_date']
 
 
 class CompanySettings(models.Model):

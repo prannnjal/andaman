@@ -69,6 +69,28 @@ class UpdateLeadStatusForm(InquiryForm):
         if 'assigned_agent' in self.fields:
             del self.fields['assigned_agent']
 
+
+class SimpleInquiryForm(forms.ModelForm):
+    """Simplified form for adding new leads with only customer information"""
+    class Meta:
+        model = Lead
+        fields = ['customer_name', 'mobile_number', 'email', 'city', 'address']
+        
+        labels = {
+            'customer_name': 'Customer Name',
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Set default values
+        self.fields['customer_name'].initial = 'Unknown'
+        self.fields['mobile_number'].initial = '0000000000'
+        
+        # Add CSS classes for styling
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control-modern'})
+
 # ====================================================================================
 
 class AgentUpdateLeadForm(forms.ModelForm):

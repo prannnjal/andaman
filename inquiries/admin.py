@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import (
     Lead, CustomUser, CompanySettings, Hotel, RoomCategory, 
     Package, PackageDay, ItineraryBuilder, ItineraryDay, 
-    LeadLogs, CallRecording
+    LeadLogs, CallRecording, EventPlace, HotelBooking
 )
 
 
@@ -31,7 +31,7 @@ class RoomCategoryAdmin(admin.ModelAdmin):
 class PackageDayInline(admin.TabularInline):
     model = PackageDay
     extra = 1
-    fields = ['day_number', 'title', 'cab_price', 'ferry_price', 'speedboat_price', 'entry_tickets']
+    fields = ['day_number', 'title', 'description', 'cab_price', 'ferry_price', 'speedboat_price', 'entry_tickets', 'activities']
 
 
 @admin.register(Package)
@@ -72,12 +72,77 @@ class ItineraryDayAdmin(admin.ModelAdmin):
     search_fields = ['itinerary__lead__customer_name', 'title']
 
 
+class ItineraryBuilderInline(admin.TabularInline):
+    model = ItineraryBuilder
+    extra = 0
+    fields = ['package', 'pax', 'duration_days', 'total_price', 'is_finalized']
+    readonly_fields = ['total_price']
+
+
 @admin.register(Lead)
 class LeadAdmin(admin.ModelAdmin):
     list_display = ['customer_name', 'mobile_number', 'destination', 'travel_type', 'status', 'assigned_agent', 'inquiry_date']
     list_filter = ['status', 'travel_type', 'inquiry_source', 'assigned_agent']
     search_fields = ['customer_name', 'mobile_number', 'email', 'destination']
     date_hierarchy = 'inquiry_date'
+    inlines = [ItineraryBuilderInline]
+    
+    # Simplified fields for add/edit forms
+    fieldsets = (
+        ('Customer Information', {
+            'fields': ('customer_name', 'mobile_number', 'email', 'city', 'address')
+        }),
+        ('Travel Details', {
+            'fields': ('destination', 'travel_type', 'number_of_travelers', 'travel_start_date', 'travel_end_date', 'duration_days'),
+            'classes': ('collapse',)
+        }),
+        ('Budget & Pricing', {
+            'fields': ('budget', 'quoted_price'),
+            'classes': ('collapse',)
+        }),
+        ('Lead Management', {
+            'fields': ('inquiry_source', 'status', 'remarks', 'inquiry_date', 'follow_up_date'),
+            'classes': ('collapse',)
+        }),
+        ('Assignment', {
+            'fields': ('assigned_agent', 'admin_assigned'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_form(self, request, obj=None, **kwargs):
+        """Customize form for add vs edit"""
+        if obj is None:  # Adding a new lead
+            # Show only customer information fields for new leads
+            self.fields = ('customer_name', 'mobile_number', 'email', 'city', 'address')
+            # Hide fieldsets during add
+            self.fieldsets = None
+        else:  # Editing existing lead
+            # Show all fields in fieldsets for editing
+            self.fields = None
+            # Restore fieldsets for editing
+            self.fieldsets = (
+                ('Customer Information', {
+                    'fields': ('customer_name', 'mobile_number', 'email', 'city', 'address')
+                }),
+                ('Travel Details', {
+                    'fields': ('destination', 'travel_type', 'number_of_travelers', 'travel_start_date', 'travel_end_date', 'duration_days'),
+                    'classes': ('collapse',)
+                }),
+                ('Budget & Pricing', {
+                    'fields': ('budget', 'quoted_price'),
+                    'classes': ('collapse',)
+                }),
+                ('Lead Management', {
+                    'fields': ('inquiry_source', 'status', 'remarks', 'inquiry_date', 'follow_up_date'),
+                    'classes': ('collapse',)
+                }),
+                ('Assignment', {
+                    'fields': ('assigned_agent', 'admin_assigned'),
+                    'classes': ('collapse',)
+                }),
+            )
+        return super().get_form(request, obj, **kwargs)
 
 
 @admin.register(CustomUser)
@@ -106,3 +171,19 @@ class CallRecordingAdmin(admin.ModelAdmin):
     list_filter = ['call_date', 'uploaded_by']
     search_fields = ['lead__customer_name']
     readonly_fields = ['call_date', 'duration']
+
+
+@admin.register(EventPlace)
+class EventPlaceAdmin(admin.ModelAdmin):
+    list_display = ['name', 'city', 'event_type', 'entry_fee', 'is_active', 'created_at']
+    list_filter = ['event_type', 'city', 'is_active']
+    search_fields = ['name', 'city', 'location']
+    readonly_fields = ['created_at', 'created_by']
+
+
+@admin.register(HotelBooking)
+class HotelBookingAdmin(admin.ModelAdmin):
+    list_display = ['hotel', 'room_category', 'check_in_date', 'check_out_date', 'booking_status', 'number_of_rooms']
+    list_filter = ['booking_status', 'check_in_date', 'hotel']
+    search_fields = ['hotel__name', 'booking_reference']
+    readonly_fields = ['created_at', 'updated_at']

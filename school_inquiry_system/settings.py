@@ -106,13 +106,19 @@ WSGI_APPLICATION = 'school_inquiry_system.wsgi.application' # Defines the WSGI a
 
 DATABASES = {
     'default': {
-        'ENGINE': os.getenv('ENGINE'),
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASS'),
-        'HOST': os.getenv('HOST'),
-        'PORT': os.getenv('PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+    
+    # MySQL Configuration (uncomment when MySQL is running)
+    # 'default': {
+    #     'ENGINE': os.getenv('ENGINE'),
+    #     'NAME': os.getenv('DB_NAME'),
+    #     'USER': os.getenv('DB_USER'),
+    #     'PASSWORD': os.getenv('DB_PASS'),
+    #     'HOST': os.getenv('HOST'),
+    #     'PORT': os.getenv('PORT'),
+    # }
     
     # 'default': {
     #     'ENGINE': 'django.db.backends.sqlite3',

@@ -1,0 +1,233 @@
+{% extends "inquiries/modern_base.html" %}
+
+{% block title %}Add Travel Lead | Travel CRM{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        text-align: center;
+        margin-bottom: var(--spacing-xl);
+    }
+    
+    .page-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: white;
+        margin-bottom: var(--spacing-sm);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .form-section {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: var(--spacing-xl);
+        margin-bottom: var(--spacing-lg);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: var(--spacing-lg);
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        padding-bottom: var(--spacing-sm);
+        border-bottom: 2px solid var(--light);
+    }
+    
+    /* Form Grid */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-lg);
+    }
+    
+    .form-grid-full {
+        grid-column: 1 / -1;
+    }
+    
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Form Control */
+    .form-control-modern {
+        width: 100%;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border: 2px solid #e0e0e0;
+        border-radius: var(--radius-sm);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .form-control-modern:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1);
+    }
+    
+    .form-label-modern {
+        display: block;
+        font-weight: 600;
+        margin-bottom: var(--spacing-sm);
+        color: var(--dark);
+        font-size: 0.95rem;
+    }
+    
+    .form-label-modern i {
+        color: var(--primary);
+        margin-right: var(--spacing-xs);
+    }
+    
+    .required {
+        color: var(--danger);
+        margin-left: 2px;
+    }
+    
+    /* Submit Button */
+    .submit-section {
+        text-align: center;
+        margin-top: var(--spacing-xl);
+    }
+    
+    .btn-submit-modern {
+        padding: var(--spacing-md) var(--spacing-xl);
+        font-size: 1.2rem;
+        font-weight: 700;
+        border-radius: var(--radius-md);
+        border: none;
+        background: linear-gradient(135deg, var(--success) 0%, #4CAF50 100%);
+        color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-md);
+        min-width: 200px;
+    }
+    
+    .btn-submit-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+    }
+    
+    .btn-submit-modern i {
+        margin-right: var(--spacing-sm);
+    }
+    
+    /* Helper Text */
+    .helper-text {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: var(--spacing-xs);
+    }
+    
+    /* Highlighted Section */
+    .highlight-section {
+        background: linear-gradient(135deg, rgba(30, 136, 229, 0.1) 0%, rgba(30, 136, 229, 0.05) 100%);
+        border-left: 4px solid var(--primary);
+        padding: var(--spacing-lg);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--spacing-lg);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="bi bi-plus-circle-fill"></i> Add New Travel Lead
+    </h1>
+    <p class="page-subtitle" style="color: rgba(255,255,255,0.9);">
+        Quick lead capture with essential customer information
+    </p>
+</div>
+
+<div class="form-container">
+    <div class="highlight-section">
+        <h3 style="color: var(--primary); margin: 0; display: flex; align-items: center; gap: var(--spacing-sm);">
+            <i class="bi bi-info-circle"></i>
+            Quick Lead Entry
+        </h3>
+        <p style="margin: var(--spacing-sm) 0 0 0; color: #666;">
+            Only essential customer information is required. Travel details and budget can be added later when editing the lead.
+        </p>
+    </div>
+
+    <form method="POST" action="{% url 'add_inquiry' %}">
+        {% csrf_token %}
+        
+        <!-- Customer Information -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="bi bi-person"></i>
+                Customer Information
+            </div>
+            
+            <div class="form-grid">
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-person-fill"></i>
+                        Customer Name <span class="required">*</span>
+                    </label>
+                    {{ form.customer_name }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-telephone-fill"></i>
+                        Mobile Number <span class="required">*</span>
+                    </label>
+                    {{ form.mobile_number }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-envelope-fill"></i>
+                        Email
+                    </label>
+                    {{ form.email }}
+                </div>
+                
+                <div>
+                    <label class="form-label-modern">
+                        <i class="bi bi-building"></i>
+                        City
+                    </label>
+                    {{ form.city }}
+                </div>
+                
+                <div class="form-grid-full">
+                    <label class="form-label-modern">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        Address
+                    </label>
+                    {{ form.address }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="submit-section">
+            <button type="submit" class="btn-submit-modern">
+                <i class="bi bi-check-circle-fill"></i>
+                Create Travel Lead
+            </button>
+            <br>
+            <a href="{% url 'inquiry_list' %}" class="btn-modern btn-secondary-modern mt-2">
+                <i class="bi bi-x-circle"></i>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

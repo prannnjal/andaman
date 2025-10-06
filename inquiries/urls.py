@@ -98,7 +98,8 @@ urlpatterns = [
     path('itinerary/day/<int:day_id>/update/', views.itinerary_day_update, name='itinerary_day_update'),
     path('itinerary/<int:itinerary_id>/markup/update/', views.itinerary_update_markup, name='itinerary_update_markup'),
     path('itinerary/<int:itinerary_id>/delete/', views.itinerary_delete, name='itinerary_delete'),
-    path('api/hotel/<int:hotel_id>/rooms/', views.get_room_categories_ajax, name='get_room_categories'),
+    path('get-room-categories/<int:hotel_id>/', views.get_room_categories, name='get_room_categories'),
+    path('check-hotel-availability/<int:hotel_id>/<int:room_category_id>/<str:check_in_date>/<str:check_out_date>/', views.check_hotel_availability, name='check_hotel_availability'),
 
 ]
 urlpatterns += [

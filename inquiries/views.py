@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import CustomUser, Lead, CustomUser, LeadLogs, Hotel, CompanySettings, Package, PackageDay, RoomCategory, ItineraryBuilder, ItineraryDay
-from .forms import InquiryForm, UpdateLeadStatusForm, EditLeadForm, AgentUpdateLeadForm, CustomUserForm, UpdateUserForm, TransferLeadForm
+from django.http import JsonResponse
+from .models import CustomUser, Lead, CustomUser, LeadLogs, Hotel, CompanySettings, Package, PackageDay, RoomCategory, ItineraryBuilder, ItineraryDay, EventPlace, HotelBooking
+from .forms import InquiryForm, UpdateLeadStatusForm, SimpleInquiryForm, EditLeadForm, AgentUpdateLeadForm, CustomUserForm, UpdateUserForm, TransferLeadForm
 from django.contrib.auth import authenticate, login
 # Django's authenticate() function doesn't itself contain the authentication logic—it simply loops through all the backends listed in your AUTHENTICATION_BACKENDS setting and calls their authenticate() methods. 
 from datetime import timedelta
@@ -573,14 +574,18 @@ def follow_up_management(request):
 @user_passes_test(is_agent_or_admin)
 def add_inquiry(request):
     if request.method == 'POST':
-        form = UpdateLeadStatusForm(request.POST)
+        form = SimpleInquiryForm(request.POST)
 
         if form.is_valid():
             inquiry = form.save(commit=False)
-                        
-            if inquiry.follow_up_date:
-                inquiry.last_follow_up_updation = inquiry.follow_up_date
-                
+            
+            # Set default values for required fields not in the simplified form
+            inquiry.destination = "To Be Determined"
+            inquiry.travel_type = "Family"
+            inquiry.number_of_travelers = 1
+            inquiry.status = "New Lead"
+            inquiry.inquiry_source = "Website"  # Default value
+            inquiry.inquiry_date = now().date()
             inquiry.last_inquiry_updation = now().date()
             
             # Auto-assign agent logic
@@ -635,9 +640,9 @@ def add_inquiry(request):
             messages.error(request, "Some error occured, please ensure that the form is valid !")
       
     else:       # For GET request
-        form = UpdateLeadStatusForm()
+        form = SimpleInquiryForm()
         
-    return render(request, 'inquiries/modern_add_lead.html', {'form': form, 'title': 'Add New Travel Lead'})
+    return render(request, 'inquiries/simple_add_lead.html', {'form': form, 'title': 'Add New Travel Lead'})
 
 # ================================================================================================================================================================
             
@@ -869,7 +874,7 @@ def itinerary_detail(request, itinerary_id):
 @login_required
 @user_passes_test(is_agent_or_admin)
 def itinerary_day_update(request, day_id):
-    """Update a specific itinerary day with hotel and pricing"""
+    """Update a specific itinerary day with hotel, dates, events and pricing"""
     day = get_object_or_404(ItineraryDay, id=day_id)
     
     # Check permission
@@ -878,6 +883,18 @@ def itinerary_day_update(request, day_id):
         return redirect('inquiry_list')
     
     if request.method == 'POST':
+        # Update dates
+        travel_date = request.POST.get('travel_date')
+        check_in_date = request.POST.get('check_in_date')
+        check_out_date = request.POST.get('check_out_date')
+        
+        if travel_date:
+            day.travel_date = travel_date
+        if check_in_date:
+            day.check_in_date = check_in_date
+        if check_out_date:
+            day.check_out_date = check_out_date
+        
         # Update hotel and room
         hotel_id = request.POST.get('hotel')
         room_category_id = request.POST.get('room_category')
@@ -890,6 +907,7 @@ def itinerary_day_update(request, day_id):
         # Update room details
         day.number_of_rooms = int(request.POST.get('number_of_rooms', 1))
         day.extra_mattress = int(request.POST.get('extra_mattress', 0))
+        day.is_hotel_booked = request.POST.get('is_hotel_booked') == 'on'
         
         # Update transportation
         day.cab_price = float(request.POST.get('cab_price', 0))
@@ -897,11 +915,33 @@ def itinerary_day_update(request, day_id):
         day.speedboat_price = float(request.POST.get('speedboat_price', 0))
         day.entry_tickets = float(request.POST.get('entry_tickets', 0))
         
+        # Update activities and events
+        day.activities = request.POST.get('activities', '')
+        
         # Update additional charges
         day.additional_charges = float(request.POST.get('additional_charges', 0))
         day.additional_charges_description = request.POST.get('additional_charges_description', '')
         
         day.save()
+        
+        # Create hotel booking if marked as booked
+        if day.is_hotel_booked and day.hotel and day.room_category and day.check_in_date and day.check_out_date:
+            booking, created = HotelBooking.objects.get_or_create(
+                itinerary_day=day,
+                hotel=day.hotel,
+                room_category=day.room_category,
+                check_in_date=day.check_in_date,
+                check_out_date=day.check_out_date,
+                defaults={
+                    'number_of_rooms': day.number_of_rooms,
+                    'extra_mattress': day.extra_mattress,
+                    'booking_status': 'Confirmed',
+                }
+            )
+            if not created:
+                booking.number_of_rooms = day.number_of_rooms
+                booking.extra_mattress = day.extra_mattress
+                booking.save()
         
         # Recalculate itinerary total
         day.itinerary.calculate_total()
@@ -910,7 +950,76 @@ def itinerary_day_update(request, day_id):
         messages.success(request, f"Day {day.day_number} updated successfully! Total price recalculated.")
         return redirect('itinerary_detail', itinerary_id=day.itinerary.id)
     
-    return redirect('itinerary_detail', itinerary_id=day.itinerary.id)
+    # Get available hotels and event places for the context
+    hotels = Hotel.objects.filter(is_active=True)
+    event_places = EventPlace.objects.filter(is_active=True)
+    
+    context = {
+        'day': day,
+        'hotels': hotels,
+        'event_places': event_places,
+        'itinerary': day.itinerary,
+    }
+    
+    return render(request, 'inquiries/itinerary_day_edit.html', context)
+
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def get_room_categories(request, hotel_id):
+    """AJAX view to get room categories for a hotel"""
+    try:
+        hotel = Hotel.objects.get(id=hotel_id)
+        room_categories = hotel.room_categories.filter(is_available=True)
+        
+        data = {
+            'room_categories': [
+                {
+                    'id': room.id,
+                    'room_type': room.room_type,
+                    'price_per_night': str(room.price_per_night),
+                    'max_occupancy': room.max_occupancy,
+                    'extra_mattress_price': str(room.extra_mattress_price),
+                }
+                for room in room_categories
+            ]
+        }
+        return JsonResponse(data)
+    except Hotel.DoesNotExist:
+        return JsonResponse({'error': 'Hotel not found'}, status=404)
+
+
+@login_required
+@user_passes_test(is_agent_or_admin)
+def check_hotel_availability(request, hotel_id, room_category_id, check_in_date, check_out_date):
+    """AJAX view to check hotel availability for specific dates"""
+    try:
+        hotel = Hotel.objects.get(id=hotel_id)
+        room_category = RoomCategory.objects.get(id=room_category_id)
+        
+        # Check for existing bookings that overlap with the requested dates
+        overlapping_bookings = HotelBooking.objects.filter(
+            hotel=hotel,
+            room_category=room_category,
+            booking_status__in=['Confirmed', 'Pending'],
+            check_in_date__lt=check_out_date,
+            check_out_date__gt=check_in_date
+        )
+        
+        available = overlapping_bookings.count() == 0
+        
+        data = {
+            'available': available,
+            'hotel_name': hotel.name,
+            'room_type': room_category.room_type,
+            'check_in_date': check_in_date,
+            'check_out_date': check_out_date,
+            'message': 'Available' if available else 'Dates already booked'
+        }
+        
+        return JsonResponse(data)
+    except (Hotel.DoesNotExist, RoomCategory.DoesNotExist):
+        return JsonResponse({'error': 'Hotel or room category not found'}, status=404)
 
 
 @login_required
